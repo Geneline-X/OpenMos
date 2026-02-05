@@ -6,6 +6,9 @@ import * as React from "react";
 import { HeroUIProvider } from "@heroui/system";
 import { useRouter } from "next/navigation";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { SessionProvider } from "next-auth/react";
+import { CookieConsentProvider } from "@/lib/contexts/cookie-consent";
+import { EvaluatorSessionProvider } from "@/lib/contexts/evaluator-session";
 
 export interface ProvidersProps {
   children: React.ReactNode;
@@ -24,8 +27,16 @@ export function Providers({ children, themeProps }: ProvidersProps) {
   const router = useRouter();
 
   return (
-    <HeroUIProvider navigate={router.push}>
-      <NextThemesProvider {...themeProps}>{children}</NextThemesProvider>
-    </HeroUIProvider>
+    <SessionProvider>
+      <HeroUIProvider navigate={router.push}>
+        <NextThemesProvider {...themeProps}>
+          <CookieConsentProvider>
+            <EvaluatorSessionProvider>
+              {children}
+            </EvaluatorSessionProvider>
+          </CookieConsentProvider>
+        </NextThemesProvider>
+      </HeroUIProvider>
+    </SessionProvider>
   );
 }
