@@ -1,4 +1,4 @@
-import IORedis from "ioredis";
+import IORedis, { type RedisOptions } from "ioredis";
 
 // Redis connection for BullMQ
 // In production, use a proper Redis URL with password
@@ -7,8 +7,8 @@ const redisUrl = process.env.REDIS_URL;
 const redisPassword = process.env.REDIS_PASSWORD;
 
 // Parse connection options
-function getRedisOptions(): IORedis.RedisOptions {
-  const options: IORedis.RedisOptions = {
+function getRedisOptions(): RedisOptions {
+  const options: RedisOptions = {
     maxRetriesPerRequest: null, // Required for BullMQ
     enableReadyCheck: false,
   };
