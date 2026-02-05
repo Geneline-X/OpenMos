@@ -1,12 +1,20 @@
 export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
-  name: "Next.js + HeroUI",
-  description: "Make beautiful websites regardless of your design experience.",
+  name: "OpenMOS",
+  description: "Mean Opinion Score Evaluation Platform - Help improve AI voice technology for African languages",
   navItems: [
     {
       label: "Home",
       href: "/",
+    },
+    {
+      label: "About",
+      href: "/about",
+    },
+    {
+      label: "Privacy",
+      href: "/privacy",
     },
   ],
   navMenuItems: [
@@ -14,12 +22,16 @@ export const siteConfig = {
       label: "Home",
       href: "/",
     },
+    {
+      label: "About",
+      href: "/about",
+    },
+    {
+      label: "Privacy",
+      href: "/privacy",
+    },
   ],
   links: {
-    github: "https://github.com/heroui-inc/heroui",
-    twitter: "https://twitter.com/hero_ui",
-    docs: "https://heroui.com",
-    discord: "https://discord.gg/9b6yyZKmH4",
-    sponsor: "https://patreon.com/jrgarciadev",
+    github: "https://github.com/GenelineX/open-mos",
   },
 };
