@@ -12,10 +12,6 @@ export const siteConfig = {
       label: "About",
       href: "/about",
     },
-    {
-      label: "Privacy",
-      href: "/privacy",
-    },
   ],
   navMenuItems: [
     {
@@ -25,10 +21,6 @@ export const siteConfig = {
     {
       label: "About",
       href: "/about",
-    },
-    {
-      label: "Privacy",
-      href: "/privacy",
     },
   ],
   links: {

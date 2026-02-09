@@ -7,17 +7,18 @@ import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from 
 import { Chip } from "@heroui/chip";
 import { Spinner } from "@heroui/spinner";
 import { Tooltip } from "@heroui/tooltip";
-import { 
-  Modal, 
-  ModalContent, 
-  ModalHeader, 
-  ModalBody, 
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
   ModalFooter,
-  useDisclosure 
+  useDisclosure
 } from "@heroui/modal";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useAudioPlayer } from "@/components/admin/audio-player-context";
+import { usePagination } from "@/hooks/usePagination";
 
 interface Sample {
   id: string;
@@ -38,6 +39,16 @@ export default function SamplesPage() {
   const [sampleToDelete, setSampleToDelete] = useState<Sample | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { playTrack, currentTrack, isPlaying, stop } = useAudioPlayer();
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    nextPage,
+    prevPage,
+    hasNext,
+    hasPrev,
+  } = usePagination({ data: samples, itemsPerPage: 20 });
 
   const fetchSamples = async () => {
     try {
@@ -63,19 +74,19 @@ export default function SamplesPage() {
 
   const handleDeleteConfirm = async () => {
     if (!sampleToDelete) return;
-    
+
     setDeletingSampleId(sampleToDelete.id);
-    
+
     // Stop playing if this sample is currently playing
     if (currentTrack?.id === sampleToDelete.id) {
       stop();
     }
-    
+
     try {
       const res = await fetch(`/api/admin/samples?id=${sampleToDelete.id}`, {
         method: "DELETE",
       });
-      
+
       if (res.ok) {
         // Remove from local state
         setSamples((prev) => prev.filter((s) => s.id !== sampleToDelete.id));
@@ -141,7 +152,7 @@ export default function SamplesPage() {
                 <TableColumn>ACTIONS</TableColumn>
               </TableHeader>
               <TableBody>
-                {samples.map((sample) => (
+                {paginatedData.map((sample) => (
                   <TableRow key={sample.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -153,14 +164,14 @@ export default function SamplesPage() {
                     <TableCell>{sample.duration}</TableCell>
                     <TableCell>{sample.ratings}</TableCell>
                     <TableCell>
-                      <Chip 
-                        size="sm" 
+                      <Chip
+                        size="sm"
                         color={
-                          sample.avgScore !== "N/A" 
-                            ? parseFloat(sample.avgScore) >= 4 
-                              ? "success" 
-                              : parseFloat(sample.avgScore) >= 3 
-                                ? "warning" 
+                          sample.avgScore !== "N/A"
+                            ? parseFloat(sample.avgScore) >= 4
+                              ? "success"
+                              : parseFloat(sample.avgScore) >= 3
+                                ? "warning"
                                 : "danger"
                             : "default"
                         }
@@ -176,9 +187,9 @@ export default function SamplesPage() {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Tooltip content="Play">
-                          <Button 
-                            isIconOnly 
-                            size="sm" 
+                          <Button
+                            isIconOnly
+                            size="sm"
                             variant="light"
                             color={currentTrack?.id === sample.id && isPlaying ? "primary" : "default"}
                             onPress={() => {
@@ -190,16 +201,16 @@ export default function SamplesPage() {
                               });
                             }}
                           >
-                            <Icon 
-                              icon={currentTrack?.id === sample.id && isPlaying ? "solar:pause-bold" : "solar:play-bold"} 
-                              className="h-4 w-4" 
+                            <Icon
+                              icon={currentTrack?.id === sample.id && isPlaying ? "solar:pause-bold" : "solar:play-bold"}
+                              className="h-4 w-4"
                             />
                           </Button>
                         </Tooltip>
                         <Tooltip content="Delete" color="danger">
-                          <Button 
-                            isIconOnly 
-                            size="sm" 
+                          <Button
+                            isIconOnly
+                            size="sm"
                             variant="light"
                             color="danger"
                             isLoading={deletingSampleId === sample.id}
@@ -214,6 +225,35 @@ export default function SamplesPage() {
                 ))}
               </TableBody>
             </Table>
+          )}
+
+          {/* Pagination Controls */}
+          {!isLoading && samples.length > 20 && (
+            <div className="flex items-center justify-between border-t border-divider px-4 py-3">
+              <p className="text-sm text-default-500">
+                Page {currentPage} of {totalPages}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="flat"
+                  isDisabled={!hasPrev}
+                  onPress={prevPage}
+                >
+                  <Icon icon="solar:alt-arrow-left-linear" className="h-4 w-4" />
+                </Button>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="flat"
+                  isDisabled={!hasNext}
+                  onPress={nextPage}
+                >
+                  <Icon icon="solar:alt-arrow-right-linear" className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           )}
         </CardBody>
       </Card>
@@ -249,8 +289,8 @@ export default function SamplesPage() {
             <Button variant="flat" onPress={onClose}>
               Cancel
             </Button>
-            <Button 
-              color="danger" 
+            <Button
+              color="danger"
               onPress={handleDeleteConfirm}
               isLoading={deletingSampleId !== null}
             >

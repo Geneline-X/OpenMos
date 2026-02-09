@@ -21,16 +21,16 @@ interface PublicLayoutWrapperProps {
  */
 export function PublicLayoutWrapper({ children }: PublicLayoutWrapperProps) {
   const pathname = usePathname();
-  
+
   // Check if we're on an admin route or evaluate route
   const isAdminRoute = pathname?.startsWith("/admin");
   const isEvaluateRoute = pathname?.startsWith("/evaluate") || pathname?.startsWith("/start");
-  
+
   // Admin and evaluate routes get a clean layout without public navbar/footer
   if (isAdminRoute || isEvaluateRoute) {
     return <>{children}</>;
   }
-  
+
   // Public routes get the full layout with navbar and footer
   return (
     <div className="relative flex flex-col min-h-screen">
@@ -54,13 +54,20 @@ export function PublicLayoutWrapper({ children }: PublicLayoutWrapperProps) {
                 <Icon icon="solar:shield-check-linear" className="w-4 h-4" />
                 Privacy
               </Link>
-              <Link 
-                href={siteConfig.links.github} 
-                isExternal 
+              <Link
+                href={siteConfig.links.github}
+                isExternal
                 className="text-default-500 hover:text-primary flex items-center gap-1"
               >
                 <Icon icon="solar:code-linear" className="w-4 h-4" />
                 GitHub
+              </Link>
+              <Link
+                href="/admin"
+                className="text-default-400 hover:text-primary flex items-center gap-1 text-xs"
+              >
+                <Icon icon="solar:user-id-linear" className="w-3 h-3" />
+                Admin
               </Link>
             </div>
           </div>

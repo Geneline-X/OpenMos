@@ -119,7 +119,7 @@ interface SidebarNavLinkProps {
 
 function SidebarNavLink({ item, isActive, isCollapsed, badgeCounts }: SidebarNavLinkProps) {
   const badge = item.badgeKey ? badgeCounts[item.badgeKey] : null;
-  const displayBadge = badge && badge > 0 
+  const displayBadge = badge && badge > 0
     ? (item.badgeKey === "activeRaters" ? `${badge} active` : badge)
     : null;
 
@@ -140,9 +140,9 @@ function SidebarNavLink({ item, isActive, isCollapsed, badgeCounts }: SidebarNav
         <>
           <span className="flex-1">{item.label}</span>
           {displayBadge && (
-            <Chip 
-              size="sm" 
-              variant="flat" 
+            <Chip
+              size="sm"
+              variant="flat"
               color={item.badgeColor || "default"}
               classNames={{
                 base: isActive ? "bg-primary-foreground/20 text-primary-foreground" : "",
@@ -188,16 +188,22 @@ function SidebarContent({ isCollapsed, onClose }: SidebarContentProps) {
       }
     }
     fetchCounts();
-    
+
     // Refresh every 60 seconds
     const interval = setInterval(fetchCounts, 60000);
     return () => clearInterval(interval);
   }, []);
 
   const isActive = (href: string) => {
+    // Exact match for dashboard
     if (href === "/admin") {
       return pathname === "/admin";
     }
+    // Exact match for Past Studies to prevent it from matching Current Study
+    if (href === "/admin/studies") {
+      return pathname === "/admin/studies";
+    }
+    // For all other routes, use startsWith
     return pathname.startsWith(href);
   };
 
@@ -303,7 +309,7 @@ export function MobileSidebar() {
         className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden"
         onClick={closeMobileSidebar}
       />
-      
+
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-50 w-72 bg-background shadow-xl lg:hidden">
         {/* Header */}

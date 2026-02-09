@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardBody } from "@heroui/card";
+import { Button } from "@heroui/button";
 import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@heroui/table";
 import { Chip } from "@heroui/chip";
 import { Avatar } from "@heroui/avatar";
 import { Spinner } from "@heroui/spinner";
 import { Icon } from "@iconify/react";
+import { usePagination } from "@/hooks/usePagination";
 
 interface Rater {
   id: string;
@@ -23,6 +25,16 @@ export default function RatersPage() {
   const [raters, setRaters] = useState<Rater[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [total, setTotal] = useState(0);
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    nextPage,
+    prevPage,
+    hasNext,
+    hasPrev,
+  } = usePagination({ data: raters, itemsPerPage: 20 });
 
   useEffect(() => {
     async function fetchRaters() {
@@ -111,39 +123,71 @@ export default function RatersPage() {
                 <TableColumn>STATUS</TableColumn>
               </TableHeader>
               <TableBody>
-                {raters.map((rater, idx) => (
-                  <TableRow key={rater.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar size="sm" name={`R${idx + 1}`} />
-                        <span>Rater #{idx + 1}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Chip size="sm" variant="flat">{rater.language}</Chip>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm">
-                        {rater.age ? `${rater.age}y` : "N/A"} • {rater.gender || "N/A"}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono">{rater.completed}/{rater.total}</span>
-                    </TableCell>
-                    <TableCell>{rater.avgTime}</TableCell>
-                    <TableCell>
-                      <Chip 
-                        size="sm" 
-                        color={rater.status === "completed" ? "success" : "warning"}
-                        variant="flat"
-                      >
-                        {rater.status === "completed" ? "Completed" : "In Progress"}
-                      </Chip>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {paginatedData.map((rater, idx) => {
+                  const displayIndex = (currentPage - 1) * 20 + idx + 1;
+                  return (
+                    <TableRow key={rater.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar size="sm" name={`R${displayIndex}`} />
+                          <span>Rater #{displayIndex}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Chip size="sm" variant="flat">{rater.language}</Chip>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm">
+                          {rater.age ? `${rater.age}y` : "N/A"} • {rater.gender || "N/A"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-mono">{rater.completed}/{rater.total}</span>
+                      </TableCell>
+                      <TableCell>{rater.avgTime}</TableCell>
+                      <TableCell>
+                        <Chip
+                          size="sm"
+                          color={rater.status === "completed" ? "success" : "warning"}
+                          variant="flat"
+                        >
+                          {rater.status === "completed" ? "Completed" : "In Progress"}
+                        </Chip>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
+          )}
+
+          {/* Pagination Controls */}
+          {!isLoading && raters.length > 20 && (
+            <div className="flex items-center justify-between border-t border-divider px-4 py-3">
+              <p className="text-sm text-default-500">
+                Page {currentPage} of {totalPages}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="flat"
+                  isDisabled={!hasPrev}
+                  onPress={prevPage}
+                >
+                  <Icon icon="solar:alt-arrow-left-linear" className="h-4 w-4" />
+                </Button>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="flat"
+                  isDisabled={!hasNext}
+                  onPress={nextPage}
+                >
+                  <Icon icon="solar:alt-arrow-right-linear" className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           )}
         </CardBody>
       </Card>

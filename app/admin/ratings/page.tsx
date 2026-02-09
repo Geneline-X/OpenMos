@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardBody } from "@heroui/card";
+import { Button } from "@heroui/button";
 import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@heroui/table";
 import { Chip } from "@heroui/chip";
 import { Spinner } from "@heroui/spinner";
 import { Icon } from "@iconify/react";
+import { usePagination } from "@/hooks/usePagination";
 
 interface Rating {
   id: string;
@@ -27,6 +29,16 @@ export default function RatingsPage() {
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, avgScore: "0.00", avgTime: "0s", today: 0 });
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    nextPage,
+    prevPage,
+    hasNext,
+    hasPrev,
+  } = usePagination({ data: ratings, itemsPerPage: 20 });
 
   useEffect(() => {
     async function fetchRatings() {
@@ -128,7 +140,7 @@ export default function RatingsPage() {
                 <TableColumn>DATE</TableColumn>
               </TableHeader>
               <TableBody>
-                {ratings.map((rating) => (
+                {paginatedData.map((rating) => (
                   <TableRow key={rating.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -149,6 +161,35 @@ export default function RatingsPage() {
                 ))}
               </TableBody>
             </Table>
+          )}
+
+          {/* Pagination Controls */}
+          {!isLoading && ratings.length > 20 && (
+            <div className="flex items-center justify-between border-t border-divider px-4 py-3">
+              <p className="text-sm text-default-500">
+                Page {currentPage} of {totalPages}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="flat"
+                  isDisabled={!hasPrev}
+                  onPress={prevPage}
+                >
+                  <Icon icon="solar:alt-arrow-left-linear" className="h-4 w-4" />
+                </Button>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="flat"
+                  isDisabled={!hasNext}
+                  onPress={nextPage}
+                >
+                  <Icon icon="solar:alt-arrow-right-linear" className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           )}
         </CardBody>
       </Card>

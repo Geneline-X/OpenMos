@@ -23,8 +23,8 @@ export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <HeroUINavbar 
-      maxWidth="xl" 
+    <HeroUINavbar
+      maxWidth="xl"
       position="sticky"
       isMenuOpen={isMenuOpen}
       onMenuOpenChange={setIsMenuOpen}
@@ -35,14 +35,17 @@ export const Navbar = () => {
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
         <NavbarBrand as="li" className="gap-2 max-w-fit">
           <NextLink className="flex justify-start items-center gap-2" href="/">
-            <Icon 
-              icon="solar:soundwave-bold-duotone" 
-              className="w-8 h-8 text-primary" 
+            <Icon
+              icon="solar:soundwave-bold-duotone"
+              className="w-8 h-8 text-primary"
             />
             <p className="font-bold text-inherit text-lg">OpenMOS</p>
           </NextLink>
         </NavbarBrand>
-        <ul className="hidden md:flex gap-4 justify-start ml-6">
+      </NavbarContent>
+
+      <NavbarContent className="hidden md:flex" justify="center">
+        <ul className="flex gap-4">
           {siteConfig.navItems.map((item) => (
             <NavbarItem key={item.href}>
               <NextLink
@@ -62,9 +65,9 @@ export const Navbar = () => {
 
       <NavbarContent className="hidden md:flex basis-1/5 sm:basis-full" justify="end">
         <NavbarItem className="flex gap-2 items-center">
-          <Link 
-            isExternal 
-            aria-label="GitHub" 
+          <Link
+            isExternal
+            aria-label="GitHub"
             href={siteConfig.links.github}
             className="text-default-500 hover:text-primary"
           >
@@ -76,9 +79,9 @@ export const Navbar = () => {
 
       <NavbarContent className="md:hidden basis-1 pl-4" justify="end">
         <ThemeSwitch />
-        <NavbarMenuToggle 
+        <NavbarMenuToggle
           aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-          icon={(isOpen) => 
+          icon={(isOpen) =>
             isOpen ? (
               <Icon icon="solar:close-circle-linear" className="w-6 h-6" />
             ) : (
