@@ -42,16 +42,13 @@ export const Navbar = () => {
             <p className="font-bold text-inherit text-lg">OpenMOS</p>
           </NextLink>
         </NavbarBrand>
-      </NavbarContent>
-
-      <NavbarContent className="hidden md:flex" justify="center">
-        <ul className="flex gap-4">
+        <ul className="hidden lg:flex gap-4 justify-start ml-2">
           {siteConfig.navItems.map((item) => (
             <NavbarItem key={item.href}>
               <NextLink
                 className={clsx(
                   linkStyles({ color: "foreground" }),
-                  "data-[active=true]:text-primary data-[active=true]:font-medium text-sm",
+                  "data-[active=true]:text-primary data-[active=true]:font-medium"
                 )}
                 color="foreground"
                 href={item.href}
@@ -63,7 +60,10 @@ export const Navbar = () => {
         </ul>
       </NavbarContent>
 
-      <NavbarContent className="hidden md:flex basis-1/5 sm:basis-full" justify="end">
+      <NavbarContent
+        className="hidden md:flex basis-1/5 sm:basis-full"
+        justify="end"
+      >
         <NavbarItem className="flex gap-2 items-center">
           <Link
             isExternal
