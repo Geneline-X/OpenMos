@@ -1,8 +1,15 @@
-import { Worker, Job } from "bullmq";
-import { createConnection } from "../connection";
 import type { EmailJobData } from "../types";
 
-// Email templates (in production, use a proper email service like Resend, SendGrid)
+import { Worker, Job } from "bullmq";
+import { Resend } from "resend";
+
+import { createConnection } from "../connection";
+
+// Initialize Resend with API key
+const resend = new Resend(process.env.RESEND_API_KEY);
+const EMAIL_FROM = process.env.EMAIL_FROM || "OpenMOS <onboarding@resend.dev>";
+
+// Email templates
 const emailTemplates = {
   "password-reset": (data: Record<string, unknown>) => ({
     subject: "Reset Your Password - OpenMOS",
@@ -15,7 +22,7 @@ const emailTemplates = {
     `,
   }),
 
-  "invitation": (data: Record<string, unknown>) => ({
+  invitation: (data: Record<string, unknown>) => ({
     subject: "You've Been Invited to OpenMOS",
     html: `
       <h1>Welcome to OpenMOS!</h1>
@@ -26,7 +33,7 @@ const emailTemplates = {
     `,
   }),
 
-  "welcome": (data: Record<string, unknown>) => ({
+  welcome: (data: Record<string, unknown>) => ({
     subject: "Welcome to OpenMOS",
     html: `
       <h1>Welcome, ${data.name}!</h1>
@@ -58,18 +65,35 @@ const emailTemplates = {
 };
 
 async function sendEmail(to: string, subject: string, html: string) {
-  // TODO: Implement actual email sending with Resend, SendGrid, etc.
-  // For now, just log it
-  console.log(`📧 [EMAIL] To: ${to}`);
-  console.log(`   Subject: ${subject}`);
-  console.log(`   Body: ${html.substring(0, 100)}...`);
-  
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  
-  // In production:
-  // const resend = new Resend(process.env.RESEND_API_KEY);
-  // await resend.emails.send({ from: 'noreply@openmos.org', to, subject, html });
+  if (!process.env.RESEND_API_KEY) {
+    console.warn(
+      "⚠️ RESEND_API_KEY is not set. Emails will be logged but not sent.",
+    );
+    console.log(`📧 [MOCK EMAIL] To: ${to}`);
+    console.log(`   Subject: ${subject}`);
+    console.log(`   Body: ${html.substring(0, 100)}...`);
+
+    return;
+  }
+
+  try {
+    const { data: emailData, error } = await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject,
+      html,
+    });
+
+    if (error) {
+      console.error("❌ Resend API Error:", error);
+      throw new Error(error.message);
+    }
+
+    console.log(`📧 Email sent via Resend: ${emailData?.id} to ${to}`);
+  } catch (error) {
+    console.error("❌ Failed to send email:", error);
+    throw error;
+  }
 }
 
 export function createEmailWorker() {
@@ -77,32 +101,33 @@ export function createEmailWorker() {
     "email",
     async (job: Job<EmailJobData>) => {
       const { type, to, subject, data } = job.data;
-      
+
       console.log(`📧 Processing email job: ${job.name}`);
-      
+
       const template = emailTemplates[type];
+
       if (!template) {
         throw new Error(`Unknown email template: ${type}`);
       }
 
       const { subject: templateSubject, html } = template(data);
-      
+
       await sendEmail(to, subject || templateSubject, html);
-      
+
       return { sent: true, to, type };
     },
     {
       connection: createConnection(),
       concurrency: 5, // Process 5 emails at a time
-    }
+    },
   );
 
   worker.on("completed", (job) => {
-    console.log(`✅ Email sent: ${job.name} (${job.id})`);
+    console.log(`✅ Email job completed: ${job.name} (${job.id})`);
   });
 
   worker.on("failed", (job, err) => {
-    console.error(`❌ Email failed: ${job?.name} - ${err.message}`);
+    console.error(`❌ Email job failed: ${job?.name} - ${err.message}`);
   });
 
   return worker;
