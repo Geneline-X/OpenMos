@@ -21,13 +21,33 @@ export default function ExportPage() {
   const [stats, setStats] = useState<ExportStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const allColumns = [
+    "audio_id",
+    "model_type",
+    "score",
+    "rater_id",
+    "timestamp",
+    "language",
+    "age",
+    "gender",
+    "playback_count",
+    "time_to_rate_ms",
+    "session_id",
+  ];
+
+  const [selectedColumns, setSelectedColumns] = useState<Set<string>>(
+    new Set(allColumns),
+  );
+
   // Fetch real stats
   useEffect(() => {
     async function fetchStats() {
       try {
         const res = await fetch("/api/admin/stats");
+
         if (res.ok) {
           const data = await res.json();
+
           setStats({
             totalRatings: data.totalRatings || 0,
             totalRaters: data.totalRaters || 0,
@@ -44,14 +64,30 @@ export default function ExportPage() {
     fetchStats();
   }, []);
 
+  const handleColumnToggle = (column: string) => {
+    const newSelected = new Set(selectedColumns);
+
+    if (newSelected.has(column)) {
+      newSelected.delete(column);
+    } else {
+      newSelected.add(column);
+    }
+    setSelectedColumns(newSelected);
+  };
+
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      const response = await fetch(`/api/export?format=${format}`);
+      const columnsParam = Array.from(selectedColumns).join(",");
+      const response = await fetch(
+        `/api/export?format=${format}&columns=${columnsParam}`,
+      );
+
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
+
         a.href = url;
         a.download = `mos-ratings.${format}`;
         a.click();
@@ -68,14 +104,19 @@ export default function ExportPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Export Center</h1>
-        <p className="text-default-500">Download evaluation data for analysis</p>
+        <p className="text-default-500">
+          Download evaluation data for analysis
+        </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Icon icon="solar:file-download-bold-duotone" className="h-5 w-5 text-primary" />
+              <Icon
+                className="h-5 w-5 text-primary"
+                icon="solar:file-download-bold-duotone"
+              />
               <p className="font-semibold">Export Data</p>
             </div>
           </CardHeader>
@@ -83,7 +124,9 @@ export default function ExportPage() {
             <Select
               label="Format"
               selectedKeys={[format]}
-              onSelectionChange={(keys) => setFormat(Array.from(keys)[0] as string)}
+              onSelectionChange={(keys) =>
+                setFormat(Array.from(keys)[0] as string)
+              }
             >
               <SelectItem key="csv">CSV (Excel)</SelectItem>
               <SelectItem key="json">JSON</SelectItem>
@@ -92,19 +135,30 @@ export default function ExportPage() {
 
             <div className="space-y-2">
               <p className="text-sm font-medium">Include columns:</p>
-              <Checkbox defaultSelected size="sm">audio_id</Checkbox>
-              <Checkbox defaultSelected size="sm">model_type</Checkbox>
-              <Checkbox defaultSelected size="sm">score</Checkbox>
-              <Checkbox defaultSelected size="sm">rater_id</Checkbox>
-              <Checkbox defaultSelected size="sm">timestamp</Checkbox>
-              <Checkbox defaultSelected size="sm">demographics</Checkbox>
+              <div className="grid grid-cols-2 gap-2">
+                {allColumns.map((col) => (
+                  <Checkbox
+                    key={col}
+                    isSelected={selectedColumns.has(col)}
+                    size="sm"
+                    onValueChange={() => handleColumnToggle(col)}
+                  >
+                    {col}
+                  </Checkbox>
+                ))}
+              </div>
             </div>
 
             <Button
               color="primary"
-              onPress={handleExport}
+              isDisabled={selectedColumns.size === 0}
               isLoading={isExporting}
-              startContent={!isExporting && <Icon icon="solar:download-bold" className="h-4 w-4" />}
+              startContent={
+                !isExporting && (
+                  <Icon className="h-4 w-4" icon="solar:download-bold" />
+                )
+              }
+              onPress={handleExport}
             >
               Download {format.toUpperCase()}
             </Button>
@@ -114,7 +168,10 @@ export default function ExportPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Icon icon="solar:document-text-bold-duotone" className="h-5 w-5 text-success" />
+              <Icon
+                className="h-5 w-5 text-success"
+                icon="solar:document-text-bold-duotone"
+              />
               <p className="font-semibold">Quick Stats</p>
             </div>
           </CardHeader>
@@ -127,15 +184,21 @@ export default function ExportPage() {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-default-500">Total Ratings</span>
-                  <span className="font-semibold">{stats.totalRatings.toLocaleString()}</span>
+                  <span className="font-semibold">
+                    {stats.totalRatings.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-default-500">Unique Raters</span>
-                  <span className="font-semibold">{stats.totalRaters.toLocaleString()}</span>
+                  <span className="font-semibold">
+                    {stats.totalRaters.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-default-500">Audio Samples</span>
-                  <span className="font-semibold">{stats.totalSamples.toLocaleString()}</span>
+                  <span className="font-semibold">
+                    {stats.totalSamples.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-default-500">Languages</span>

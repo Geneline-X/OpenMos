@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { eq, and, gte, lte } from "drizzle-orm";
+
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { ratings, raters, audioSamples, evaluationSessions } from "@/lib/db/schema";
-import { eq, sql, and, gte, lte } from "drizzle-orm";
+import { ratings, raters, audioSamples } from "@/lib/db/schema";
 
 interface ExportFilters {
   language?: string;
@@ -59,14 +60,16 @@ function generateCSV(data: any[]) {
     headers
       .map((header) => {
         const value = row[header];
+
         if (value === null || value === undefined) return "";
         if (value instanceof Date) return value.toISOString();
         if (typeof value === "string" && value.includes(",")) {
           return `"${value.replace(/"/g, '""')}"`;
         }
+
         return String(value);
       })
-      .join(",")
+      .join(","),
   );
 
   return [headers.join(","), ...rows].join("\n");
@@ -82,6 +85,7 @@ function generateLatexTable(data: any[]) {
 
   data.forEach((row) => {
     const model = row.model_type;
+
     if (!modelStats[model]) {
       modelStats[model] = { scores: [], n: 0 };
     }
@@ -130,6 +134,7 @@ export async function GET(request: NextRequest) {
   try {
     // Check authentication
     const session = await auth();
+
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -140,8 +145,30 @@ export async function GET(request: NextRequest) {
     const modelType = searchParams.get("modelType") || undefined;
     const startDate = searchParams.get("startDate") || undefined;
     const endDate = searchParams.get("endDate") || undefined;
+    const columnsParam = searchParams.get("columns");
 
-    const data = await getRatingsData({ language, modelType, startDate, endDate });
+    const data = await getRatingsData({
+      language,
+      modelType,
+      startDate,
+      endDate,
+    });
+
+    // Filter columns if specified
+    const filteredData = columnsParam
+      ? data.map((row) => {
+          const selectedColumns = columnsParam.split(",");
+          const newRow: any = {};
+
+          selectedColumns.forEach((col) => {
+            if (Object.prototype.hasOwnProperty.call(row, col)) {
+              newRow[col] = row[col as keyof typeof row];
+            }
+          });
+
+          return newRow;
+        })
+      : data;
 
     let content: string;
     let contentType: string;
@@ -151,12 +178,15 @@ export async function GET(request: NextRequest) {
 
     switch (format) {
       case "json":
-        content = generateJSON(data);
+        content = generateJSON(filteredData);
         contentType = "application/json";
         filename = `mos-ratings-${timestamp}.json`;
         break;
 
       case "latex":
+        // LaTeX generator might fail if required columns (model_type, score) are missing
+        // For now, we pass original data to LaTeX generator as it calculates stats
+        // Or we could disable LaTeX option if required columns are missing in UI
         content = generateLatexTable(data);
         contentType = "text/plain";
         filename = `mos-table-${timestamp}.tex`;
@@ -164,7 +194,7 @@ export async function GET(request: NextRequest) {
 
       case "csv":
       default:
-        content = generateCSV(data);
+        content = generateCSV(filteredData);
         contentType = "text/csv";
         filename = `mos-ratings-${timestamp}.csv`;
         break;
@@ -179,7 +209,11 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Export error:", error);
-    return NextResponse.json({ error: "Failed to export data" }, { status: 500 });
+
+    return NextResponse.json(
+      { error: "Failed to export data" },
+      { status: 500 },
+    );
   }
 }
 
@@ -187,6 +221,7 @@ export async function POST(request: NextRequest) {
   // For stats/summary endpoint
   try {
     const session = await auth();
+
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -194,13 +229,19 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { language, modelType, startDate, endDate } = body;
 
-    const data = await getRatingsData({ language, modelType, startDate, endDate });
+    const data = await getRatingsData({
+      language,
+      modelType,
+      startDate,
+      endDate,
+    });
 
     // Calculate comprehensive statistics
     const modelStats: Record<string, { scores: number[]; n: number }> = {};
 
     data.forEach((row) => {
       const model = row.model_type;
+
       if (!modelStats[model]) {
         modelStats[model] = { scores: [], n: 0 };
       }
@@ -210,7 +251,8 @@ export async function POST(request: NextRequest) {
 
     const stats = Object.entries(modelStats).map(([model, { scores, n }]) => {
       const mean = scores.reduce((a, b) => a + b, 0) / n;
-      const variance = scores.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / n;
+      const variance =
+        scores.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / n;
       const stdDev = Math.sqrt(variance);
       const marginOfError = 1.96 * (stdDev / Math.sqrt(n));
 
@@ -224,7 +266,7 @@ export async function POST(request: NextRequest) {
         min: Math.min(...scores),
         max: Math.max(...scores),
         distribution: [1, 2, 3, 4, 5].map(
-          (score) => scores.filter((s) => s === score).length
+          (score) => scores.filter((s) => s === score).length,
         ),
       };
     });
@@ -236,6 +278,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Stats error:", error);
-    return NextResponse.json({ error: "Failed to get statistics" }, { status: 500 });
+
+    return NextResponse.json(
+      { error: "Failed to get statistics" },
+      { status: 500 },
+    );
   }
 }
