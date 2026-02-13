@@ -57,7 +57,7 @@ export const sessions = pgTable(
     index("idx_sessions_token").on(table.sessionToken),
     index("idx_sessions_rater").on(table.raterId),
     index("idx_sessions_expires").on(table.expiresAt),
-  ]
+  ],
 );
 
 // Audio samples table - stores uploaded audio files
@@ -144,7 +144,7 @@ export const adminUsers = pgTable(
   (table) => [
     index("idx_admin_users_email").on(table.email),
     index("idx_admin_users_username").on(table.username),
-  ]
+  ],
 );
 
 // Password reset tokens
@@ -163,7 +163,7 @@ export const passwordResetTokens = pgTable(
   (table) => [
     index("idx_reset_tokens_token").on(table.token),
     index("idx_reset_tokens_expires").on(table.expiresAt),
-  ]
+  ],
 );
 
 // Admin invitations
@@ -183,7 +183,7 @@ export const adminInvitations = pgTable(
   (table) => [
     index("idx_invitations_token").on(table.token),
     index("idx_invitations_email").on(table.email),
-  ]
+  ],
 );
 
 // Audit action types
@@ -221,7 +221,7 @@ export const auditLogs = pgTable(
     index("idx_audit_logs_admin").on(table.adminId),
     index("idx_audit_logs_action").on(table.action),
     index("idx_audit_logs_timestamp").on(table.timestamp),
-  ]
+  ],
 );
 
 // Backup codes for 2FA
@@ -236,7 +236,7 @@ export const backupCodes = pgTable(
     usedAt: timestamp("used_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => [index("idx_backup_codes_admin").on(table.adminId)]
+  (table) => [index("idx_backup_codes_admin").on(table.adminId)],
 );
 
 // Export logs table - tracks data exports
@@ -251,7 +251,7 @@ export const exportLogs = pgTable("export_logs", {
 });
 
 // Notification types
-export type NotificationType = 
+export type NotificationType =
   | "rater_started"
   | "rater_completed"
   | "samples_uploaded"
@@ -274,7 +274,7 @@ export const notifications = pgTable(
   (table) => [
     index("idx_notifications_read").on(table.isRead),
     index("idx_notifications_created").on(table.createdAt),
-  ]
+  ],
 );
 
 // Access request status types
@@ -289,7 +289,10 @@ export const accessRequests = pgTable(
     email: text("email").notNull(),
     institution: text("institution").notNull(),
     reason: text("reason").notNull(),
-    status: text("status").$type<AccessRequestStatus>().default("pending").notNull(),
+    status: text("status")
+      .$type<AccessRequestStatus>()
+      .default("pending")
+      .notNull(),
     reviewedBy: uuid("reviewed_by").references(() => adminUsers.id),
     reviewedAt: timestamp("reviewed_at"),
     reviewNotes: text("review_notes"),
@@ -298,7 +301,70 @@ export const accessRequests = pgTable(
   (table) => [
     index("idx_access_requests_email").on(table.email),
     index("idx_access_requests_status").on(table.status),
-  ]
+  ],
+);
+
+// AI Models - Dynamic list of models
+export const aiModels = pgTable("ai_models", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(), // e.g., "NeMo"
+  value: text("value").unique().notNull(), // e.g., "nemo"
+  description: text("description"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Languages - Dynamic list of languages
+export const languages = pgTable("languages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  code: text("code").unique().notNull(), // e.g., "luganda"
+  name: text("name").notNull(), // e.g., "Luganda"
+  flag: text("flag").notNull(), // e.g., "🇺🇬"
+  region: text("region"),
+  speakers: text("speakers"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Studies - Configuration for data collection
+export const studies = pgTable("studies", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  samplesPerRater: integer("samples_per_rater").default(20).notNull(),
+  isActive: boolean("is_active").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Study Models - Many-to-Many relation between Studies and AI Models
+export const studyModels = pgTable(
+  "study_models",
+  {
+    studyId: uuid("study_id")
+      .references(() => studies.id, { onDelete: "cascade" })
+      .notNull(),
+    modelId: uuid("model_id")
+      .references(() => aiModels.id, { onDelete: "cascade" })
+      .notNull(),
+  },
+  (table) => [
+    { pk: [table.studyId, table.modelId] }, // Composite primary key
+  ],
+);
+
+// Study Languages - Many-to-Many relation between Studies and Languages
+export const studyLanguages = pgTable(
+  "study_languages",
+  {
+    studyId: uuid("study_id")
+      .references(() => studies.id, { onDelete: "cascade" })
+      .notNull(),
+    languageId: uuid("language_id")
+      .references(() => languages.id, { onDelete: "cascade" })
+      .notNull(),
+  },
+  (table) => [
+    { pk: [table.studyId, table.languageId] }, // Composite primary key
+  ],
 );
 
 // Type exports for use in application
@@ -328,3 +394,13 @@ export type AccessRequest = typeof accessRequests.$inferSelect;
 export type NewAccessRequest = typeof accessRequests.$inferInsert;
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
+export type AiModel = typeof aiModels.$inferSelect;
+export type NewAiModel = typeof aiModels.$inferInsert;
+export type Language = typeof languages.$inferSelect;
+export type NewLanguage = typeof languages.$inferInsert;
+export type Study = typeof studies.$inferSelect;
+export type NewStudy = typeof studies.$inferInsert;
+export type StudyModel = typeof studyModels.$inferSelect;
+export type NewStudyModel = typeof studyModels.$inferInsert;
+export type StudyLanguage = typeof studyLanguages.$inferSelect;
+export type NewStudyLanguage = typeof studyLanguages.$inferInsert;
