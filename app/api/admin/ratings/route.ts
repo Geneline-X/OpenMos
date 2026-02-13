@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { eq, desc, count, avg, gte } from "drizzle-orm";
+
 import { db } from "@/lib/db";
 import { ratings, audioSamples, raters } from "@/lib/db/schema";
-import { eq, desc, count, avg, and, gte } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,9 +31,7 @@ export async function GET(request: NextRequest) {
       .offset(offset);
 
     // Get totals
-    const [totalResult] = await db
-      .select({ count: count() })
-      .from(ratings);
+    const [totalResult] = await db.select({ count: count() }).from(ratings);
 
     const [avgResult] = await db
       .select({ avg: avg(ratings.score) })
@@ -44,6 +43,7 @@ export async function GET(request: NextRequest) {
 
     // Get today's count
     const today = new Date();
+
     today.setHours(0, 0, 0, 0);
     const [todayResult] = await db
       .select({ count: count() })
@@ -53,9 +53,12 @@ export async function GET(request: NextRequest) {
     // Format the response
     const formattedRatings = ratingsData.map((r) => {
       const timeAgo = getTimeAgo(r.timestamp);
+
       return {
         id: r.id,
-        sample: r.sampleId ? `${r.language?.slice(0, 3)}_${r.modelType}_${r.sampleId.slice(0, 3)}` : "Unknown",
+        sample: r.sampleId
+          ? `${r.language?.slice(0, 3)}_${r.modelType}_${r.sampleId.slice(0, 3)}`
+          : "Unknown",
         model: r.modelType || "Unknown",
         score: r.score,
         rater: `#${r.raterId?.slice(-2) || "??"}`,
@@ -68,24 +71,29 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       ratings: formattedRatings,
       total: totalResult?.count || 0,
-      avgScore: avgResult?.avg ? parseFloat(avgResult.avg as string).toFixed(2) : "0.00",
-      avgTime: avgTimeResult?.avg ? `${Math.round(Number(avgTimeResult.avg) / 1000)}s` : "0s",
+      avgScore: avgResult?.avg
+        ? parseFloat(avgResult.avg as string).toFixed(2)
+        : "0.00",
+      avgTime: avgTimeResult?.avg
+        ? `${Math.round(Number(avgTimeResult.avg) / 1000)}s`
+        : "0s",
       today: todayResult?.count || 0,
       limit,
       offset,
     });
   } catch (error) {
     console.error("Ratings fetch error:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch ratings" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 function getTimeAgo(date: Date | null): string {
   if (!date) return "Unknown";
-  
+
   const now = new Date();
   const diffMs = now.getTime() - new Date(date).getTime();
   const diffMins = Math.floor(diffMs / 60000);
@@ -96,5 +104,6 @@ function getTimeAgo(date: Date | null): string {
   if (diffMins < 60) return `${diffMins} min ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
+
   return new Date(date).toLocaleDateString();
 }

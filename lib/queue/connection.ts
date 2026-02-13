@@ -25,6 +25,7 @@ function getRedisOptions(): RedisOptions {
       // URL format - parse it
       try {
         const url = new URL(redisUrl);
+
         options.host = url.hostname;
         options.port = parseInt(url.port) || 6379;
         if (url.password) {
@@ -36,12 +37,14 @@ function getRedisOptions(): RedisOptions {
       } catch {
         // If URL parsing fails, try as host:port
         const [host, port] = redisUrl.split(":");
+
         options.host = host;
         options.port = parseInt(port) || 6379;
       }
     } else {
       // Just host:port format
       const [host, port] = redisUrl.split(":");
+
       options.host = host;
       options.port = parseInt(port) || 6379;
     }

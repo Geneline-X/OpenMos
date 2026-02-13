@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { eq, and, gt } from "drizzle-orm";
+
 import { db } from "@/lib/db";
 import { sessions } from "@/lib/db/schema";
-import { eq, and, gt } from "drizzle-orm";
 
 export async function POST(request: Request) {
   try {
@@ -10,7 +11,7 @@ export async function POST(request: Request) {
     if (!sessionToken || currentSampleIndex === undefined) {
       return NextResponse.json(
         { success: false, error: "Session token and sample index required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -24,15 +25,15 @@ export async function POST(request: Request) {
       .where(
         and(
           eq(sessions.sessionToken, sessionToken),
-          gt(sessions.expiresAt, new Date())
-        )
+          gt(sessions.expiresAt, new Date()),
+        ),
       )
       .returning();
 
     if (!updatedSession) {
       return NextResponse.json(
         { success: false, error: "Session not found or expired" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -46,9 +47,10 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Error updating progress:", error);
+
     return NextResponse.json(
       { success: false, error: "Failed to update progress" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

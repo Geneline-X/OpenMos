@@ -27,6 +27,7 @@ export function usePagination<T>({
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
+
     return data.slice(startIndex, endIndex);
   }, [data, currentPage, itemsPerPage]);
 
@@ -47,6 +48,7 @@ export function usePagination<T>({
 
   const goToPage = (page: number) => {
     const pageNumber = Math.max(1, Math.min(page, totalPages));
+
     setCurrentPage(pageNumber);
   };
 

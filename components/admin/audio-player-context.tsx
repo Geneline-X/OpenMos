@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, useContext, useState, useRef, useCallback, useEffect, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  type ReactNode,
+} from "react";
 
 interface AudioTrack {
   id: string;
@@ -15,11 +23,11 @@ interface AudioPlayerContextType {
   isPlaying: boolean;
   currentTime: number;
   duration: number;
-  
+
   // Player visibility
   isVisible: boolean;
   isMinimized: boolean;
-  
+
   // Actions
   playTrack: (track: AudioTrack) => void;
   pause: () => void;
@@ -38,9 +46,11 @@ const AudioPlayerContext = createContext<AudioPlayerContextType | null>(null);
 
 export function useAudioPlayer() {
   const context = useContext(AudioPlayerContext);
+
   if (!context) {
     throw new Error("useAudioPlayer must be used within AudioPlayerProvider");
   }
+
   return context;
 }
 
@@ -50,7 +60,7 @@ interface AudioPlayerProviderProps {
 
 export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  
+
   const [currentTrack, setCurrentTrack] = useState<AudioTrack | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -61,54 +71,58 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   // Initialize audio element
   useEffect(() => {
     audioRef.current = new Audio();
-    
+
     const audio = audioRef.current;
-    
+
     audio.addEventListener("timeupdate", () => {
       setCurrentTime(audio.currentTime);
     });
-    
+
     audio.addEventListener("loadedmetadata", () => {
       setDuration(audio.duration);
     });
-    
+
     audio.addEventListener("ended", () => {
       setIsPlaying(false);
     });
-    
+
     audio.addEventListener("play", () => {
       setIsPlaying(true);
     });
-    
+
     audio.addEventListener("pause", () => {
       setIsPlaying(false);
     });
-    
+
     return () => {
       audio.pause();
       audio.src = "";
     };
   }, []);
 
-  const playTrack = useCallback((track: AudioTrack) => {
-    if (!audioRef.current) return;
-    
-    // If same track, just resume
-    if (currentTrack?.id === track.id && currentTrack?.url === track.url) {
+  const playTrack = useCallback(
+    (track: AudioTrack) => {
+      if (!audioRef.current) return;
+
+      // If same track, just resume
+      if (currentTrack?.id === track.id && currentTrack?.url === track.url) {
+        audioRef.current.play();
+        setIsVisible(true);
+        setIsMinimized(false);
+
+        return;
+      }
+
+      // New track
+      setCurrentTrack(track);
+      audioRef.current.src = track.url;
+      audioRef.current.load();
       audioRef.current.play();
       setIsVisible(true);
       setIsMinimized(false);
-      return;
-    }
-    
-    // New track
-    setCurrentTrack(track);
-    audioRef.current.src = track.url;
-    audioRef.current.load();
-    audioRef.current.play();
-    setIsVisible(true);
-    setIsMinimized(false);
-  }, [currentTrack]);
+    },
+    [currentTrack],
+  );
 
   const pause = useCallback(() => {
     audioRef.current?.pause();
@@ -126,21 +140,33 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     }
   }, [isPlaying, pause, resume]);
 
-  const seek = useCallback((time: number) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = Math.max(0, Math.min(time, duration));
-    }
-  }, [duration]);
+  const seek = useCallback(
+    (time: number) => {
+      if (audioRef.current) {
+        audioRef.current.currentTime = Math.max(0, Math.min(time, duration));
+      }
+    },
+    [duration],
+  );
 
-  const skipForward = useCallback((seconds = 5) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = Math.min(audioRef.current.currentTime + seconds, duration);
-    }
-  }, [duration]);
+  const skipForward = useCallback(
+    (seconds = 5) => {
+      if (audioRef.current) {
+        audioRef.current.currentTime = Math.min(
+          audioRef.current.currentTime + seconds,
+          duration,
+        );
+      }
+    },
+    [duration],
+  );
 
   const skipBackward = useCallback((seconds = 5) => {
     if (audioRef.current) {
-      audioRef.current.currentTime = Math.max(audioRef.current.currentTime - seconds, 0);
+      audioRef.current.currentTime = Math.max(
+        audioRef.current.currentTime - seconds,
+        0,
+      );
     }
   }, []);
 

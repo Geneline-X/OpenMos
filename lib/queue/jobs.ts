@@ -1,10 +1,3 @@
-import {
-  emailQueue,
-  evaluationQueue,
-  auditQueue,
-  cleanupQueue,
-  reportQueue,
-} from "./queues";
 import type {
   EmailJobData,
   EvaluationJobData,
@@ -13,6 +6,14 @@ import type {
   ReportJobData,
 } from "./types";
 
+import {
+  emailQueue,
+  evaluationQueue,
+  auditQueue,
+  cleanupQueue,
+  reportQueue,
+} from "./queues";
+
 // ============================================
 // JOB HELPERS - Use these to add jobs to queues
 // ============================================
@@ -20,7 +21,10 @@ import type {
 /**
  * Send an email asynchronously
  */
-export async function queueEmail(data: EmailJobData, options?: { delay?: number }) {
+export async function queueEmail(
+  data: EmailJobData,
+  options?: { delay?: number },
+) {
   return emailQueue.add(`email:${data.type}`, data, {
     delay: options?.delay,
   });
@@ -45,7 +49,7 @@ export async function queueInvitationEmail(
   email: string,
   inviteUrl: string,
   inviterName: string,
-  role: string
+  role: string,
 ) {
   return queueEmail({
     type: "invitation",
@@ -63,7 +67,7 @@ export async function queueAccessRequestNotification(
   requesterName: string,
   requesterEmail: string,
   institution: string,
-  reason: string
+  reason: string,
 ) {
   return queueEmail({
     type: "access-request",
@@ -94,7 +98,7 @@ export async function queueSessionFinalization(sessionId: string) {
     },
     {
       delay: 5000, // Wait 5 seconds to batch any last ratings
-    }
+    },
   );
 }
 
@@ -108,7 +112,10 @@ export async function queueAuditLog(data: AuditJobData) {
 /**
  * Schedule a cleanup job
  */
-export async function queueCleanup(data: CleanupJobData, options?: { delay?: number }) {
+export async function queueCleanup(
+  data: CleanupJobData,
+  options?: { delay?: number },
+) {
   return cleanupQueue.add(`cleanup:${data.type}`, data, {
     delay: options?.delay,
   });
@@ -120,6 +127,7 @@ export async function queueCleanup(data: CleanupJobData, options?: { delay?: num
 export async function scheduleSessionCleanup() {
   // Remove existing scheduled job if any
   const existingJobs = await cleanupQueue.getRepeatableJobs();
+
   for (const job of existingJobs) {
     if (job.name === "cleanup:expire-sessions") {
       await cleanupQueue.removeRepeatableByKey(job.key);
@@ -134,7 +142,7 @@ export async function scheduleSessionCleanup() {
       repeat: {
         pattern: "0 3 * * *", // Cron: 3 AM daily
       },
-    }
+    },
   );
 }
 
@@ -151,7 +159,7 @@ export async function queueReport(data: ReportJobData) {
 export async function queueEvaluationExport(
   requestedBy: string,
   filters?: ReportJobData["filters"],
-  format: "csv" | "json" = "csv"
+  format: "csv" | "json" = "csv",
 ) {
   return queueReport({
     type: "export-evaluations",

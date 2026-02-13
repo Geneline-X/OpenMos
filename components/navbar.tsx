@@ -24,20 +24,20 @@ export const Navbar = () => {
 
   return (
     <HeroUINavbar
-      maxWidth="xl"
-      position="sticky"
-      isMenuOpen={isMenuOpen}
-      onMenuOpenChange={setIsMenuOpen}
       classNames={{
         base: "bg-background/80 backdrop-blur-lg border-b border-default-200",
       }}
+      isMenuOpen={isMenuOpen}
+      maxWidth="xl"
+      position="sticky"
+      onMenuOpenChange={setIsMenuOpen}
     >
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
         <NavbarBrand as="li" className="gap-2 max-w-fit">
           <NextLink className="flex justify-start items-center gap-2" href="/">
             <Icon
-              icon="solar:soundwave-bold-duotone"
               className="w-8 h-8 text-primary"
+              icon="solar:soundwave-bold-duotone"
             />
             <p className="font-bold text-inherit text-lg">OpenMOS</p>
           </NextLink>
@@ -48,7 +48,7 @@ export const Navbar = () => {
               <NextLink
                 className={clsx(
                   linkStyles({ color: "foreground" }),
-                  "data-[active=true]:text-primary data-[active=true]:font-medium"
+                  "data-[active=true]:text-primary data-[active=true]:font-medium",
                 )}
                 color="foreground"
                 href={item.href}
@@ -68,10 +68,10 @@ export const Navbar = () => {
           <Link
             isExternal
             aria-label="GitHub"
-            href={siteConfig.links.github}
             className="text-default-500 hover:text-primary"
+            href={siteConfig.links.github}
           >
-            <Icon icon="solar:code-linear" className="w-5 h-5" />
+            <Icon className="w-5 h-5" icon="solar:code-linear" />
           </Link>
           <ThemeSwitch />
         </NavbarItem>
@@ -83,9 +83,9 @@ export const Navbar = () => {
           aria-label={isMenuOpen ? "Close menu" : "Open menu"}
           icon={(isOpen) =>
             isOpen ? (
-              <Icon icon="solar:close-circle-linear" className="w-6 h-6" />
+              <Icon className="w-6 h-6" icon="solar:close-circle-linear" />
             ) : (
-              <Icon icon="solar:hamburger-menu-linear" className="w-6 h-6" />
+              <Icon className="w-6 h-6" icon="solar:hamburger-menu-linear" />
             )
           }
         />
@@ -113,7 +113,7 @@ export const Navbar = () => {
             href={siteConfig.links.github}
             size="lg"
           >
-            <Icon icon="solar:code-linear" className="w-5 h-5" />
+            <Icon className="w-5 h-5" icon="solar:code-linear" />
             GitHub
           </Link>
         </NavbarMenuItem>

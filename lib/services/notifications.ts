@@ -44,7 +44,11 @@ export const NotificationService = {
   /**
    * Create notification when a rater completes all ratings
    */
-  async raterCompleted(raterId: string, language: string, totalRatings: number) {
+  async raterCompleted(
+    raterId: string,
+    language: string,
+    totalRatings: number,
+  ) {
     return createNotification({
       type: "rater_completed",
       title: "Evaluation Completed",

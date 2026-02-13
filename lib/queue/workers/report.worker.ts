@@ -1,22 +1,26 @@
+import type { ReportJobData } from "../types";
+
 import { Worker, Job } from "bullmq";
+import { eq, sql, gte, lte, and } from "drizzle-orm";
+
 import { createConnection } from "../connection";
+
 import { db } from "@/lib/db";
 import { ratings, evaluationSessions, audioSamples } from "@/lib/db/schema";
-import { eq, sql, gte, lte, and } from "drizzle-orm";
-import type { ReportJobData } from "../types";
 
 export function createReportWorker() {
   const worker = new Worker<ReportJobData>(
     "report",
     async (job: Job<ReportJobData>) => {
       const { type, requestedBy, filters, format = "json" } = job.data;
-      
+
       console.log(`📊 Processing report job: ${type}`);
-      
+
       switch (type) {
         case "export-evaluations": {
           // Build query with filters
           const conditions = [];
+
           if (filters?.startDate) {
             conditions.push(gte(ratings.timestamp, filters.startDate));
           }
@@ -44,20 +48,24 @@ export function createReportWorker() {
 
           // Format based on requested format
           let output: string;
+
           if (format === "csv") {
             const headers = Object.keys(data[0] || {}).join(",");
             const rows = data.map((row) => Object.values(row).join(","));
+
             output = [headers, ...rows].join("\n");
           } else {
             output = JSON.stringify(data, null, 2);
           }
 
           // TODO: Save to file storage and notify user
-          console.log(`Generated ${format.toUpperCase()} export with ${data.length} rows`);
-          
-          return { 
-            generated: true, 
-            rowCount: data.length, 
+          console.log(
+            `Generated ${format.toUpperCase()} export with ${data.length} rows`,
+          );
+
+          return {
+            generated: true,
+            rowCount: data.length,
             format,
             // In production: return file URL
           };
@@ -117,7 +125,12 @@ export function createReportWorker() {
             })
             .from(ratings)
             .leftJoin(audioSamples, eq(ratings.audioId, audioSamples.id))
-            .groupBy(ratings.audioId, audioSamples.fileUrl, audioSamples.language, audioSamples.modelType)
+            .groupBy(
+              ratings.audioId,
+              audioSamples.fileUrl,
+              audioSamples.language,
+              audioSamples.modelType,
+            )
             .orderBy(sql`AVG(${ratings.score}) DESC`);
 
           return { generated: true, samples: sampleStats };
@@ -145,7 +158,7 @@ export function createReportWorker() {
     {
       connection: createConnection(),
       concurrency: 2, // Limit concurrent reports
-    }
+    },
   );
 
   worker.on("completed", (job) => {

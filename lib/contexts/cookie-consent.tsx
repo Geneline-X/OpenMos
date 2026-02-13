@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import Cookies from "js-cookie";
 
 export type CookieConsent = {
@@ -28,12 +34,18 @@ const defaultConsent: CookieConsent = {
   research: false,
 };
 
-const CookieConsentContext = createContext<CookieConsentContextType | undefined>(undefined);
+const CookieConsentContext = createContext<
+  CookieConsentContextType | undefined
+>(undefined);
 
 const COOKIE_NAME = "openmos_consent";
 const COOKIE_EXPIRY = 365; // days
 
-export function CookieConsentProvider({ children }: { children: React.ReactNode }) {
+export function CookieConsentProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [consent, setConsent] = useState<CookieConsent | null>(null);
   const [showBanner, setShowBanner] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -42,10 +54,11 @@ export function CookieConsentProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     setMounted(true);
     const savedConsent = Cookies.get(COOKIE_NAME);
-    
+
     if (savedConsent) {
       try {
         const parsed = JSON.parse(savedConsent) as CookieConsent;
+
         setConsent({ ...parsed, essential: true }); // Essential always true
         setShowBanner(false);
       } catch {
@@ -58,7 +71,8 @@ export function CookieConsentProvider({ children }: { children: React.ReactNode 
 
   const saveConsent = useCallback((newConsent: CookieConsent) => {
     const consentToSave = { ...newConsent, essential: true };
-    Cookies.set(COOKIE_NAME, JSON.stringify(consentToSave), { 
+
+    Cookies.set(COOKIE_NAME, JSON.stringify(consentToSave), {
       expires: COOKIE_EXPIRY,
       sameSite: "strict",
     });
@@ -86,9 +100,12 @@ export function CookieConsentProvider({ children }: { children: React.ReactNode 
     });
   }, [saveConsent]);
 
-  const savePreferences = useCallback((preferences: CookieConsent) => {
-    saveConsent(preferences);
-  }, [saveConsent]);
+  const savePreferences = useCallback(
+    (preferences: CookieConsent) => {
+      saveConsent(preferences);
+    },
+    [saveConsent],
+  );
 
   const withdrawConsent = useCallback(() => {
     Cookies.remove(COOKIE_NAME);
@@ -124,7 +141,7 @@ export function CookieConsentProvider({ children }: { children: React.ReactNode 
 
 export function useCookieConsent() {
   const context = useContext(CookieConsentContext);
-  
+
   // During SSR or if used outside provider, return safe defaults
   if (context === undefined) {
     return {
@@ -138,5 +155,6 @@ export function useCookieConsent() {
       withdrawConsent: () => {},
     };
   }
+
   return context;
 }

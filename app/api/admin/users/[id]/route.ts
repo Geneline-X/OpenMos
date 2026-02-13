@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { adminUsers, auditLogs } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -37,12 +38,13 @@ export async function PATCH(
     if (targetUser.role === "owner") {
       return NextResponse.json(
         { error: "Cannot modify owner account" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Prepare updates
     const updates: Record<string, unknown> = {};
+
     if (typeof isActive === "boolean") updates.isActive = isActive;
     if (role && ["admin", "researcher", "viewer"].includes(role)) {
       updates.role = role;
@@ -71,9 +73,10 @@ export async function PATCH(
     return NextResponse.json({ success: true, user: updatedUser });
   } catch (error) {
     console.error("Error updating user:", error);
+
     return NextResponse.json(
       { error: "Failed to update user" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

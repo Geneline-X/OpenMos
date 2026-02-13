@@ -12,9 +12,7 @@ export default function EvaluateLayout({
 }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-default-50">
-      <main className="container mx-auto max-w-lg px-4 py-4">
-        {children}
-      </main>
+      <main className="container mx-auto max-w-lg px-4 py-4">{children}</main>
     </div>
   );
 }

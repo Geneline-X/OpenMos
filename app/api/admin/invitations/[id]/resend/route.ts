@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { adminInvitations } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { generateInviteToken, getInviteTokenExpiry } from "@/lib/auth/utils";
 
 // POST - Resend invitation
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -38,7 +39,7 @@ export async function POST(
     if (!updatedInvite) {
       return NextResponse.json(
         { error: "Invitation not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -53,9 +54,10 @@ export async function POST(
     });
   } catch (error) {
     console.error("Error resending invitation:", error);
+
     return NextResponse.json(
       { error: "Failed to resend invitation" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

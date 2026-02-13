@@ -3,7 +3,14 @@
 import { useState, useEffect } from "react";
 import { Card, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@heroui/table";
+import {
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@heroui/table";
 import { Chip } from "@heroui/chip";
 import { Spinner } from "@heroui/spinner";
 import { Tooltip } from "@heroui/tooltip";
@@ -13,10 +20,11 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  useDisclosure
+  useDisclosure,
 } from "@heroui/modal";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
+
 import { useAudioPlayer } from "@/components/admin/audio-player-context";
 import { usePagination } from "@/hooks/usePagination";
 
@@ -54,6 +62,7 @@ export default function SamplesPage() {
     try {
       const res = await fetch("/api/admin/samples");
       const data = await res.json();
+
       setSamples(data.samples || []);
       setTotal(data.total || 0);
     } catch (error) {
@@ -93,6 +102,7 @@ export default function SamplesPage() {
         setTotal((prev) => prev - 1);
       } else {
         const error = await res.json();
+
         console.error("Failed to delete sample:", error);
       }
     } catch (error) {
@@ -113,9 +123,9 @@ export default function SamplesPage() {
         </div>
         <Button
           as={Link}
-          href="/admin/upload"
           color="primary"
-          startContent={<Icon icon="solar:upload-bold" className="h-4 w-4" />}
+          href="/admin/upload"
+          startContent={<Icon className="h-4 w-4" icon="solar:upload-bold" />}
         >
           Upload Samples
         </Button>
@@ -129,13 +139,16 @@ export default function SamplesPage() {
             </div>
           ) : samples.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 text-center">
-              <Icon icon="solar:soundwave-bold-duotone" className="h-12 w-12 text-default-300 mb-4" />
+              <Icon
+                className="h-12 w-12 text-default-300 mb-4"
+                icon="solar:soundwave-bold-duotone"
+              />
               <p className="text-default-500">No audio samples uploaded yet</p>
               <Button
                 as={Link}
-                href="/admin/upload"
-                color="primary"
                 className="mt-4"
+                color="primary"
+                href="/admin/upload"
               >
                 Upload First Sample
               </Button>
@@ -156,7 +169,10 @@ export default function SamplesPage() {
                   <TableRow key={sample.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Icon icon="solar:soundwave-bold-duotone" className="h-4 w-4 text-primary" />
+                        <Icon
+                          className="h-4 w-4 text-primary"
+                          icon="solar:soundwave-bold-duotone"
+                        />
                         {sample.model}
                       </div>
                     </TableCell>
@@ -165,7 +181,6 @@ export default function SamplesPage() {
                     <TableCell>{sample.ratings}</TableCell>
                     <TableCell>
                       <Chip
-                        size="sm"
                         color={
                           sample.avgScore !== "N/A"
                             ? parseFloat(sample.avgScore) >= 4
@@ -175,12 +190,17 @@ export default function SamplesPage() {
                                 : "danger"
                             : "default"
                         }
+                        size="sm"
                       >
                         {sample.avgScore}
                       </Chip>
                     </TableCell>
                     <TableCell>
-                      <Chip size="sm" variant="flat" color={sample.isActive ? "success" : "default"}>
+                      <Chip
+                        color={sample.isActive ? "success" : "default"}
+                        size="sm"
+                        variant="flat"
+                      >
                         {sample.isActive ? "active" : "inactive"}
                       </Chip>
                     </TableCell>
@@ -189,9 +209,13 @@ export default function SamplesPage() {
                         <Tooltip content="Play">
                           <Button
                             isIconOnly
+                            color={
+                              currentTrack?.id === sample.id && isPlaying
+                                ? "primary"
+                                : "default"
+                            }
                             size="sm"
                             variant="light"
-                            color={currentTrack?.id === sample.id && isPlaying ? "primary" : "default"}
                             onPress={() => {
                               playTrack({
                                 id: sample.id,
@@ -202,21 +226,28 @@ export default function SamplesPage() {
                             }}
                           >
                             <Icon
-                              icon={currentTrack?.id === sample.id && isPlaying ? "solar:pause-bold" : "solar:play-bold"}
                               className="h-4 w-4"
+                              icon={
+                                currentTrack?.id === sample.id && isPlaying
+                                  ? "solar:pause-bold"
+                                  : "solar:play-bold"
+                              }
                             />
                           </Button>
                         </Tooltip>
-                        <Tooltip content="Delete" color="danger">
+                        <Tooltip color="danger" content="Delete">
                           <Button
                             isIconOnly
-                            size="sm"
-                            variant="light"
                             color="danger"
                             isLoading={deletingSampleId === sample.id}
+                            size="sm"
+                            variant="light"
                             onPress={() => handleDeleteClick(sample)}
                           >
-                            <Icon icon="solar:trash-bin-trash-bold" className="h-4 w-4" />
+                            <Icon
+                              className="h-4 w-4"
+                              icon="solar:trash-bin-trash-bold"
+                            />
                           </Button>
                         </Tooltip>
                       </div>
@@ -236,21 +267,27 @@ export default function SamplesPage() {
               <div className="flex items-center gap-2">
                 <Button
                   isIconOnly
+                  isDisabled={!hasPrev}
                   size="sm"
                   variant="flat"
-                  isDisabled={!hasPrev}
                   onPress={prevPage}
                 >
-                  <Icon icon="solar:alt-arrow-left-linear" className="h-4 w-4" />
+                  <Icon
+                    className="h-4 w-4"
+                    icon="solar:alt-arrow-left-linear"
+                  />
                 </Button>
                 <Button
                   isIconOnly
+                  isDisabled={!hasNext}
                   size="sm"
                   variant="flat"
-                  isDisabled={!hasNext}
                   onPress={nextPage}
                 >
-                  <Icon icon="solar:alt-arrow-right-linear" className="h-4 w-4" />
+                  <Icon
+                    className="h-4 w-4"
+                    icon="solar:alt-arrow-right-linear"
+                  />
                 </Button>
               </div>
             </div>
@@ -259,11 +296,14 @@ export default function SamplesPage() {
       </Card>
 
       {/* Delete Confirmation Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="sm">
+      <Modal isOpen={isOpen} size="sm" onClose={onClose}>
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <Icon icon="solar:trash-bin-trash-bold-duotone" className="h-5 w-5 text-danger" />
+              <Icon
+                className="h-5 w-5 text-danger"
+                icon="solar:trash-bin-trash-bold-duotone"
+              />
               Delete Audio Sample
             </div>
           </ModalHeader>
@@ -279,7 +319,8 @@ export default function SamplesPage() {
                 </p>
                 {sampleToDelete.ratings > 0 && (
                   <p className="text-sm text-warning mt-1">
-                    ⚠️ This will also delete {sampleToDelete.ratings} associated rating(s)
+                    ⚠️ This will also delete {sampleToDelete.ratings} associated
+                    rating(s)
                   </p>
                 )}
               </div>
@@ -291,8 +332,8 @@ export default function SamplesPage() {
             </Button>
             <Button
               color="danger"
-              onPress={handleDeleteConfirm}
               isLoading={deletingSampleId !== null}
+              onPress={handleDeleteConfirm}
             >
               Delete
             </Button>

@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
 import { Spinner } from "@heroui/spinner";
+
 import { AuthModal } from "./auth-modal";
 
 interface ProtectedPageWrapperProps {
@@ -12,7 +13,11 @@ interface ProtectedPageWrapperProps {
   requiredRole?: "viewer" | "researcher" | "admin" | "owner";
 }
 
-type AuthState = "loading" | "unauthenticated" | "authenticating" | "authenticated";
+type AuthState =
+  | "loading"
+  | "unauthenticated"
+  | "authenticating"
+  | "authenticated";
 
 export function ProtectedPageWrapper({
   children,
@@ -30,6 +35,7 @@ export function ProtectedPageWrapper({
   const hasRequiredRole = (userRole: string) => {
     const userLevel = roleHierarchy.indexOf(userRole);
     const requiredLevel = roleHierarchy.indexOf(requiredRole);
+
     return userLevel >= requiredLevel;
   };
 
@@ -68,7 +74,7 @@ export function ProtectedPageWrapper({
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
         <div className="flex flex-col items-center gap-4">
-          <Spinner size="lg" color="primary" />
+          <Spinner color="primary" size="lg" />
           <p className="text-default-500">Loading...</p>
         </div>
       </div>
@@ -83,16 +89,18 @@ export function ProtectedPageWrapper({
           <div className="relative">
             <div className="p-4 rounded-full bg-success/10 animate-pulse">
               <Icon
-                icon="solar:check-circle-bold-duotone"
                 className="w-16 h-16 text-success"
+                icon="solar:check-circle-bold-duotone"
               />
             </div>
           </div>
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-success">Welcome back!</h2>
+            <h2 className="text-xl font-semibold text-success">
+              Welcome back!
+            </h2>
             <p className="text-default-500 mt-1">Preparing your dashboard...</p>
           </div>
-          <Spinner size="sm" color="success" />
+          <Spinner color="success" size="sm" />
         </div>
       </div>
     );
@@ -109,8 +117,8 @@ export function ProtectedPageWrapper({
         <div className="max-w-md w-full bg-content1 rounded-2xl shadow-xl p-8 text-center">
           <div className="p-4 rounded-full bg-danger/10 w-fit mx-auto mb-4">
             <Icon
-              icon="solar:shield-warning-bold-duotone"
               className="w-12 h-12 text-danger"
+              icon="solar:shield-warning-bold-duotone"
             />
           </div>
           <h2 className="text-2xl font-bold">Access Denied</h2>
@@ -119,10 +127,12 @@ export function ProtectedPageWrapper({
           </p>
           <div className="mt-4 p-3 rounded-lg bg-default-100">
             <p className="text-sm text-default-600">
-              Your role: <strong className="capitalize">{session.user.role}</strong>
+              Your role:{" "}
+              <strong className="capitalize">{session.user.role}</strong>
             </p>
             <p className="text-sm text-default-600">
-              Required: <strong className="capitalize">{requiredRole}</strong> or higher
+              Required: <strong className="capitalize">{requiredRole}</strong>{" "}
+              or higher
             </p>
           </div>
           <p className="text-sm text-default-400 mt-4">
@@ -148,9 +158,9 @@ export function ProtectedPageWrapper({
 
       {/* Auth Modal - shows when unauthenticated */}
       <AuthModal
+        callbackUrl={pathname}
         isOpen={authState === "unauthenticated"}
         onSuccess={handleAuthSuccess}
-        callbackUrl={pathname}
       />
     </div>
   );

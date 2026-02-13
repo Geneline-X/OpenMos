@@ -33,12 +33,18 @@ interface EvaluatorSessionContextType {
   refreshSession: () => Promise<void>;
 }
 
-const EvaluatorSessionContext = createContext<EvaluatorSessionContextType | undefined>(undefined);
+const EvaluatorSessionContext = createContext<
+  EvaluatorSessionContextType | undefined
+>(undefined);
 
 const SESSION_COOKIE_NAME = "openmos_session";
 const SESSION_STORAGE_KEY = "openmos_session_data";
 
-export function EvaluatorSessionProvider({ children }: { children: ReactNode }) {
+export function EvaluatorSessionProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const [session, setSession] = useState<EvaluatorSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -47,7 +53,7 @@ export function EvaluatorSessionProvider({ children }: { children: ReactNode }) 
     const loadSession = async () => {
       try {
         const sessionToken = Cookies.get(SESSION_COOKIE_NAME);
-        
+
         if (sessionToken) {
           // Try to validate session with server
           const response = await fetch("/api/sessions/validate", {
@@ -58,9 +64,13 @@ export function EvaluatorSessionProvider({ children }: { children: ReactNode }) 
 
           if (response.ok) {
             const data = await response.json();
+
             setSession(data.session);
             // Backup to localStorage
-            localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(data.session));
+            localStorage.setItem(
+              SESSION_STORAGE_KEY,
+              JSON.stringify(data.session),
+            );
           } else {
             // Session invalid, clear it
             clearSessionData();
@@ -68,6 +78,7 @@ export function EvaluatorSessionProvider({ children }: { children: ReactNode }) 
         } else {
           // Try localStorage backup
           const storedSession = localStorage.getItem(SESSION_STORAGE_KEY);
+
           if (storedSession) {
             const parsed = JSON.parse(storedSession) as EvaluatorSession;
             // Validate the stored session
@@ -79,6 +90,7 @@ export function EvaluatorSessionProvider({ children }: { children: ReactNode }) 
 
             if (response.ok) {
               const data = await response.json();
+
               setSession(data.session);
               // Restore cookie
               Cookies.set(SESSION_COOKIE_NAME, parsed.sessionToken, {
@@ -108,83 +120,93 @@ export function EvaluatorSessionProvider({ children }: { children: ReactNode }) 
     setSession(null);
   };
 
-  const startNewSession = useCallback(async (): Promise<EvaluatorSession | null> => {
-    try {
-      const response = await fetch("/api/sessions/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+  const startNewSession =
+    useCallback(async (): Promise<EvaluatorSession | null> => {
+      try {
+        const response = await fetch("/api/sessions/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
 
-      if (!response.ok) {
-        throw new Error("Failed to create session");
+        if (!response.ok) {
+          throw new Error("Failed to create session");
+        }
+
+        const data = await response.json();
+        const newSession: EvaluatorSession = data.session;
+
+        // Set cookie
+        Cookies.set(SESSION_COOKIE_NAME, newSession.sessionToken, {
+          expires: 7,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+        });
+
+        // Backup to localStorage
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(newSession));
+
+        setSession(newSession);
+
+        return newSession;
+      } catch (error) {
+        console.error("Error creating session:", error);
+
+        return null;
       }
+    }, []);
 
-      const data = await response.json();
-      const newSession: EvaluatorSession = data.session;
+  const resumeSession =
+    useCallback(async (): Promise<EvaluatorSession | null> => {
+      if (!session) return null;
 
-      // Set cookie
-      Cookies.set(SESSION_COOKIE_NAME, newSession.sessionToken, {
-        expires: 7,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-      });
+      try {
+        const response = await fetch("/api/sessions/resume", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionToken: session.sessionToken }),
+        });
 
-      // Backup to localStorage
-      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(newSession));
+        if (!response.ok) {
+          throw new Error("Failed to resume session");
+        }
 
-      setSession(newSession);
-      return newSession;
-    } catch (error) {
-      console.error("Error creating session:", error);
-      return null;
-    }
-  }, []);
+        const data = await response.json();
 
-  const resumeSession = useCallback(async (): Promise<EvaluatorSession | null> => {
-    if (!session) return null;
+        setSession(data.session);
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(data.session));
 
-    try {
-      const response = await fetch("/api/sessions/resume", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionToken: session.sessionToken }),
-      });
+        return data.session;
+      } catch (error) {
+        console.error("Error resuming session:", error);
 
-      if (!response.ok) {
-        throw new Error("Failed to resume session");
+        return null;
       }
+    }, [session]);
 
-      const data = await response.json();
-      setSession(data.session);
-      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(data.session));
-      return data.session;
-    } catch (error) {
-      console.error("Error resuming session:", error);
-      return null;
-    }
-  }, [session]);
+  const updateProgress = useCallback(
+    (sampleIndex: number) => {
+      if (!session) return;
 
-  const updateProgress = useCallback((sampleIndex: number) => {
-    if (!session) return;
-
-    const updatedSession = {
-      ...session,
-      currentSampleIndex: sampleIndex,
-    };
-
-    setSession(updatedSession);
-    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedSession));
-
-    // Update server in background
-    fetch("/api/sessions/progress", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sessionToken: session.sessionToken,
+      const updatedSession = {
+        ...session,
         currentSampleIndex: sampleIndex,
-      }),
-    }).catch(console.error);
-  }, [session]);
+      };
+
+      setSession(updatedSession);
+      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedSession));
+
+      // Update server in background
+      fetch("/api/sessions/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionToken: session.sessionToken,
+          currentSampleIndex: sampleIndex,
+        }),
+      }).catch(console.error);
+    },
+    [session],
+  );
 
   const completeSession = useCallback(() => {
     if (!session) return;
@@ -221,6 +243,7 @@ export function EvaluatorSessionProvider({ children }: { children: ReactNode }) 
 
       if (response.ok) {
         const data = await response.json();
+
         setSession(data.session);
         localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(data.session));
       } else {
@@ -254,6 +277,7 @@ export function EvaluatorSessionProvider({ children }: { children: ReactNode }) 
 
 export function useEvaluatorSession() {
   const context = useContext(EvaluatorSessionContext);
+
   if (context === undefined) {
     // Return safe defaults for SSR
     return {
@@ -268,5 +292,6 @@ export function useEvaluatorSession() {
       refreshSession: async () => {},
     };
   }
+
   return context;
 }

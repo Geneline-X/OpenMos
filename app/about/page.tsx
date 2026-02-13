@@ -11,10 +11,15 @@ export default function AboutPage() {
   return (
     <section className="py-8 max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-8">
-        <Icon icon="solar:info-circle-bold-duotone" className="w-10 h-10 text-primary" />
+        <Icon
+          className="w-10 h-10 text-primary"
+          icon="solar:info-circle-bold-duotone"
+        />
         <div>
           <h1 className="text-3xl font-bold">About OpenMOS</h1>
-          <p className="text-default-500">Mean Opinion Score Evaluation Platform</p>
+          <p className="text-default-500">
+            Mean Opinion Score Evaluation Platform
+          </p>
         </div>
       </div>
 
@@ -23,14 +28,18 @@ export default function AboutPage() {
         <Card shadow="sm">
           <CardBody className="gap-4 p-6">
             <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Icon icon="solar:target-bold-duotone" className="w-6 h-6 text-primary" />
+              <Icon
+                className="w-6 h-6 text-primary"
+                icon="solar:target-bold-duotone"
+              />
               Our Mission
             </h2>
             <p className="text-default-600 leading-relaxed">
-              OpenMOS is a research platform dedicated to improving AI voice technology for 
-              underrepresented languages. By collecting Mean Opinion Score (MOS) evaluations 
-              from native speakers, we help researchers understand how natural AI-generated 
-              speech sounds compared to human recordings.
+              OpenMOS is a research platform dedicated to improving AI voice
+              technology for underrepresented languages. By collecting Mean
+              Opinion Score (MOS) evaluations from native speakers, we help
+              researchers understand how natural AI-generated speech sounds
+              compared to human recordings.
             </p>
           </CardBody>
         </Card>
@@ -39,15 +48,19 @@ export default function AboutPage() {
         <Card shadow="sm">
           <CardBody className="gap-4 p-6">
             <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Icon icon="solar:star-bold-duotone" className="w-6 h-6 text-warning" />
+              <Icon
+                className="w-6 h-6 text-warning"
+                icon="solar:star-bold-duotone"
+              />
               What is MOS?
             </h2>
             <p className="text-default-600 leading-relaxed">
-              Mean Opinion Score (MOS) is a standardized measure used in telecommunications 
-              and speech synthesis research. It rates audio quality on a scale of 1 to 5, 
-              where 5 represents &quot;excellent&quot; (sounds completely human) and 1 represents 
-              &quot;bad&quot; (unintelligible). MOS evaluations are conducted following ITU-T 
-              recommendation standards.
+              Mean Opinion Score (MOS) is a standardized measure used in
+              telecommunications and speech synthesis research. It rates audio
+              quality on a scale of 1 to 5, where 5 represents
+              &quot;excellent&quot; (sounds completely human) and 1 represents
+              &quot;bad&quot; (unintelligible). MOS evaluations are conducted
+              following ITU-T recommendation standards.
             </p>
             <div className="grid grid-cols-5 gap-2 mt-4">
               {[
@@ -57,8 +70,13 @@ export default function AboutPage() {
                 { score: 2, color: "danger", label: "Poor" },
                 { score: 1, color: "danger", label: "Bad" },
               ].map((item) => (
-                <div key={item.score} className="text-center p-2 bg-default-50 rounded-lg">
-                  <p className={`text-lg font-bold text-${item.color}`}>{item.score}</p>
+                <div
+                  key={item.score}
+                  className="text-center p-2 bg-default-50 rounded-lg"
+                >
+                  <p className={`text-lg font-bold text-${item.color}`}>
+                    {item.score}
+                  </p>
                   <p className="text-xs text-default-500">{item.label}</p>
                 </div>
               ))}
@@ -70,12 +88,15 @@ export default function AboutPage() {
         <Card shadow="sm">
           <CardBody className="gap-4 p-6">
             <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Icon icon="solar:global-bold-duotone" className="w-6 h-6 text-success" />
+              <Icon
+                className="w-6 h-6 text-success"
+                icon="solar:global-bold-duotone"
+              />
               Supported Languages
             </h2>
             <p className="text-default-600 leading-relaxed">
-              We are currently focused on evaluating text-to-speech systems for African 
-              languages that are underrepresented in AI research:
+              We are currently focused on evaluating text-to-speech systems for
+              African languages that are underrepresented in AI research:
             </p>
             <div className="flex gap-4 mt-2">
               <div className="flex items-center gap-2 px-4 py-3 bg-default-50 rounded-lg">
@@ -100,7 +121,10 @@ export default function AboutPage() {
         <Card shadow="sm">
           <CardBody className="gap-4 p-6">
             <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Icon icon="solar:document-text-bold-duotone" className="w-6 h-6 text-primary" />
+              <Icon
+                className="w-6 h-6 text-primary"
+                icon="solar:document-text-bold-duotone"
+              />
               Research Applications
             </h2>
             <p className="text-default-600 leading-relaxed">
@@ -108,19 +132,32 @@ export default function AboutPage() {
             </p>
             <ul className="space-y-2 mt-2">
               <li className="flex items-start gap-2 text-default-600">
-                <Icon icon="solar:check-circle-bold" className="w-5 h-5 text-success mt-0.5" />
+                <Icon
+                  className="w-5 h-5 text-success mt-0.5"
+                  icon="solar:check-circle-bold"
+                />
                 Compare different text-to-speech models (Orpheus, NeMo, etc.)
               </li>
               <li className="flex items-start gap-2 text-default-600">
-                <Icon icon="solar:check-circle-bold" className="w-5 h-5 text-success mt-0.5" />
+                <Icon
+                  className="w-5 h-5 text-success mt-0.5"
+                  icon="solar:check-circle-bold"
+                />
                 Identify areas where AI speech needs improvement
               </li>
               <li className="flex items-start gap-2 text-default-600">
-                <Icon icon="solar:check-circle-bold" className="w-5 h-5 text-success mt-0.5" />
-                Publish research that advances voice technology for African languages
+                <Icon
+                  className="w-5 h-5 text-success mt-0.5"
+                  icon="solar:check-circle-bold"
+                />
+                Publish research that advances voice technology for African
+                languages
               </li>
               <li className="flex items-start gap-2 text-default-600">
-                <Icon icon="solar:check-circle-bold" className="w-5 h-5 text-success mt-0.5" />
+                <Icon
+                  className="w-5 h-5 text-success mt-0.5"
+                  icon="solar:check-circle-bold"
+                />
                 Develop accessible technology for native speakers
               </li>
             </ul>
@@ -128,21 +165,24 @@ export default function AboutPage() {
         </Card>
 
         {/* Contact */}
-        <Card shadow="sm" className="bg-primary/5 border border-primary/20">
+        <Card className="bg-primary/5 border border-primary/20" shadow="sm">
           <CardBody className="gap-4 p-6">
             <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Icon icon="solar:letter-bold-duotone" className="w-6 h-6 text-primary" />
+              <Icon
+                className="w-6 h-6 text-primary"
+                icon="solar:letter-bold-duotone"
+              />
               Contact Us
             </h2>
             <p className="text-default-600">
-              Have questions about the research or want to get involved? 
-              Reach out to our team:
+              Have questions about the research or want to get involved? Reach
+              out to our team:
             </p>
-            <Link 
-              href="mailto:research@openmos.org" 
+            <Link
               className="flex items-center gap-2"
+              href="mailto:research@openmos.org"
             >
-              <Icon icon="solar:letter-linear" className="w-5 h-5" />
+              <Icon className="w-5 h-5" icon="solar:letter-linear" />
               research@openmos.org
             </Link>
           </CardBody>

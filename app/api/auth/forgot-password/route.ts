@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+
 import { db } from "@/lib/db";
 import { adminUsers, passwordResetTokens, auditLogs } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { generateResetToken, getResetTokenExpiry } from "@/lib/auth/utils";
 
 export async function POST(request: Request) {
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
     if (!email) {
       return NextResponse.json(
         { success: false, error: "Email is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -69,9 +70,10 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Error in forgot password:", error);
+
     return NextResponse.json(
       { success: false, error: "Failed to process request" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

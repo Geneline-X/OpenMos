@@ -11,10 +11,10 @@ export { DataQualityPanel } from "./data-quality-panel";
 export { ExportCenter } from "./export-center";
 
 // Charts
-export { 
-  MOSComparisonChart, 
-  RatingDistributionChart, 
-  ProgressTimelineChart 
+export {
+  MOSComparisonChart,
+  RatingDistributionChart,
+  ProgressTimelineChart,
 } from "./charts";
 
 // Icons

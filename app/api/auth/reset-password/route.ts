@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { eq, and, gt, isNull } from "drizzle-orm";
+
 import { db } from "@/lib/db";
 import { adminUsers, passwordResetTokens, auditLogs } from "@/lib/db/schema";
-import { eq, and, gt, isNull } from "drizzle-orm";
 import { hashPassword, validatePassword } from "@/lib/auth/utils";
 
 export async function POST(request: Request) {
@@ -11,16 +12,17 @@ export async function POST(request: Request) {
     if (!token || !password) {
       return NextResponse.json(
         { success: false, error: "Token and password are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Validate password strength
     const validation = validatePassword(password);
+
     if (!validation.isValid) {
       return NextResponse.json(
         { success: false, error: validation.errors[0] },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -32,15 +34,15 @@ export async function POST(request: Request) {
         and(
           eq(passwordResetTokens.token, token),
           gt(passwordResetTokens.expiresAt, new Date()),
-          isNull(passwordResetTokens.usedAt)
-        )
+          isNull(passwordResetTokens.usedAt),
+        ),
       )
       .limit(1);
 
     if (!resetToken) {
       return NextResponse.json(
         { success: false, error: "Invalid or expired token" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -70,8 +72,8 @@ export async function POST(request: Request) {
       .where(
         and(
           eq(passwordResetTokens.adminId, resetToken.adminId),
-          isNull(passwordResetTokens.usedAt)
-        )
+          isNull(passwordResetTokens.usedAt),
+        ),
       );
 
     // Log the password reset
@@ -86,9 +88,10 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Error resetting password:", error);
+
     return NextResponse.json(
       { success: false, error: "Failed to reset password" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

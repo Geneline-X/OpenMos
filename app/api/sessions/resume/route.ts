@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { eq, and, gt, ne } from "drizzle-orm";
+
 import { db } from "@/lib/db";
 import { sessions, evaluationSessions } from "@/lib/db/schema";
-import { eq, and, gt, ne } from "drizzle-orm";
 import { getSessionExpiry } from "@/lib/auth/utils";
 
 export async function POST(request: Request) {
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
     if (!sessionToken) {
       return NextResponse.json(
         { success: false, error: "Session token required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -23,15 +24,15 @@ export async function POST(request: Request) {
         and(
           eq(sessions.sessionToken, sessionToken),
           gt(sessions.expiresAt, new Date()),
-          ne(sessions.status, "completed")
-        )
+          ne(sessions.status, "completed"),
+        ),
       )
       .limit(1);
 
     if (!session) {
       return NextResponse.json(
         { success: false, error: "No active session to resume" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -48,6 +49,7 @@ export async function POST(request: Request) {
 
     // Get evaluation session for total samples count
     let totalSamples = 20;
+
     if (session.raterId) {
       const [evalSession] = await db
         .select()
@@ -75,9 +77,10 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Error resuming session:", error);
+
     return NextResponse.json(
       { success: false, error: "Failed to resume session" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

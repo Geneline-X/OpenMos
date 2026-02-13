@@ -1,17 +1,19 @@
 import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { accessRequests, adminInvitations } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { generateResetToken } from "@/lib/auth/utils";
 
 // PATCH - Approve or reject a request
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
+
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -27,7 +29,7 @@ export async function PATCH(
     if (!action || !["approve", "reject"].includes(action)) {
       return NextResponse.json(
         { error: "Invalid action. Must be 'approve' or 'reject'" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -45,7 +47,7 @@ export async function PATCH(
     if (accessRequest.status !== "pending") {
       return NextResponse.json(
         { error: "Request has already been reviewed" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -54,6 +56,7 @@ export async function PATCH(
       const inviteRole = role || "researcher";
       const token = generateResetToken();
       const expiresAt = new Date();
+
       expiresAt.setDate(expiresAt.getDate() + 7); // 7 days to accept
 
       await db.insert(adminInvitations).values({
@@ -77,7 +80,10 @@ export async function PATCH(
 
       // TODO: Send invitation email via queue
       const inviteUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/admin/accept-invite?token=${token}`;
-      console.log(`Invitation created for ${accessRequest.email}: ${inviteUrl}`);
+
+      console.log(
+        `Invitation created for ${accessRequest.email}: ${inviteUrl}`,
+      );
 
       return NextResponse.json({
         success: true,
@@ -105,9 +111,10 @@ export async function PATCH(
     }
   } catch (error) {
     console.error("Error reviewing access request:", error);
+
     return NextResponse.json(
       { error: "Failed to review request" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -115,10 +122,11 @@ export async function PATCH(
 // DELETE - Delete a request
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
+
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -134,9 +142,10 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting access request:", error);
+
     return NextResponse.json(
       { error: "Failed to delete request" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -3,11 +3,19 @@
 import { useState, useEffect } from "react";
 import { Card, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@heroui/table";
+import {
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@heroui/table";
 import { Chip } from "@heroui/chip";
 import { Avatar } from "@heroui/avatar";
 import { Spinner } from "@heroui/spinner";
 import { Icon } from "@iconify/react";
+
 import { usePagination } from "@/hooks/usePagination";
 
 interface Rater {
@@ -41,6 +49,7 @@ export default function RatersPage() {
       try {
         const res = await fetch("/api/admin/raters");
         const data = await res.json();
+
         setRaters(data.raters || []);
         setTotal(data.total || 0);
       } catch (error) {
@@ -52,8 +61,8 @@ export default function RatersPage() {
     fetchRaters();
   }, []);
 
-  const activeCount = raters.filter(r => r.status === "in_progress").length;
-  const completedCount = raters.filter(r => r.status === "completed").length;
+  const activeCount = raters.filter((r) => r.status === "in_progress").length;
+  const completedCount = raters.filter((r) => r.status === "completed").length;
 
   return (
     <div className="space-y-6">
@@ -66,7 +75,10 @@ export default function RatersPage() {
         <Card>
           <CardBody className="flex flex-row items-center gap-4">
             <div className="rounded-lg bg-primary/10 p-2">
-              <Icon icon="solar:users-group-rounded-bold-duotone" className="h-6 w-6 text-primary" />
+              <Icon
+                className="h-6 w-6 text-primary"
+                icon="solar:users-group-rounded-bold-duotone"
+              />
             </div>
             <div>
               <p className="text-2xl font-bold">{total}</p>
@@ -77,7 +89,10 @@ export default function RatersPage() {
         <Card>
           <CardBody className="flex flex-row items-center gap-4">
             <div className="rounded-lg bg-success/10 p-2">
-              <Icon icon="solar:check-circle-bold-duotone" className="h-6 w-6 text-success" />
+              <Icon
+                className="h-6 w-6 text-success"
+                icon="solar:check-circle-bold-duotone"
+              />
             </div>
             <div>
               <p className="text-2xl font-bold">{completedCount}</p>
@@ -88,7 +103,10 @@ export default function RatersPage() {
         <Card>
           <CardBody className="flex flex-row items-center gap-4">
             <div className="rounded-lg bg-warning/10 p-2">
-              <Icon icon="solar:play-circle-bold-duotone" className="h-6 w-6 text-warning" />
+              <Icon
+                className="h-6 w-6 text-warning"
+                icon="solar:play-circle-bold-duotone"
+              />
             </div>
             <div>
               <p className="text-2xl font-bold">{activeCount}</p>
@@ -106,10 +124,16 @@ export default function RatersPage() {
             </div>
           ) : raters.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 text-center">
-              <Icon icon="solar:users-group-rounded-bold-duotone" className="h-12 w-12 text-default-300 mb-4" />
-              <p className="text-default-500">No raters have participated yet</p>
+              <Icon
+                className="h-12 w-12 text-default-300 mb-4"
+                icon="solar:users-group-rounded-bold-duotone"
+              />
+              <p className="text-default-500">
+                No raters have participated yet
+              </p>
               <p className="text-sm text-default-400 mt-2">
-                Share the evaluation link to get native speakers to rate your audio samples
+                Share the evaluation link to get native speakers to rate your
+                audio samples
               </p>
             </div>
           ) : (
@@ -125,33 +149,43 @@ export default function RatersPage() {
               <TableBody>
                 {paginatedData.map((rater, idx) => {
                   const displayIndex = (currentPage - 1) * 20 + idx + 1;
+
                   return (
                     <TableRow key={rater.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Avatar size="sm" name={`R${displayIndex}`} />
+                          <Avatar name={`R${displayIndex}`} size="sm" />
                           <span>Rater #{displayIndex}</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Chip size="sm" variant="flat">{rater.language}</Chip>
+                        <Chip size="sm" variant="flat">
+                          {rater.language}
+                        </Chip>
                       </TableCell>
                       <TableCell>
                         <span className="text-sm">
-                          {rater.age ? `${rater.age}y` : "N/A"} • {rater.gender || "N/A"}
+                          {rater.age ? `${rater.age}y` : "N/A"} •{" "}
+                          {rater.gender || "N/A"}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span className="font-mono">{rater.completed}/{rater.total}</span>
+                        <span className="font-mono">
+                          {rater.completed}/{rater.total}
+                        </span>
                       </TableCell>
                       <TableCell>{rater.avgTime}</TableCell>
                       <TableCell>
                         <Chip
+                          color={
+                            rater.status === "completed" ? "success" : "warning"
+                          }
                           size="sm"
-                          color={rater.status === "completed" ? "success" : "warning"}
                           variant="flat"
                         >
-                          {rater.status === "completed" ? "Completed" : "In Progress"}
+                          {rater.status === "completed"
+                            ? "Completed"
+                            : "In Progress"}
                         </Chip>
                       </TableCell>
                     </TableRow>
@@ -170,21 +204,27 @@ export default function RatersPage() {
               <div className="flex items-center gap-2">
                 <Button
                   isIconOnly
+                  isDisabled={!hasPrev}
                   size="sm"
                   variant="flat"
-                  isDisabled={!hasPrev}
                   onPress={prevPage}
                 >
-                  <Icon icon="solar:alt-arrow-left-linear" className="h-4 w-4" />
+                  <Icon
+                    className="h-4 w-4"
+                    icon="solar:alt-arrow-left-linear"
+                  />
                 </Button>
                 <Button
                   isIconOnly
+                  isDisabled={!hasNext}
                   size="sm"
                   variant="flat"
-                  isDisabled={!hasNext}
                   onPress={nextPage}
                 >
-                  <Icon icon="solar:alt-arrow-right-linear" className="h-4 w-4" />
+                  <Icon
+                    className="h-4 w-4"
+                    icon="solar:alt-arrow-right-linear"
+                  />
                 </Button>
               </div>
             </div>

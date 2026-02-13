@@ -24,10 +24,30 @@ interface SessionData {
 }
 
 const RATINGS = [
-  { score: 5, emoji: "😊", label: "Excellent", description: "Sounds completely human" },
-  { score: 4, emoji: "🙂", label: "Good", description: "Minor robotic qualities" },
-  { score: 3, emoji: "😐", label: "Fair", description: "Clearly synthetic, but okay" },
-  { score: 2, emoji: "😕", label: "Poor", description: "Very robotic, hard to follow" },
+  {
+    score: 5,
+    emoji: "😊",
+    label: "Excellent",
+    description: "Sounds completely human",
+  },
+  {
+    score: 4,
+    emoji: "🙂",
+    label: "Good",
+    description: "Minor robotic qualities",
+  },
+  {
+    score: 3,
+    emoji: "😐",
+    label: "Fair",
+    description: "Clearly synthetic, but okay",
+  },
+  {
+    score: 2,
+    emoji: "😕",
+    label: "Poor",
+    description: "Very robotic, hard to follow",
+  },
   { score: 1, emoji: "😞", label: "Bad", description: "Unintelligible" },
 ];
 
@@ -36,7 +56,7 @@ type PlaybackState = "idle" | "playing" | "paused" | "completed";
 export default function EvaluatePage() {
   const router = useRouter();
   const audioRef = useRef<HTMLAudioElement>(null);
-  
+
   const [sessionData, setSessionData] = useState<SessionData | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [playbackState, setPlaybackState] = useState<PlaybackState>("idle");
@@ -45,7 +65,14 @@ export default function EvaluatePage() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [playbackCount, setPlaybackCount] = useState(0);
-  const [collectedRatings, setCollectedRatings] = useState<Array<{ sampleId: string; score: number; playCount: number; timeToRateMs: number }>>([]);
+  const [collectedRatings, setCollectedRatings] = useState<
+    Array<{
+      sampleId: string;
+      score: number;
+      playCount: number;
+      timeToRateMs: number;
+    }>
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [timeStarted, setTimeStarted] = useState<number | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
@@ -53,18 +80,27 @@ export default function EvaluatePage() {
   // Load session from localStorage
   useEffect(() => {
     const stored = localStorage.getItem("openmos_session");
+
     if (!stored) {
-      setSessionError("No active session found. Please start from the beginning.");
+      setSessionError(
+        "No active session found. Please start from the beginning.",
+      );
       setIsLoading(false);
+
       return;
     }
 
     try {
       const parsed = JSON.parse(stored) as SessionData;
+
       if (!parsed.samples || parsed.samples.length === 0) {
         const lang = parsed.language || "your language";
-        setSessionError(`No audio samples are currently available for ${lang}. The research team is still preparing the evaluation materials. Please check back later or contact the administrator.`);
+
+        setSessionError(
+          `No audio samples are currently available for ${lang}. The research team is still preparing the evaluation materials. Please check back later or contact the administrator.`,
+        );
         setIsLoading(false);
+
         return;
       }
       setSessionData(parsed);
@@ -76,8 +112,8 @@ export default function EvaluatePage() {
   }, []);
 
   const totalSamples = sessionData?.totalSamples || 0;
-  const progress = totalSamples > 0 ? ((currentIndex) / totalSamples) * 100 : 0;
-  
+  const progress = totalSamples > 0 ? (currentIndex / totalSamples) * 100 : 0;
+
   // Get current sample from session
   const currentSample = sessionData?.samples?.[currentIndex];
 
@@ -154,6 +190,7 @@ export default function EvaluatePage() {
     }
 
     const updatedRatings = [...collectedRatings, newRating];
+
     setCollectedRatings(updatedRatings);
 
     // Check if completed
@@ -161,6 +198,7 @@ export default function EvaluatePage() {
       // Save all ratings to localStorage for the completion screen
       localStorage.setItem("openmos_ratings", JSON.stringify(updatedRatings));
       router.push("/evaluate/complete");
+
       return;
     }
 
@@ -178,6 +216,7 @@ export default function EvaluatePage() {
   const formatTime = (time: number) => {
     const mins = Math.floor(time / 60);
     const secs = Math.floor(time % 60);
+
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
@@ -203,14 +242,22 @@ export default function EvaluatePage() {
     }
   };
 
-  const getRatingColor = (score: number): "success" | "primary" | "warning" | "danger" | "default" => {
+  const getRatingColor = (
+    score: number,
+  ): "success" | "primary" | "warning" | "danger" | "default" => {
     switch (score) {
-      case 5: return "success";
-      case 4: return "success";
-      case 3: return "warning";
-      case 2: return "danger";
-      case 1: return "danger";
-      default: return "default";
+      case 5:
+        return "success";
+      case 4:
+        return "success";
+      case 3:
+        return "warning";
+      case 2:
+        return "danger";
+      case 1:
+        return "danger";
+      default:
+        return "default";
     }
   };
 
@@ -218,7 +265,7 @@ export default function EvaluatePage() {
   if (isLoading) {
     return (
       <section className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Spinner size="lg" color="primary" />
+        <Spinner color="primary" size="lg" />
         <p className="text-default-500">Loading evaluation session...</p>
       </section>
     );
@@ -228,16 +275,19 @@ export default function EvaluatePage() {
   if (sessionError || !sessionData || !currentSample) {
     return (
       <section className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-4 text-center">
-        <Icon icon="solar:danger-triangle-bold-duotone" className="w-16 h-16 text-warning" />
+        <Icon
+          className="w-16 h-16 text-warning"
+          icon="solar:danger-triangle-bold-duotone"
+        />
         <h2 className="text-xl font-semibold">Session Error</h2>
         <p className="text-default-500 max-w-md">
           {sessionError || "No samples available for evaluation."}
         </p>
         <div className="flex gap-3">
-          <Button variant="flat" as={Link} href="/">
+          <Button as={Link} href="/" variant="flat">
             Go Home
           </Button>
-          <Button color="primary" as={Link} href="/start">
+          <Button as={Link} color="primary" href="/start">
             Try Again
           </Button>
         </div>
@@ -249,48 +299,58 @@ export default function EvaluatePage() {
     <section className="flex flex-col gap-4 py-2 md:py-4 max-w-lg mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <Link 
-          href="/"
+        <Link
           className="flex items-center gap-1 text-default-500 text-sm"
+          href="/"
         >
-          <Icon icon="solar:alt-arrow-left-linear" className="w-5 h-5" />
+          <Icon className="w-5 h-5" icon="solar:alt-arrow-left-linear" />
           Exit
         </Link>
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">Sample {currentIndex + 1}/{totalSamples}</span>
-          <span className="text-sm text-default-500">{Math.round(progress)}%</span>
+          <span className="text-sm font-medium">
+            Sample {currentIndex + 1}/{totalSamples}
+          </span>
+          <span className="text-sm text-default-500">
+            {Math.round(progress)}%
+          </span>
         </div>
       </div>
-      
-      <Progress 
-        value={progress} 
-        color="primary" 
-        size="sm" 
+
+      <Progress
         aria-label="Evaluation progress"
+        color="primary"
+        size="sm"
+        value={progress}
       />
 
       {/* Audio Player Card */}
-      <Card shadow="sm" className="overflow-visible">
+      <Card className="overflow-visible" shadow="sm">
         <CardBody className="gap-4 p-6">
           {/* Waveform Visualization Area */}
           <div className="relative h-20 bg-default-100 rounded-xl flex items-center justify-center overflow-hidden">
             {isLoading ? (
-              <Icon icon="solar:refresh-linear" className="w-8 h-8 text-default-400 animate-spin" />
+              <Icon
+                className="w-8 h-8 text-default-400 animate-spin"
+                icon="solar:refresh-linear"
+              />
             ) : (
               <>
                 {/* Simple waveform visualization */}
                 <div className="absolute inset-0 flex items-center justify-center gap-1 px-4">
                   {Array.from({ length: 30 }).map((_, i) => {
-                    const height = 20 + Math.sin(i * 0.5) * 15 + Math.random() * 10;
+                    const height =
+                      20 + Math.sin(i * 0.5) * 15 + Math.random() * 10;
                     const isActive = (currentTime / duration) * 30 > i;
+
                     return (
                       <div
                         key={i}
                         className={`w-1 rounded-full transition-all duration-75 ${
                           isActive ? "bg-primary" : "bg-default-300"
                         }`}
-                        style={{ 
-                          height: playbackState === "playing" ? `${height}%` : "20%",
+                        style={{
+                          height:
+                            playbackState === "playing" ? `${height}%` : "20%",
                           opacity: isActive ? 1 : 0.5,
                         }}
                       />
@@ -299,7 +359,10 @@ export default function EvaluatePage() {
                 </div>
                 {hasPlayed && (
                   <div className="absolute top-2 right-2">
-                    <Icon icon="solar:check-circle-bold-duotone" className="w-5 h-5 text-success" />
+                    <Icon
+                      className="w-5 h-5 text-success"
+                      icon="solar:check-circle-bold-duotone"
+                    />
                   </div>
                 )}
               </>
@@ -310,22 +373,24 @@ export default function EvaluatePage() {
           <div className="flex flex-col items-center gap-3">
             <Button
               isIconOnly
-              color={playbackState === "completed" ? "success" : "primary"}
-              size="lg"
-              radius="full"
               className="w-[72px] h-[72px] shadow-lg"
-              onPress={togglePlayback}
+              color={playbackState === "completed" ? "success" : "primary"}
               isDisabled={isLoading}
+              radius="full"
+              size="lg"
+              onPress={togglePlayback}
             >
-              <Icon icon={getPlayIcon()} className="w-10 h-10" />
+              <Icon className="w-10 h-10" icon={getPlayIcon()} />
             </Button>
             <span className="text-sm text-default-500">{getPlayLabel()}</span>
           </div>
 
           {/* Time Display */}
           <div className="flex items-center justify-center gap-2 text-sm text-default-500">
-            <Icon icon="solar:clock-circle-linear" className="w-4 h-4" />
-            <span>{formatTime(currentTime)} / {formatTime(duration || 0)}</span>
+            <Icon className="w-4 h-4" icon="solar:clock-circle-linear" />
+            <span>
+              {formatTime(currentTime)} / {formatTime(duration || 0)}
+            </span>
             {playbackCount > 1 && (
               <span className="text-xs text-default-400">
                 (played {playbackCount}×)
@@ -336,11 +401,11 @@ export default function EvaluatePage() {
           {/* Hidden Audio Element */}
           <audio
             ref={audioRef}
-            src={currentSample?.url || ""}
             preload="metadata"
+            src={currentSample?.url || ""}
+            onEnded={handleEnded}
             onLoadedMetadata={handleLoadedMetadata}
             onTimeUpdate={handleTimeUpdate}
-            onEnded={handleEnded}
           />
         </CardBody>
       </Card>
@@ -349,7 +414,10 @@ export default function EvaluatePage() {
       <Card shadow="sm">
         <CardBody className="gap-4 p-6">
           <div className="flex items-center gap-2">
-            <Icon icon="solar:star-bold-duotone" className="w-6 h-6 text-warning" />
+            <Icon
+              className="w-6 h-6 text-warning"
+              icon="solar:star-bold-duotone"
+            />
             <h2 className="font-semibold">How natural does this sound?</h2>
           </div>
 
@@ -357,26 +425,38 @@ export default function EvaluatePage() {
             {RATINGS.map((rating) => (
               <Button
                 key={rating.score}
-                variant={selectedRating === rating.score ? "solid" : "bordered"}
-                color={selectedRating === rating.score ? getRatingColor(rating.score) : "default"}
                 className={`w-full h-auto py-3 px-4 justify-start rating-btn ${
                   !hasPlayed ? "opacity-50 cursor-not-allowed" : ""
                 }`}
+                color={
+                  selectedRating === rating.score
+                    ? getRatingColor(rating.score)
+                    : "default"
+                }
                 isDisabled={!hasPlayed}
+                variant={selectedRating === rating.score ? "solid" : "bordered"}
                 onPress={() => handleRatingSelect(rating.score)}
               >
                 <div className="flex items-center gap-3 w-full">
-                  <Icon 
-                    icon={selectedRating === rating.score ? "solar:star-bold" : "solar:star-bold-duotone"} 
-                    className="w-6 h-6 flex-shrink-0" 
+                  <Icon
+                    className="w-6 h-6 flex-shrink-0"
+                    icon={
+                      selectedRating === rating.score
+                        ? "solar:star-bold"
+                        : "solar:star-bold-duotone"
+                    }
                   />
                   <span className="text-xl">{rating.emoji}</span>
                   <div className="flex-1 text-left">
-                    <p className="font-medium">{rating.score} - {rating.label}</p>
-                    <p className="text-xs text-default-500">{rating.description}</p>
+                    <p className="font-medium">
+                      {rating.score} - {rating.label}
+                    </p>
+                    <p className="text-xs text-default-500">
+                      {rating.description}
+                    </p>
                   </div>
                   {selectedRating === rating.score && (
-                    <Icon icon="solar:check-circle-bold" className="w-5 h-5" />
+                    <Icon className="w-5 h-5" icon="solar:check-circle-bold" />
                   )}
                 </div>
               </Button>
@@ -393,11 +473,13 @@ export default function EvaluatePage() {
 
       {/* Next Button */}
       <Button
-        color="primary"
-        size="lg"
         className="w-full h-14 font-semibold"
-        endContent={<Icon icon="solar:alt-arrow-right-bold-duotone" className="w-6 h-6" />}
+        color="primary"
+        endContent={
+          <Icon className="w-6 h-6" icon="solar:alt-arrow-right-bold-duotone" />
+        }
         isDisabled={selectedRating === null}
+        size="lg"
         onPress={handleNext}
       >
         {currentIndex >= totalSamples - 1 ? "Finish Evaluation" : "Next Sample"}

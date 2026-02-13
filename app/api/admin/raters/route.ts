@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { eq, count, desc } from "drizzle-orm";
+
 import { db } from "@/lib/db";
-import { raters, evaluationSessions, ratings } from "@/lib/db/schema";
-import { eq, count, avg, desc, sql } from "drizzle-orm";
+import { raters, evaluationSessions } from "@/lib/db/schema";
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,19 +32,19 @@ export async function GET(request: NextRequest) {
       .offset(offset);
 
     // Get total count
-    const [totalResult] = await db
-      .select({ count: count() })
-      .from(raters);
+    const [totalResult] = await db.select({ count: count() }).from(raters);
 
     // Transform data
     const transformedRaters = ratersData.map((r) => {
       const startedAt = r.startedAt ? new Date(r.startedAt) : null;
       const completedAt = r.completedAt ? new Date(r.completedAt) : null;
-      
+
       let avgTime = "N/A";
+
       if (startedAt && completedAt) {
         const diffMs = completedAt.getTime() - startedAt.getTime();
         const diffMins = Math.round(diffMs / 60000);
+
         avgTime = `${diffMins}m`;
       }
 
@@ -55,7 +56,11 @@ export async function GET(request: NextRequest) {
         completed: r.completedCount || 0,
         total: r.totalSamples || 20,
         avgTime,
-        status: r.completedAt ? "completed" : (r.sessionId ? "in_progress" : "not_started"),
+        status: r.completedAt
+          ? "completed"
+          : r.sessionId
+            ? "in_progress"
+            : "not_started",
         createdAt: r.createdAt,
       };
     });
@@ -68,9 +73,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Raters fetch error:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch raters" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

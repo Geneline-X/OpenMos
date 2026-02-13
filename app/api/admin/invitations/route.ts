@@ -1,10 +1,13 @@
+import type { AdminRole } from "@/lib/db/schema";
+
 import { NextResponse } from "next/server";
+import { eq, isNull, gt, and } from "drizzle-orm";
+
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { adminInvitations, adminUsers, auditLogs } from "@/lib/db/schema";
-import { eq, isNull, gt, and } from "drizzle-orm";
 import { generateInviteToken, getInviteTokenExpiry } from "@/lib/auth/utils";
-import type { AdminRole } from "@/lib/db/schema";
+import { queueInvitationEmail } from "@/lib/queue/jobs";
 
 // GET - List pending invitations
 export async function GET() {
@@ -32,8 +35,8 @@ export async function GET() {
         and(
           isNull(adminInvitations.acceptedAt),
           isNull(adminInvitations.revokedAt),
-          gt(adminInvitations.expiresAt, new Date())
-        )
+          gt(adminInvitations.expiresAt, new Date()),
+        ),
       )
       .orderBy(adminInvitations.createdAt);
 
@@ -46,9 +49,10 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Error fetching invitations:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch invitations" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -71,7 +75,7 @@ export async function POST(request: Request) {
     if (!email || !role) {
       return NextResponse.json(
         { error: "Email and role are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -89,7 +93,7 @@ export async function POST(request: Request) {
     if (existingUser) {
       return NextResponse.json(
         { error: "A user with this email already exists" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -102,15 +106,15 @@ export async function POST(request: Request) {
           eq(adminInvitations.email, email.toLowerCase()),
           isNull(adminInvitations.acceptedAt),
           isNull(adminInvitations.revokedAt),
-          gt(adminInvitations.expiresAt, new Date())
-        )
+          gt(adminInvitations.expiresAt, new Date()),
+        ),
       )
       .limit(1);
 
     if (existingInvite) {
       return NextResponse.json(
         { error: "A pending invitation already exists for this email" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -138,8 +142,17 @@ export async function POST(request: Request) {
       metadata: { email, role },
     });
 
-    // TODO: Send invitation email
-    console.log(`Invitation link: /admin/accept-invite?token=${token}`);
+    // Send invitation email
+    const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/admin/accept-invite?token=${token}`;
+
+    await queueInvitationEmail(
+      email,
+      inviteUrl,
+      session.user.fullName || session.user.username || "Admin",
+      role,
+    );
+
+    console.log(`Invitation link: ${inviteUrl}`);
     console.log(`For: ${email}`);
 
     return NextResponse.json({
@@ -156,9 +169,10 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Error creating invitation:", error);
+
     return NextResponse.json(
       { error: "Failed to create invitation" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

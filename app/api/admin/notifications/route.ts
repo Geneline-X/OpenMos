@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { desc, eq, count } from "drizzle-orm";
+
 import { db } from "@/lib/db";
 import { notifications } from "@/lib/db/schema";
-import { desc, eq, count } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,9 +48,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Notifications fetch error:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch notifications" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -77,9 +79,10 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Notifications update error:", error);
+
     return NextResponse.json(
       { error: "Failed to update notifications" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -97,5 +100,6 @@ function getTimeAgo(date: Date | null): string {
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
+
   return new Date(date).toLocaleDateString();
 }

@@ -10,6 +10,7 @@ import { Progress } from "@heroui/progress";
 import { Link } from "@heroui/link";
 import { Spinner } from "@heroui/spinner";
 import { addToast } from "@heroui/toast";
+
 import { validatePassword } from "@/lib/auth/utils";
 
 function ResetPasswordContent() {
@@ -41,6 +42,7 @@ function ResetPasswordContent() {
     const validateToken = async () => {
       if (!token) {
         setIsValidating(false);
+
         return;
       }
 
@@ -71,6 +73,7 @@ function ResetPasswordContent() {
   useEffect(() => {
     if (formData.password) {
       const result = validatePassword(formData.password, undefined, email);
+
       setPasswordStrength({
         strength: result.strength,
         errors: result.errors,
@@ -84,6 +87,7 @@ function ResetPasswordContent() {
   useEffect(() => {
     if (isSuccess && countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+
       return () => clearTimeout(timer);
     } else if (isSuccess && countdown === 0) {
       router.push("/admin/login");
@@ -96,14 +100,17 @@ function ResetPasswordContent() {
 
     // Validate password
     const validation = validatePassword(formData.password, undefined, email);
+
     if (!validation.isValid) {
       setErrors({ password: validation.errors[0] });
+
       return;
     }
 
     // Check password match
     if (formData.password !== formData.confirmPassword) {
       setErrors({ confirmPassword: "Passwords do not match" });
+
       return;
     }
 
@@ -166,7 +173,7 @@ function ResetPasswordContent() {
   if (isValidating) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-        <Spinner size="lg" label="Validating reset link..." />
+        <Spinner label="Validating reset link..." size="lg" />
       </div>
     );
   }
@@ -179,11 +186,13 @@ function ResetPasswordContent() {
           <CardBody className="flex flex-col items-center gap-4 py-12 px-6">
             <div className="p-4 rounded-full bg-danger/10">
               <Icon
-                icon="solar:danger-circle-bold-duotone"
                 className="w-16 h-16 text-danger"
+                icon="solar:danger-circle-bold-duotone"
               />
             </div>
-            <h2 className="text-2xl font-bold text-center">Invalid Reset Link</h2>
+            <h2 className="text-2xl font-bold text-center">
+              Invalid Reset Link
+            </h2>
             <p className="text-default-500 text-center max-w-sm">
               This password reset link is invalid or has expired. Please request
               a new one.
@@ -191,17 +200,17 @@ function ResetPasswordContent() {
             <div className="flex flex-col gap-2 w-full mt-4">
               <Button
                 as={Link}
-                href="/admin/forgot-password"
-                color="primary"
                 className="w-full"
+                color="primary"
+                href="/admin/forgot-password"
               >
                 Request New Link
               </Button>
               <Button
                 as={Link}
+                className="w-full"
                 href="/admin/login"
                 variant="light"
-                className="w-full"
               >
                 Back to Login
               </Button>
@@ -220,8 +229,8 @@ function ResetPasswordContent() {
           <CardBody className="flex flex-col items-center gap-4 py-12 px-6">
             <div className="p-4 rounded-full bg-success/10">
               <Icon
-                icon="solar:check-circle-bold-duotone"
                 className="w-16 h-16 text-success"
+                icon="solar:check-circle-bold-duotone"
               />
             </div>
             <h2 className="text-2xl font-bold text-center">
@@ -232,12 +241,12 @@ function ResetPasswordContent() {
             </p>
             <Button
               as={Link}
-              href="/admin/login"
-              color="primary"
               className="w-full mt-4"
+              color="primary"
+              href="/admin/login"
               size="lg"
               startContent={
-                <Icon icon="solar:login-bold-duotone" className="w-5 h-5" />
+                <Icon className="w-5 h-5" icon="solar:login-bold-duotone" />
               }
             >
               Go to Login
@@ -258,8 +267,8 @@ function ResetPasswordContent() {
         <CardHeader className="flex flex-col items-center gap-3 pt-8 pb-0">
           <div className="p-3 rounded-full bg-primary/10">
             <Icon
-              icon="solar:shield-check-bold-duotone"
               className="w-12 h-12 text-primary"
+              icon="solar:shield-check-bold-duotone"
             />
           </div>
           <div className="text-center">
@@ -274,45 +283,50 @@ function ResetPasswordContent() {
           {errors.form && (
             <div className="mb-4 p-3 rounded-lg bg-danger/10 border border-danger/20">
               <div className="flex items-center gap-2 text-danger">
-                <Icon icon="solar:danger-circle-bold-duotone" className="w-5 h-5" />
+                <Icon
+                  className="w-5 h-5"
+                  icon="solar:danger-circle-bold-duotone"
+                />
                 <span className="text-sm">{errors.form}</span>
               </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <Input
+                autoComplete="new-password"
+                endContent={
+                  <button
+                    className="focus:outline-none"
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    <Icon
+                      className="w-5 h-5 text-default-400 hover:text-default-600 transition-colors"
+                      icon={
+                        showPassword
+                          ? "solar:eye-closed-linear"
+                          : "solar:eye-linear"
+                      }
+                    />
+                  </button>
+                }
+                errorMessage={errors.password}
+                isInvalid={!!errors.password}
                 label="New Password"
                 placeholder="Create a strong password"
+                startContent={
+                  <Icon
+                    className="w-5 h-5 text-default-400"
+                    icon="solar:lock-password-linear"
+                  />
+                }
                 type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, password: e.target.value }))
                 }
-                isInvalid={!!errors.password}
-                errorMessage={errors.password}
-                startContent={
-                  <Icon
-                    icon="solar:lock-password-linear"
-                    className="w-5 h-5 text-default-400"
-                  />
-                }
-                endContent={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="focus:outline-none"
-                  >
-                    <Icon
-                      icon={
-                        showPassword ? "solar:eye-closed-linear" : "solar:eye-linear"
-                      }
-                      className="w-5 h-5 text-default-400 hover:text-default-600 transition-colors"
-                    />
-                  </button>
-                }
-                autoComplete="new-password"
               />
 
               {formData.password && (
@@ -326,20 +340,32 @@ function ResetPasswordContent() {
                     </span>
                   </div>
                   <Progress
-                    value={getStrengthValue()}
+                    className="max-w-full"
                     color={getStrengthColor()}
                     size="sm"
-                    className="max-w-full"
+                    value={getStrengthValue()}
                   />
                   <ul className="space-y-1 mt-2">
                     {[
-                      { check: formData.password.length >= 12, text: "At least 12 characters" },
-                      { check: /[A-Z]/.test(formData.password), text: "Contains uppercase letter" },
-                      { check: /[a-z]/.test(formData.password), text: "Contains lowercase letter" },
-                      { check: /\d/.test(formData.password), text: "Contains number" },
+                      {
+                        check: formData.password.length >= 12,
+                        text: "At least 12 characters",
+                      },
+                      {
+                        check: /[A-Z]/.test(formData.password),
+                        text: "Contains uppercase letter",
+                      },
+                      {
+                        check: /[a-z]/.test(formData.password),
+                        text: "Contains lowercase letter",
+                      },
+                      {
+                        check: /\d/.test(formData.password),
+                        text: "Contains number",
+                      },
                       {
                         check: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(
-                          formData.password
+                          formData.password,
                         ),
                         text: "Contains special character",
                       },
@@ -351,12 +377,12 @@ function ResetPasswordContent() {
                         }`}
                       >
                         <Icon
+                          className="w-4 h-4"
                           icon={
                             item.check
                               ? "solar:check-circle-bold"
                               : "solar:close-circle-linear"
                           }
-                          className="w-4 h-4"
                         />
                         {item.text}
                       </li>
@@ -367,8 +393,33 @@ function ResetPasswordContent() {
             </div>
 
             <Input
+              autoComplete="new-password"
+              endContent={
+                <button
+                  className="focus:outline-none"
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  <Icon
+                    className="w-5 h-5 text-default-400 hover:text-default-600 transition-colors"
+                    icon={
+                      showConfirmPassword
+                        ? "solar:eye-closed-linear"
+                        : "solar:eye-linear"
+                    }
+                  />
+                </button>
+              }
+              errorMessage={errors.confirmPassword}
+              isInvalid={!!errors.confirmPassword}
               label="Confirm Password"
               placeholder="Confirm your password"
+              startContent={
+                <Icon
+                  className="w-5 h-5 text-default-400"
+                  icon="solar:lock-password-linear"
+                />
+              }
               type={showConfirmPassword ? "text" : "password"}
               value={formData.confirmPassword}
               onChange={(e) =>
@@ -377,40 +428,15 @@ function ResetPasswordContent() {
                   confirmPassword: e.target.value,
                 }))
               }
-              isInvalid={!!errors.confirmPassword}
-              errorMessage={errors.confirmPassword}
-              startContent={
-                <Icon
-                  icon="solar:lock-password-linear"
-                  className="w-5 h-5 text-default-400"
-                />
-              }
-              endContent={
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="focus:outline-none"
-                >
-                  <Icon
-                    icon={
-                      showConfirmPassword
-                        ? "solar:eye-closed-linear"
-                        : "solar:eye-linear"
-                    }
-                    className="w-5 h-5 text-default-400 hover:text-default-600 transition-colors"
-                  />
-                </button>
-              }
-              autoComplete="new-password"
             />
 
             <Button
-              type="submit"
-              color="primary"
               className="w-full"
-              size="lg"
-              isLoading={isLoading}
+              color="primary"
               isDisabled={passwordStrength.strength !== "strong"}
+              isLoading={isLoading}
+              size="lg"
+              type="submit"
             >
               Reset Password
             </Button>
@@ -426,7 +452,7 @@ export default function ResetPasswordPage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-          <Spinner size="lg" label="Loading..." />
+          <Spinner label="Loading..." size="lg" />
         </div>
       }
     >

@@ -1,6 +1,6 @@
 /**
  * Central configuration for supported languages in OpenMOS.
- * 
+ *
  * To add a new language:
  * 1. Add it to the LANGUAGES array below
  * 2. Upload audio samples tagged with the new language code
@@ -8,11 +8,11 @@
  */
 
 export interface Language {
-  code: string;       // Unique identifier (lowercase, no spaces)
-  name: string;       // Display name
-  flag: string;       // Country flag emoji
-  region: string;     // Geographic region
-  speakers?: string;  // Estimated speaker count (optional)
+  code: string; // Unique identifier (lowercase, no spaces)
+  name: string; // Display name
+  flag: string; // Country flag emoji
+  region: string; // Geographic region
+  speakers?: string; // Estimated speaker count (optional)
 }
 
 /**
@@ -87,14 +87,14 @@ export const LANGUAGES: Language[] = [
 // Helper functions
 export const getLanguageCodes = () => LANGUAGES.map((l) => l.code);
 
-export const getLanguageByCode = (code: string) => 
+export const getLanguageByCode = (code: string) =>
   LANGUAGES.find((l) => l.code === code);
 
-export const isValidLanguage = (code: string) => 
+export const isValidLanguage = (code: string) =>
   LANGUAGES.some((l) => l.code === code);
 
 // For select dropdowns
-export const getLanguageOptions = () => 
+export const getLanguageOptions = () =>
   LANGUAGES.map((l) => ({
     key: l.code,
     label: l.name,
@@ -102,4 +102,4 @@ export const getLanguageOptions = () =>
   }));
 
 // Type for TypeScript validation
-export type LanguageCode = typeof LANGUAGES[number]["code"];
+export type LanguageCode = (typeof LANGUAGES)[number]["code"];

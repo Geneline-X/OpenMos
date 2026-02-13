@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { eq, sql, count, avg, and, gte, desc } from "drizzle-orm";
+
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { ratings, raters, evaluationSessions, audioSamples } from "@/lib/db/schema";
-import { eq, sql, count, avg, and, gte, desc } from "drizzle-orm";
+import { ratings, evaluationSessions, audioSamples } from "@/lib/db/schema";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
+
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -18,6 +20,7 @@ export async function GET(request: NextRequest) {
 
     // Get ratings from today
     const today = new Date();
+
     today.setHours(0, 0, 0, 0);
     const [todayRatingsResult] = await db
       .select({ count: count() })
@@ -32,8 +35,8 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           gte(evaluationSessions.startedAt, thirtyMinutesAgo),
-          sql`${evaluationSessions.completedAt} IS NULL`
-        )
+          sql`${evaluationSessions.completedAt} IS NULL`,
+        ),
       );
 
     // Get completion rate
@@ -46,9 +49,12 @@ export async function GET(request: NextRequest) {
       .select({ count: count() })
       .from(evaluationSessions);
 
-    const completionRate = totalSessionsResult.count > 0
-      ? Math.round((completedSessionsResult.count / totalSessionsResult.count) * 100)
-      : 0;
+    const completionRate =
+      totalSessionsResult.count > 0
+        ? Math.round(
+            (completedSessionsResult.count / totalSessionsResult.count) * 100,
+          )
+        : 0;
 
     // Get MOS by model
     const modelStats = await db
@@ -103,9 +109,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Dashboard stats error:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch dashboard stats" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

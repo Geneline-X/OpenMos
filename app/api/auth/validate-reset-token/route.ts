@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { eq, and, gt, isNull } from "drizzle-orm";
+
 import { db } from "@/lib/db";
 import { adminUsers, passwordResetTokens } from "@/lib/db/schema";
-import { eq, and, gt, isNull } from "drizzle-orm";
 
 export async function POST(request: Request) {
   try {
@@ -10,7 +11,7 @@ export async function POST(request: Request) {
     if (!token) {
       return NextResponse.json(
         { valid: false, error: "Token is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -29,8 +30,8 @@ export async function POST(request: Request) {
         and(
           eq(passwordResetTokens.token, token),
           gt(passwordResetTokens.expiresAt, new Date()),
-          isNull(passwordResetTokens.usedAt)
-        )
+          isNull(passwordResetTokens.usedAt),
+        ),
       )
       .limit(1);
 
@@ -47,9 +48,10 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Error validating reset token:", error);
+
     return NextResponse.json(
       { valid: false, error: "Failed to validate token" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

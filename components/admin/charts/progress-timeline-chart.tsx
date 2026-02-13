@@ -32,7 +32,7 @@ export function ProgressTimelineChart({
 }: ProgressTimelineChartProps) {
   const current = data[data.length - 1]?.cumulative || 0;
   const hasReachedTarget = current >= target;
-  
+
   // Handle empty data state
   const hasData = data && data.length > 0;
 
@@ -144,13 +144,13 @@ export function ProgressTimelineChart({
     <Card className="shadow-sm">
       <CardHeader className="flex items-center justify-between px-6 pt-6">
         <div className="flex items-center gap-2">
-          <Icon icon={chartIcons.lineChart} className="h-5 w-5 text-primary" />
+          <Icon className="h-5 w-5 text-primary" icon={chartIcons.lineChart} />
           <h3 className="text-lg font-semibold">Collection Progress</h3>
         </div>
         <Chip
           color={hasReachedTarget ? "success" : "warning"}
-          variant="flat"
           size="sm"
+          variant="flat"
         >
           {current}/{target} ({Math.round((current / target) * 100)}%)
         </Chip>
@@ -159,16 +159,19 @@ export function ProgressTimelineChart({
       <CardBody className="px-6 pb-6">
         {!hasData ? (
           <div className="flex flex-col items-center justify-center h-[280px] text-center">
-            <Icon icon="solar:graph-up-bold-duotone" className="h-12 w-12 text-default-200 mb-3" />
+            <Icon
+              className="h-12 w-12 text-default-200 mb-3"
+              icon="solar:graph-up-bold-duotone"
+            />
             <p className="text-default-500 text-sm">No progress data yet</p>
           </div>
         ) : (
           <div className="h-[280px] w-full">
             <Chart
+              height="100%"
               options={chartOptions}
               series={series}
               type="line"
-              height="100%"
               width="100%"
             />
           </div>

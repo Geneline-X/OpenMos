@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Spinner } from "@heroui/spinner";
 import { Chip } from "@heroui/chip";
 import { Icon } from "@iconify/react";
+
 import {
   MOSComparisonChart,
   RatingDistributionChart,
@@ -59,8 +60,10 @@ export default function AnalyticsPage() {
     async function fetchAnalytics() {
       try {
         const res = await fetch("/api/admin/analytics");
+
         if (res.ok) {
           const data = await res.json();
+
           setAnalytics(data);
         }
       } catch (error) {
@@ -86,21 +89,21 @@ export default function AnalyticsPage() {
       ) : (
         <>
           {/* MOS Comparison - Full Width */}
-          <MOSComparisonChart 
-            data={analytics?.mosComparison} 
-            isLoading={isLoading} 
+          <MOSComparisonChart
+            data={analytics?.mosComparison}
+            isLoading={isLoading}
           />
 
           {/* Two Column Layout */}
           <div className="grid gap-6 lg:grid-cols-2">
-            <RatingDistributionChart 
+            <RatingDistributionChart
               data={analytics?.ratingDistribution}
               isLoading={isLoading}
             />
-            <ProgressTimelineChart 
+            <ProgressTimelineChart
               data={analytics?.progressTimeline?.data}
-              target={analytics?.progressTimeline?.target}
               isLoading={isLoading}
+              target={analytics?.progressTimeline?.target}
             />
           </div>
 
@@ -109,23 +112,36 @@ export default function AnalyticsPage() {
             {/* Gender Distribution */}
             <Card>
               <CardHeader className="flex gap-3">
-                <Icon icon="solar:users-group-rounded-bold-duotone" className="h-5 w-5 text-primary" />
+                <Icon
+                  className="h-5 w-5 text-primary"
+                  icon="solar:users-group-rounded-bold-duotone"
+                />
                 <div>
                   <p className="font-semibold">Gender Distribution</p>
                 </div>
               </CardHeader>
               <CardBody>
-                {analytics?.demographics?.gender && analytics.demographics.gender.length > 0 ? (
+                {analytics?.demographics?.gender &&
+                analytics.demographics.gender.length > 0 ? (
                   <div className="space-y-3">
                     {analytics.demographics.gender.map((item) => (
-                      <div key={item.gender} className="flex items-center justify-between">
-                        <span className="text-sm capitalize">{item.gender || "Not specified"}</span>
-                        <Chip size="sm" variant="flat">{item.count}</Chip>
+                      <div
+                        key={item.gender}
+                        className="flex items-center justify-between"
+                      >
+                        <span className="text-sm capitalize">
+                          {item.gender || "Not specified"}
+                        </span>
+                        <Chip size="sm" variant="flat">
+                          {item.count}
+                        </Chip>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center text-default-400 py-4">No data yet</p>
+                  <p className="text-center text-default-400 py-4">
+                    No data yet
+                  </p>
                 )}
               </CardBody>
             </Card>
@@ -133,23 +149,34 @@ export default function AnalyticsPage() {
             {/* Age Distribution */}
             <Card>
               <CardHeader className="flex gap-3">
-                <Icon icon="solar:calendar-bold-duotone" className="h-5 w-5 text-success" />
+                <Icon
+                  className="h-5 w-5 text-success"
+                  icon="solar:calendar-bold-duotone"
+                />
                 <div>
                   <p className="font-semibold">Age Groups</p>
                 </div>
               </CardHeader>
               <CardBody>
-                {analytics?.demographics?.age && analytics.demographics.age.length > 0 ? (
+                {analytics?.demographics?.age &&
+                analytics.demographics.age.length > 0 ? (
                   <div className="space-y-3">
                     {analytics.demographics.age.map((item) => (
-                      <div key={item.ageGroup} className="flex items-center justify-between">
+                      <div
+                        key={item.ageGroup}
+                        className="flex items-center justify-between"
+                      >
                         <span className="text-sm">{item.ageGroup}</span>
-                        <Chip size="sm" variant="flat">{item.count}</Chip>
+                        <Chip size="sm" variant="flat">
+                          {item.count}
+                        </Chip>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center text-default-400 py-4">No data yet</p>
+                  <p className="text-center text-default-400 py-4">
+                    No data yet
+                  </p>
                 )}
               </CardBody>
             </Card>
@@ -157,23 +184,36 @@ export default function AnalyticsPage() {
             {/* Language Distribution */}
             <Card>
               <CardHeader className="flex gap-3">
-                <Icon icon="solar:global-bold-duotone" className="h-5 w-5 text-warning" />
+                <Icon
+                  className="h-5 w-5 text-warning"
+                  icon="solar:global-bold-duotone"
+                />
                 <div>
                   <p className="font-semibold">Languages</p>
                 </div>
               </CardHeader>
               <CardBody>
-                {analytics?.demographics?.language && analytics.demographics.language.length > 0 ? (
+                {analytics?.demographics?.language &&
+                analytics.demographics.language.length > 0 ? (
                   <div className="space-y-3">
                     {analytics.demographics.language.map((item) => (
-                      <div key={item.language} className="flex items-center justify-between">
-                        <span className="text-sm capitalize">{item.language}</span>
-                        <Chip size="sm" variant="flat" color="primary">{item.count}</Chip>
+                      <div
+                        key={item.language}
+                        className="flex items-center justify-between"
+                      >
+                        <span className="text-sm capitalize">
+                          {item.language}
+                        </span>
+                        <Chip color="primary" size="sm" variant="flat">
+                          {item.count}
+                        </Chip>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center text-default-400 py-4">No data yet</p>
+                  <p className="text-center text-default-400 py-4">
+                    No data yet
+                  </p>
                 )}
               </CardBody>
             </Card>

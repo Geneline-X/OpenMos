@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardBody, CardHeader, CardFooter } from "@heroui/card";
+import { Card, CardBody, CardFooter } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { RadioGroup, Radio } from "@heroui/radio";
@@ -46,7 +46,7 @@ export default function OnboardPage() {
 
   const validateStep = (): boolean => {
     const newErrors: OnboardingErrors = {};
-    
+
     if (currentStep === 1) {
       if (!data.age || parseInt(data.age) < 18 || parseInt(data.age) > 100) {
         newErrors.age = "Please enter a valid age (18-100)";
@@ -63,14 +63,15 @@ export default function OnboardPage() {
         newErrors.consent = "You must consent to participate";
       }
     }
-    
+
     setErrors(newErrors);
+
     return Object.keys(newErrors).length === 0;
   };
 
   const handleNext = () => {
     if (!validateStep()) return;
-    
+
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -91,21 +92,25 @@ export default function OnboardPage() {
       {/* Progress Header */}
       <div className="w-full max-w-lg mb-6">
         <div className="flex items-center gap-3 mb-3">
-          <Icon 
-            icon={steps[currentStep - 1].icon} 
-            className="w-8 h-8 text-primary" 
+          <Icon
+            className="w-8 h-8 text-primary"
+            icon={steps[currentStep - 1].icon}
           />
           <div className="flex-1">
-            <p className="text-sm text-default-500">Step {currentStep} of {steps.length}</p>
+            <p className="text-sm text-default-500">
+              Step {currentStep} of {steps.length}
+            </p>
             <p className="font-semibold">{steps[currentStep - 1].title}</p>
           </div>
-          <span className="text-sm font-medium text-primary">{Math.round(progress)}%</span>
+          <span className="text-sm font-medium text-primary">
+            {Math.round(progress)}%
+          </span>
         </div>
-        <Progress 
-          value={progress} 
-          color="primary" 
-          size="sm"
+        <Progress
           aria-label="Onboarding progress"
+          color="primary"
+          size="sm"
+          value={progress}
         />
       </div>
 
@@ -116,44 +121,53 @@ export default function OnboardPage() {
           {currentStep === 1 && (
             <>
               <div>
-                <p className="text-lg font-medium mb-2">Tell us about yourself</p>
-                <p className="text-sm text-default-500">This helps us ensure diverse representation in our research</p>
+                <p className="text-lg font-medium mb-2">
+                  Tell us about yourself
+                </p>
+                <p className="text-sm text-default-500">
+                  This helps us ensure diverse representation in our research
+                </p>
               </div>
 
               <div className="space-y-1">
                 <Input
-                  label="Age"
-                  labelPlacement="outside"
-                  type="number"
-                  placeholder="Enter your age"
-                  value={data.age}
-                  onChange={(e) => setData({ ...data, age: e.target.value })}
-                  startContent={<Icon icon="solar:hashtag-linear" className="w-5 h-5 text-default-400" />}
-                  isInvalid={!!errors.age}
-                  errorMessage={errors.age}
                   classNames={{
                     inputWrapper: "h-12",
                   }}
+                  errorMessage={errors.age}
+                  isInvalid={!!errors.age}
+                  label="Age"
+                  labelPlacement="outside"
+                  placeholder="Enter your age"
+                  startContent={
+                    <Icon
+                      className="w-5 h-5 text-default-400"
+                      icon="solar:hashtag-linear"
+                    />
+                  }
+                  type="number"
+                  value={data.age}
+                  onChange={(e) => setData({ ...data, age: e.target.value })}
                 />
               </div>
 
               <RadioGroup
+                errorMessage={errors.gender}
+                isInvalid={!!errors.gender}
                 label="Gender"
                 value={data.gender}
                 onValueChange={(value) => setData({ ...data, gender: value })}
-                isInvalid={!!errors.gender}
-                errorMessage={errors.gender}
               >
-                <Radio value="male" classNames={{ base: "py-2" }}>
+                <Radio classNames={{ base: "py-2" }} value="male">
                   Male
                 </Radio>
-                <Radio value="female" classNames={{ base: "py-2" }}>
+                <Radio classNames={{ base: "py-2" }} value="female">
                   Female
                 </Radio>
-                <Radio value="non-binary" classNames={{ base: "py-2" }}>
+                <Radio classNames={{ base: "py-2" }} value="non-binary">
                   Non-binary
                 </Radio>
-                <Radio value="prefer_not_to_say" classNames={{ base: "py-2" }}>
+                <Radio classNames={{ base: "py-2" }} value="prefer_not_to_say">
                   Prefer not to say
                 </Radio>
               </RadioGroup>
@@ -164,26 +178,30 @@ export default function OnboardPage() {
           {currentStep === 2 && (
             <>
               <div>
-                <p className="text-lg font-medium mb-2">Select your native language</p>
-                <p className="text-sm text-default-500">You should be a native speaker of the language you select</p>
+                <p className="text-lg font-medium mb-2">
+                  Select your native language
+                </p>
+                <p className="text-sm text-default-500">
+                  You should be a native speaker of the language you select
+                </p>
               </div>
 
               <RadioGroup
-                value={data.language}
-                onValueChange={(value) => setData({ ...data, language: value })}
-                isInvalid={!!errors.language}
-                errorMessage={errors.language}
                 classNames={{
                   wrapper: "gap-4",
                 }}
+                errorMessage={errors.language}
+                isInvalid={!!errors.language}
+                value={data.language}
+                onValueChange={(value) => setData({ ...data, language: value })}
               >
-                <Radio 
-                  value="luganda"
+                <Radio
                   classNames={{
                     base: "max-w-full m-0 p-4 border-2 rounded-xl cursor-pointer data-[selected=true]:border-primary bg-default-50 hover:bg-default-100 transition-colors",
                     wrapper: "hidden",
                     labelWrapper: "ml-0",
                   }}
+                  value="luganda"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">🇺🇬</span>
@@ -193,13 +211,13 @@ export default function OnboardPage() {
                     </div>
                   </div>
                 </Radio>
-                <Radio 
-                  value="krio"
+                <Radio
                   classNames={{
                     base: "max-w-full m-0 p-4 border-2 rounded-xl cursor-pointer data-[selected=true]:border-primary bg-default-50 hover:bg-default-100 transition-colors",
                     wrapper: "hidden",
                     labelWrapper: "ml-0",
                   }}
+                  value="krio"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">🇸🇱</span>
@@ -218,45 +236,68 @@ export default function OnboardPage() {
             <>
               <div>
                 <p className="text-lg font-medium mb-2">How it works</p>
-                <p className="text-sm text-default-500">Here&apos;s what you&apos;ll be doing in this evaluation</p>
+                <p className="text-sm text-default-500">
+                  Here&apos;s what you&apos;ll be doing in this evaluation
+                </p>
               </div>
 
               <div className="space-y-4">
                 <div className="flex gap-4 p-4 bg-default-50 rounded-xl">
                   <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-primary/10 rounded-full">
-                    <Icon icon="solar:volume-loud-bold-duotone" className="w-5 h-5 text-primary" />
+                    <Icon
+                      className="w-5 h-5 text-primary"
+                      icon="solar:volume-loud-bold-duotone"
+                    />
                   </div>
                   <div>
-                    <p className="font-medium">1. Listen to each audio sample</p>
-                    <p className="text-sm text-default-500">You must hear the full clip before rating</p>
+                    <p className="font-medium">
+                      1. Listen to each audio sample
+                    </p>
+                    <p className="text-sm text-default-500">
+                      You must hear the full clip before rating
+                    </p>
                   </div>
                 </div>
 
                 <div className="flex gap-4 p-4 bg-default-50 rounded-xl">
                   <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-warning/10 rounded-full">
-                    <Icon icon="solar:star-bold-duotone" className="w-5 h-5 text-warning" />
+                    <Icon
+                      className="w-5 h-5 text-warning"
+                      icon="solar:star-bold-duotone"
+                    />
                   </div>
                   <div>
                     <p className="font-medium">2. Rate how natural it sounds</p>
-                    <p className="text-sm text-default-500">Imagine you&apos;re talking to a friend</p>
+                    <p className="text-sm text-default-500">
+                      Imagine you&apos;re talking to a friend
+                    </p>
                   </div>
                 </div>
 
                 <div className="flex gap-4 p-4 bg-default-50 rounded-xl">
                   <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-success/10 rounded-full">
-                    <Icon icon="solar:restart-bold-duotone" className="w-5 h-5 text-success" />
+                    <Icon
+                      className="w-5 h-5 text-success"
+                      icon="solar:restart-bold-duotone"
+                    />
                   </div>
                   <div>
                     <p className="font-medium">3. Repeat for 20 samples</p>
-                    <p className="text-sm text-default-500">Takes about 10-15 minutes</p>
+                    <p className="text-sm text-default-500">
+                      Takes about 10-15 minutes
+                    </p>
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-3 p-4 bg-warning/10 border border-warning/30 rounded-xl">
-                <Icon icon="solar:headphones-round-bold-duotone" className="w-6 h-6 text-warning flex-shrink-0" />
+                <Icon
+                  className="w-6 h-6 text-warning flex-shrink-0"
+                  icon="solar:headphones-round-bold-duotone"
+                />
                 <p className="text-sm">
-                  <span className="font-medium">Tip:</span> Use headphones for the best experience
+                  <span className="font-medium">Tip:</span> Use headphones for
+                  the best experience
                 </p>
               </div>
             </>
@@ -267,14 +308,19 @@ export default function OnboardPage() {
             <>
               <div>
                 <p className="text-lg font-medium mb-2">Research Consent</p>
-                <p className="text-sm text-default-500">Please review and agree to participate</p>
+                <p className="text-sm text-default-500">
+                  Please review and agree to participate
+                </p>
               </div>
 
               <Card className="bg-default-50" shadow="none">
                 <CardBody className="gap-4">
                   <div>
                     <p className="font-medium text-success mb-2 flex items-center gap-2">
-                      <Icon icon="solar:check-circle-bold-duotone" className="w-5 h-5" />
+                      <Icon
+                        className="w-5 h-5"
+                        icon="solar:check-circle-bold-duotone"
+                      />
                       Your responses will:
                     </p>
                     <ul className="text-sm text-default-600 space-y-1 ml-7">
@@ -286,7 +332,10 @@ export default function OnboardPage() {
 
                   <div>
                     <p className="font-medium text-danger mb-2 flex items-center gap-2">
-                      <Icon icon="solar:close-circle-bold-duotone" className="w-5 h-5" />
+                      <Icon
+                        className="w-5 h-5"
+                        icon="solar:close-circle-bold-duotone"
+                      />
                       Your responses will NOT:
                     </p>
                     <ul className="text-sm text-default-600 space-y-1 ml-7">
@@ -298,13 +347,13 @@ export default function OnboardPage() {
               </Card>
 
               <Checkbox
-                isSelected={data.consent}
-                onValueChange={(value) => setData({ ...data, consent: value })}
                 classNames={{
                   base: "p-4 bg-default-50 rounded-xl max-w-full",
                   label: "text-sm",
                 }}
                 isInvalid={!!errors.consent}
+                isSelected={data.consent}
+                onValueChange={(value) => setData({ ...data, consent: value })}
               >
                 <span className={errors.consent ? "text-danger" : ""}>
                   I understand and consent to participate in this research
@@ -316,20 +365,24 @@ export default function OnboardPage() {
 
         <CardFooter className="flex gap-3 p-6 pt-0">
           {currentStep > 1 && (
-            <Button 
-              variant="bordered" 
-              onPress={handleBack}
-              startContent={<Icon icon="solar:alt-arrow-left-linear" className="w-5 h-5" />}
+            <Button
               className="flex-1"
+              startContent={
+                <Icon className="w-5 h-5" icon="solar:alt-arrow-left-linear" />
+              }
+              variant="bordered"
+              onPress={handleBack}
             >
               Back
             </Button>
           )}
-          <Button 
-            color="primary" 
-            onPress={handleNext}
-            endContent={<Icon icon="solar:alt-arrow-right-linear" className="w-5 h-5" />}
+          <Button
             className={currentStep === 1 ? "w-full" : "flex-1"}
+            color="primary"
+            endContent={
+              <Icon className="w-5 h-5" icon="solar:alt-arrow-right-linear" />
+            }
+            onPress={handleNext}
           >
             {currentStep === steps.length ? "Begin Evaluation" : "Continue"}
           </Button>

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { eq, and, gt } from "drizzle-orm";
+
 import { db } from "@/lib/db";
 import { sessions, evaluationSessions } from "@/lib/db/schema";
-import { eq, and, gt } from "drizzle-orm";
 
 export async function POST(request: Request) {
   try {
@@ -10,7 +11,7 @@ export async function POST(request: Request) {
     if (!sessionToken) {
       return NextResponse.json(
         { success: false, error: "Session token required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -21,20 +22,21 @@ export async function POST(request: Request) {
       .where(
         and(
           eq(sessions.sessionToken, sessionToken),
-          gt(sessions.expiresAt, new Date())
-        )
+          gt(sessions.expiresAt, new Date()),
+        ),
       )
       .limit(1);
 
     if (!session) {
       return NextResponse.json(
         { success: false, error: "Session not found or expired" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     // Get evaluation session for total samples count
     let totalSamples = 20;
+
     if (session.raterId) {
       const [evalSession] = await db
         .select()
@@ -68,9 +70,10 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Error validating session:", error);
+
     return NextResponse.json(
       { success: false, error: "Failed to validate session" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

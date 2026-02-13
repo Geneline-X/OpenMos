@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
-import { 
-  Dropdown, 
-  DropdownTrigger, 
-  DropdownMenu, 
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
   DropdownItem,
-  DropdownSection 
+  DropdownSection,
 } from "@heroui/dropdown";
 import { Button } from "@heroui/button";
 import { Badge } from "@heroui/badge";
@@ -17,12 +17,12 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 
 import { useSidebar } from "./sidebar-context";
-import { 
-  logoIcon, 
-  navigationIcons, 
-  quickActionIcons, 
+import {
+  logoIcon,
+  navigationIcons,
+  quickActionIcons,
   notificationIcons,
-  userIcons
+  userIcons,
 } from "./icons";
 
 interface Notification {
@@ -46,6 +46,7 @@ export function TopNavbar() {
       try {
         const res = await fetch("/api/admin/notifications?limit=5");
         const data = await res.json();
+
         setNotifications(data.notifications || []);
         setUnreadCount(data.unreadCount || 0);
       } catch (error) {
@@ -56,6 +57,7 @@ export function TopNavbar() {
     fetchNotifications();
     // Refresh every 30 seconds
     const interval = setInterval(fetchNotifications, 30000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -75,12 +77,18 @@ export function TopNavbar() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case "rater_started": return "solar:user-plus-bold-duotone";
-      case "rater_completed": return "solar:check-circle-bold-duotone";
-      case "samples_uploaded": return "solar:upload-bold-duotone";
-      case "rating_milestone": return "solar:star-bold-duotone";
-      case "export_completed": return "solar:file-download-bold-duotone";
-      default: return "solar:bell-bold-duotone";
+      case "rater_started":
+        return "solar:user-plus-bold-duotone";
+      case "rater_completed":
+        return "solar:check-circle-bold-duotone";
+      case "samples_uploaded":
+        return "solar:upload-bold-duotone";
+      case "rating_milestone":
+        return "solar:star-bold-duotone";
+      case "export_completed":
+        return "solar:file-download-bold-duotone";
+      default:
+        return "solar:bell-bold-duotone";
     }
   };
 
@@ -92,20 +100,22 @@ export function TopNavbar() {
           {/* Mobile Menu Button */}
           <Button
             isIconOnly
-            variant="light"
-            className="lg:hidden"
-            onPress={openMobileSidebar}
             aria-label="Open menu"
+            className="lg:hidden"
+            variant="light"
+            onPress={openMobileSidebar}
           >
-            <Icon icon={navigationIcons.menu} className="h-6 w-6" />
+            <Icon className="h-6 w-6" icon={navigationIcons.menu} />
           </Button>
 
           {/* Logo */}
-          <Link href="/admin" className="flex items-center gap-2">
+          <Link className="flex items-center gap-2" href="/admin">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-              <Icon icon={logoIcon} className="h-5 w-5 text-primary" />
+              <Icon className="h-5 w-5 text-primary" icon={logoIcon} />
             </div>
-            <span className="hidden text-lg font-semibold sm:block">OpenMOS</span>
+            <span className="hidden text-lg font-semibold sm:block">
+              OpenMOS
+            </span>
           </Link>
         </div>
 
@@ -114,10 +124,12 @@ export function TopNavbar() {
           {/* Quick Actions Dropdown */}
           <Dropdown placement="bottom-end">
             <DropdownTrigger>
-              <Button 
-                variant="flat" 
+              <Button
                 className="hidden sm:flex"
-                startContent={<Icon icon="solar:bolt-bold-duotone" className="h-4 w-4" />}
+                startContent={
+                  <Icon className="h-4 w-4" icon="solar:bolt-bold-duotone" />
+                }
+                variant="flat"
               >
                 Quick Actions
               </Button>
@@ -127,32 +139,52 @@ export function TopNavbar() {
                 <DropdownItem
                   key="upload"
                   description="Add new audio files"
-                  startContent={<Icon icon={quickActionIcons.upload} className="h-5 w-5 text-primary" />}
                   href="/admin/upload"
+                  startContent={
+                    <Icon
+                      className="h-5 w-5 text-primary"
+                      icon={quickActionIcons.upload}
+                    />
+                  }
                 >
                   Upload Audio Samples
                 </DropdownItem>
                 <DropdownItem
                   key="export"
                   description="Download as CSV"
-                  startContent={<Icon icon={quickActionIcons.download} className="h-5 w-5 text-success" />}
                   href="/admin/export"
+                  startContent={
+                    <Icon
+                      className="h-5 w-5 text-success"
+                      icon={quickActionIcons.download}
+                    />
+                  }
                 >
                   Export Dataset
                 </DropdownItem>
                 <DropdownItem
                   key="report"
                   description="Generate PDF analysis"
-                  startContent={<Icon icon={quickActionIcons.report} className="h-5 w-5 text-warning" />}
                   href="/admin/reports"
+                  startContent={
+                    <Icon
+                      className="h-5 w-5 text-warning"
+                      icon={quickActionIcons.report}
+                    />
+                  }
                 >
                   Generate Report
                 </DropdownItem>
                 <DropdownItem
                   key="new-study"
                   description="Create new evaluation"
-                  startContent={<Icon icon={quickActionIcons.newStudy} className="h-5 w-5 text-secondary" />}
                   href="/admin/studies/new"
+                  startContent={
+                    <Icon
+                      className="h-5 w-5 text-secondary"
+                      icon={quickActionIcons.newStudy}
+                    />
+                  }
                 >
                   Start New Study
                 </DropdownItem>
@@ -163,44 +195,57 @@ export function TopNavbar() {
           {/* Notifications Dropdown */}
           <Dropdown placement="bottom-end">
             <DropdownTrigger>
-              <Button isIconOnly variant="light" aria-label="Notifications">
-                <Badge 
-                  content={unreadCount} 
-                  color="danger" 
-                  size="sm"
+              <Button isIconOnly aria-label="Notifications" variant="light">
+                <Badge
+                  color="danger"
+                  content={unreadCount}
                   isInvisible={unreadCount === 0}
+                  size="sm"
                 >
-                  <Icon 
-                    icon={unreadCount > 0 ? notificationIcons.bellRinging : notificationIcons.bell} 
-                    className="h-5 w-5" 
+                  <Icon
+                    className="h-5 w-5"
+                    icon={
+                      unreadCount > 0
+                        ? notificationIcons.bellRinging
+                        : notificationIcons.bell
+                    }
                   />
                 </Badge>
               </Button>
             </DropdownTrigger>
             <DropdownMenu aria-label="Notifications" className="w-80">
-              <DropdownSection 
-                title="Notifications" 
+              <DropdownSection
                 showDivider={unreadCount > 0}
+                title="Notifications"
               >
                 {notifications.length === 0 ? (
-                  <DropdownItem key="empty" isReadOnly className="text-center py-4">
+                  <DropdownItem
+                    key="empty"
+                    isReadOnly
+                    className="text-center py-4"
+                  >
                     <div className="flex flex-col items-center gap-2">
-                      <Icon icon="solar:bell-off-bold-duotone" className="h-8 w-8 text-default-300" />
-                      <span className="text-default-400">No notifications yet</span>
+                      <Icon
+                        className="h-8 w-8 text-default-300"
+                        icon="solar:bell-off-bold-duotone"
+                      />
+                      <span className="text-default-400">
+                        No notifications yet
+                      </span>
                     </div>
                   </DropdownItem>
                 ) : (
                   notifications.map((notification) => (
                     <DropdownItem
                       key={notification.id}
-                      description={notification.timeAgo}
                       classNames={{
                         base: notification.read ? "opacity-60" : "",
                       }}
+                      description={notification.timeAgo}
                       startContent={
-                        <Icon 
-                          icon={getNotificationIcon(notification.type)} 
-                          className="h-5 w-5 text-primary" 
+                        <Icon
+                          className="h-5 w-5 text-primary"
+                          icon={getNotificationIcon(notification.type)}
                         />
                       }
                     >
@@ -216,8 +261,8 @@ export function TopNavbar() {
               </DropdownSection>
               {unreadCount > 0 ? (
                 <DropdownSection>
-                  <DropdownItem 
-                    key="mark-read" 
+                  <DropdownItem
+                    key="mark-read"
                     className="text-xs text-center text-primary"
                     onPress={markAllAsRead}
                   >
@@ -235,30 +280,52 @@ export function TopNavbar() {
           {/* User Menu Dropdown */}
           <Dropdown placement="bottom-end">
             <DropdownTrigger>
-              <Button variant="light" className="h-auto gap-2 px-2 py-1">
+              <Button className="h-auto gap-2 px-2 py-1" variant="light">
                 <Avatar
-                  size="sm"
-                  name={session?.user?.fullName || session?.user?.username || "User"}
                   className="h-8 w-8"
+                  name={
+                    session?.user?.fullName || session?.user?.username || "User"
+                  }
+                  size="sm"
                 />
                 <div className="hidden text-left md:block">
                   <p className="text-sm font-medium leading-tight">
-                    {session?.user?.fullName || session?.user?.username || "Researcher"}
+                    {session?.user?.fullName ||
+                      session?.user?.username ||
+                      "Researcher"}
                   </p>
                   <p className="text-xs text-default-500">
                     {session?.user?.role || "researcher"}
                   </p>
                 </div>
-                <Icon icon="solar:alt-arrow-down-linear" className="h-4 w-4 hidden md:block" />
+                <Icon
+                  className="h-4 w-4 hidden md:block"
+                  icon="solar:alt-arrow-down-linear"
+                />
               </Button>
             </DropdownTrigger>
             <DropdownMenu aria-label="User menu" className="w-64">
               <DropdownSection showDivider>
-                <DropdownItem key="profile" isReadOnly className="cursor-default">
+                <DropdownItem
+                  key="profile"
+                  isReadOnly
+                  className="cursor-default"
+                >
                   <div className="flex flex-col gap-1">
-                    <p className="font-semibold">{session?.user?.fullName || session?.user?.username || "Researcher"}</p>
-                    <p className="text-xs text-default-500">{session?.user?.email}</p>
-                    <Chip size="sm" variant="flat" color="primary" className="mt-1">
+                    <p className="font-semibold">
+                      {session?.user?.fullName ||
+                        session?.user?.username ||
+                        "Researcher"}
+                    </p>
+                    <p className="text-xs text-default-500">
+                      {session?.user?.email}
+                    </p>
+                    <Chip
+                      className="mt-1"
+                      color="primary"
+                      size="sm"
+                      variant="flat"
+                    >
                       {session?.user?.role || "researcher"}
                     </Chip>
                   </div>
@@ -267,22 +334,31 @@ export function TopNavbar() {
               <DropdownSection showDivider>
                 <DropdownItem
                   key="my-profile"
-                  startContent={<Icon icon={userIcons.userCircle} className="h-4 w-4" />}
                   href="/admin/profile"
+                  startContent={
+                    <Icon className="h-4 w-4" icon={userIcons.userCircle} />
+                  }
                 >
                   My Profile
                 </DropdownItem>
                 <DropdownItem
                   key="settings"
-                  startContent={<Icon icon={navigationIcons.settings} className="h-4 w-4" />}
                   href="/admin/settings"
+                  startContent={
+                    <Icon className="h-4 w-4" icon={navigationIcons.settings} />
+                  }
                 >
                   Settings
                 </DropdownItem>
                 <DropdownItem
                   key="activity"
-                  startContent={<Icon icon={navigationIcons.pastStudies} className="h-4 w-4" />}
                   href="/admin/activity"
+                  startContent={
+                    <Icon
+                      className="h-4 w-4"
+                      icon={navigationIcons.pastStudies}
+                    />
+                  }
                 >
                   Activity Log
                 </DropdownItem>
@@ -291,7 +367,9 @@ export function TopNavbar() {
                 <DropdownItem
                   key="logout"
                   color="danger"
-                  startContent={<Icon icon={navigationIcons.logout} className="h-4 w-4" />}
+                  startContent={
+                    <Icon className="h-4 w-4" icon={navigationIcons.logout} />
+                  }
                   onPress={() => signOut({ callbackUrl: "/" })}
                 >
                   Sign Out

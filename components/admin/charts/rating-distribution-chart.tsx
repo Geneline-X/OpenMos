@@ -25,12 +25,12 @@ interface RatingDistributionChartProps {
 
 const defaultData: RatingDistributionData[] = [];
 
-export function RatingDistributionChart({ 
-  data = defaultData, 
-  isLoading = false 
+export function RatingDistributionChart({
+  data = defaultData,
+  isLoading = false,
 }: RatingDistributionChartProps) {
   const [viewMode, setViewMode] = useState<"grouped" | "stacked">("grouped");
-  
+
   // Handle empty data state
   const hasData = data && data.length > 0;
 
@@ -122,7 +122,7 @@ export function RatingDistributionChart({
     <Card className="shadow-sm">
       <CardHeader className="flex items-center justify-between px-6 pt-6">
         <div className="flex items-center gap-2">
-          <Icon icon={chartIcons.pieChart} className="h-5 w-5 text-primary" />
+          <Icon className="h-5 w-5 text-primary" icon={chartIcons.pieChart} />
           <h3 className="text-lg font-semibold">Rating Distribution</h3>
         </div>
         <ButtonGroup size="sm" variant="flat">
@@ -144,16 +144,19 @@ export function RatingDistributionChart({
       <CardBody className="px-6 pb-6">
         {!hasData ? (
           <div className="flex flex-col items-center justify-center h-[320px] text-center">
-            <Icon icon="solar:pie-chart-2-bold-duotone" className="h-12 w-12 text-default-200 mb-3" />
+            <Icon
+              className="h-12 w-12 text-default-200 mb-3"
+              icon="solar:pie-chart-2-bold-duotone"
+            />
             <p className="text-default-500 text-sm">No distribution data yet</p>
           </div>
         ) : (
           <div className="h-[320px] w-full">
             <Chart
+              height="100%"
               options={chartOptions}
               series={series}
               type="bar"
-              height="100%"
               width="100%"
             />
           </div>

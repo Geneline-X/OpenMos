@@ -1,18 +1,21 @@
-import { Worker, Job } from "bullmq";
-import { createConnection } from "../connection";
-import { db } from "@/lib/db";
-import { evaluationSessions, ratings, audioSamples } from "@/lib/db/schema";
-import { eq, sql } from "drizzle-orm";
 import type { EvaluationJobData } from "../types";
+
+import { Worker, Job } from "bullmq";
+import { eq, sql } from "drizzle-orm";
+
+import { createConnection } from "../connection";
+
+import { db } from "@/lib/db";
+import { evaluationSessions, ratings } from "@/lib/db/schema";
 
 export function createEvaluationWorker() {
   const worker = new Worker<EvaluationJobData>(
     "evaluation",
     async (job: Job<EvaluationJobData>) => {
       const { type, sessionId, sampleId } = job.data;
-      
+
       console.log(`🎯 Processing evaluation job: ${type}`);
-      
+
       switch (type) {
         case "process-rating":
           // Update sample's aggregated score after a new rating
@@ -26,8 +29,11 @@ export function createEvaluationWorker() {
               .from(ratings)
               .where(eq(ratings.audioId, sampleId));
 
-            console.log(`Sample ${sampleId}: avg=${result[0]?.avgScore}, count=${result[0]?.count}`);
+            console.log(
+              `Sample ${sampleId}: avg=${result[0]?.avgScore}, count=${result[0]?.count}`,
+            );
           }
+
           return { processed: true, sampleId };
 
         case "finalize-session":
@@ -46,19 +52,26 @@ export function createEvaluationWorker() {
               })
               .where(eq(evaluationSessions.id, sessionId));
 
-            return { finalized: true, sessionId, totalRatings: sessionRatings.length };
+            return {
+              finalized: true,
+              sessionId,
+              totalRatings: sessionRatings.length,
+            };
           }
+
           return { finalized: false, reason: "No sessionId" };
 
         case "calculate-mos":
           // Calculate overall MOS statistics for a language/model
           // This would aggregate all ratings for reporting
           console.log("Calculating MOS statistics...");
+
           return { calculated: true };
 
         case "aggregate-results":
           // Aggregate evaluation results for export/reporting
           console.log("Aggregating results...");
+
           return { aggregated: true };
 
         default:
@@ -68,7 +81,7 @@ export function createEvaluationWorker() {
     {
       connection: createConnection(),
       concurrency: 3,
-    }
+    },
   );
 
   worker.on("completed", (job) => {

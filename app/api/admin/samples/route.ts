@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { eq, count, avg, desc } from "drizzle-orm";
+import { UTApi } from "uploadthing/server";
+
 import { db } from "@/lib/db";
 import { audioSamples, ratings } from "@/lib/db/schema";
-import { eq, count, avg, desc, sql } from "drizzle-orm";
-import { UTApi } from "uploadthing/server";
 
 const utapi = new UTApi();
 
@@ -70,11 +71,15 @@ export async function GET(request: NextRequest) {
         model: s.modelType,
         language: s.language,
         text: s.textContent,
-        duration: s.durationSeconds ? `${parseFloat(s.durationSeconds)}s` : "N/A",
+        duration: s.durationSeconds
+          ? `${parseFloat(s.durationSeconds)}s`
+          : "N/A",
         isActive: s.isActive,
         createdAt: s.createdAt,
         ratings: s.ratingCount,
-        avgScore: s.avgScore ? parseFloat(s.avgScore as string).toFixed(1) : "N/A",
+        avgScore: s.avgScore
+          ? parseFloat(s.avgScore as string).toFixed(1)
+          : "N/A",
       })),
       total: totalResult?.count || 0,
       limit,
@@ -82,9 +87,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Samples fetch error:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch samples" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -97,14 +103,14 @@ export async function DELETE(request: NextRequest) {
     if (!id) {
       return NextResponse.json(
         { error: "Sample ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Delete the sample (ratings will cascade due to FK or we handle manually)
     // First delete associated ratings
     await db.delete(ratings).where(eq(ratings.audioId, id));
-    
+
     // Get the sample first to retrieve the uploadthing key
     const [sample] = await db
       .select({ uploadthingKey: audioSamples.uploadthingKey })
@@ -112,10 +118,7 @@ export async function DELETE(request: NextRequest) {
       .where(eq(audioSamples.id, id));
 
     if (!sample) {
-      return NextResponse.json(
-        { error: "Sample not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Sample not found" }, { status: 404 });
     }
 
     // Delete from UploadThing storage if we have the key
@@ -142,9 +145,10 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error) {
     console.error("Sample delete error:", error);
+
     return NextResponse.json(
       { error: "Failed to delete sample" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

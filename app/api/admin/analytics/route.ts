@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { sql, eq, count, desc } from "drizzle-orm";
+
 import { db } from "@/lib/db";
 import { ratings, audioSamples, raters } from "@/lib/db/schema";
-import { sql, eq, count, avg, desc } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,10 +25,10 @@ export async function GET(request: NextRequest) {
       const stdDev = parseFloat(String(row.stdDev)) || 0;
       const n = row.n || 1;
       const marginOfError = 1.96 * (stdDev / Math.sqrt(n));
-      
+
       // Assign colors based on model type or index
       const colors = ["#10b981", "#1e40af", "#f59e0b", "#8b5cf6", "#ef4444"];
-      
+
       return {
         name: row.modelType || "Unknown",
         mean,
@@ -60,6 +61,7 @@ export async function GET(request: NextRequest) {
 
     ratingDistribution.forEach((row) => {
       const model = row.modelType || "Unknown";
+
       if (!modelRatings[model]) {
         modelRatings[model] = [0, 0, 0, 0, 0]; // Scores 1-5
         modelColors[model] = colors[colorIndex % colors.length];
@@ -70,14 +72,17 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    const distributionData = Object.entries(modelRatings).map(([model, ratings]) => ({
-      model,
-      color: modelColors[model],
-      ratings,
-    }));
+    const distributionData = Object.entries(modelRatings).map(
+      ([model, ratings]) => ({
+        model,
+        color: modelColors[model],
+        ratings,
+      }),
+    );
 
     // 3. Progress Timeline - Last 7 days of ratings
     const sevenDaysAgo = new Date();
+
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
@@ -93,30 +98,31 @@ export async function GET(request: NextRequest) {
 
     // Fill in missing days and calculate cumulative
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const progressData: { date: string; cumulative: number; daily: number }[] = [];
-    
+    const progressData: { date: string; cumulative: number; daily: number }[] =
+      [];
+
     // Get total ratings before this period for cumulative
     const [beforePeriodResult] = await db
       .select({ count: count() })
       .from(ratings)
       .where(sql`${ratings.timestamp} < ${sevenDaysAgo}`);
-    
+
     let cumulative = beforePeriodResult?.count || 0;
-    
+
     // Create a map of date -> count
-    const dailyMap = new Map(
-      dailyRatings.map((r) => [r.date, r.daily])
-    );
+    const dailyMap = new Map(dailyRatings.map((r) => [r.date, r.daily]));
 
     // Generate last 7 days
     for (let i = 0; i < 7; i++) {
       const date = new Date(sevenDaysAgo);
+
       date.setDate(date.getDate() + i);
       const dateStr = date.toISOString().split("T")[0];
       const dayName = days[date.getDay()];
       const daily = dailyMap.get(dateStr) || 0;
+
       cumulative += daily;
-      
+
       progressData.push({
         date: dayName,
         cumulative,
@@ -146,8 +152,7 @@ export async function GET(request: NextRequest) {
         `,
         count: count(),
       })
-      .from(raters)
-      .groupBy(sql`
+      .from(raters).groupBy(sql`
         CASE 
           WHEN ${raters.age} < 25 THEN '18-24'
           WHEN ${raters.age} < 35 THEN '25-34'
@@ -189,9 +194,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Analytics fetch error:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch analytics" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -11,13 +11,13 @@ import { cn } from "@heroui/theme";
 
 import { activityIcons } from "./icons";
 
-type ActivityType = 
-  | "completed" 
-  | "started" 
-  | "uploaded" 
-  | "downloaded" 
-  | "alert" 
-  | "settings" 
+type ActivityType =
+  | "completed"
+  | "started"
+  | "uploaded"
+  | "downloaded"
+  | "alert"
+  | "settings"
   | "invited";
 
 interface Activity {
@@ -95,20 +95,25 @@ function ActivityItem({ activity }: { activity: Activity }) {
     <div
       className={cn(
         "rounded-lg border border-divider border-l-4 bg-background p-4 transition-colors hover:bg-default-50",
-        config.borderColor
+        config.borderColor,
       )}
     >
       <div className="flex items-start gap-3">
-        <Icon icon={config.icon} className={cn("h-5 w-5 mt-0.5", config.color)} />
+        <Icon
+          className={cn("h-5 w-5 mt-0.5", config.color)}
+          icon={config.icon}
+        />
         <div className="flex-1 min-w-0">
           <p className="font-medium text-default-900">{activity.title}</p>
-          <p className="text-sm text-default-500 mt-0.5">{activity.description}</p>
+          <p className="text-sm text-default-500 mt-0.5">
+            {activity.description}
+          </p>
           <div className="flex items-center gap-4 mt-2">
             <span className="text-xs text-default-400">{activity.time}</span>
             {activity.actionLabel && activity.actionHref && (
               <Link
-                href={activity.actionHref}
                 className="text-xs text-primary hover:underline"
+                href={activity.actionHref}
               >
                 {activity.actionLabel}
               </Link>
@@ -163,12 +168,15 @@ export function ActivityFeed({
     <Card className="shadow-sm">
       <CardHeader className="flex items-center justify-between px-6 pt-6">
         <div className="flex items-center gap-2">
-          <Icon icon="solar:history-bold-duotone" className="h-5 w-5 text-primary" />
+          <Icon
+            className="h-5 w-5 text-primary"
+            icon="solar:history-bold-duotone"
+          />
           <h3 className="text-lg font-semibold">Activity</h3>
         </div>
         <Switch
-          size="sm"
           isSelected={autoRefresh}
+          size="sm"
           onValueChange={setAutoRefresh}
         />
       </CardHeader>
@@ -183,7 +191,10 @@ export function ActivityFeed({
             </>
           ) : activities.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Icon icon="solar:history-bold-duotone" className="h-12 w-12 text-default-300 mb-4" />
+              <Icon
+                className="h-12 w-12 text-default-300 mb-4"
+                icon="solar:history-bold-duotone"
+              />
               <p className="text-default-500">No activity yet</p>
               <p className="text-sm text-default-400 mt-2">
                 Activity will appear here as raters complete evaluations
@@ -198,9 +209,9 @@ export function ActivityFeed({
 
         {hasMore && !isLoading && (
           <Button
-            variant="light"
-            size="sm"
             className="mt-3 w-full"
+            size="sm"
+            variant="light"
             onPress={() => setDisplayCount((prev) => prev + 5)}
           >
             Load More

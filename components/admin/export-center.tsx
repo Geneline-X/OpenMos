@@ -60,7 +60,10 @@ export function ExportCenter({ onExport }: ExportCenterProps) {
     <Card className="shadow-sm">
       <CardHeader className="flex items-center justify-between px-6 pt-6">
         <div className="flex items-center gap-2">
-          <Icon icon="solar:download-bold-duotone" className="h-5 w-5 text-primary" />
+          <Icon
+            className="h-5 w-5 text-primary"
+            icon="solar:download-bold-duotone"
+          />
           <h3 className="text-lg font-semibold">Export</h3>
         </div>
       </CardHeader>
@@ -70,11 +73,11 @@ export function ExportCenter({ onExport }: ExportCenterProps) {
           {quickExports.map((exp) => (
             <Button
               key={exp.id}
-              variant="flat"
               className="h-auto flex-col items-center gap-1 py-3"
+              variant="flat"
               onPress={() => handleExport(exp.id)}
             >
-              <Icon icon={exp.icon} className={cn("h-6 w-6", exp.iconColor)} />
+              <Icon className={cn("h-6 w-6", exp.iconColor)} icon={exp.icon} />
               <span className="text-xs font-medium">{exp.title}</span>
             </Button>
           ))}

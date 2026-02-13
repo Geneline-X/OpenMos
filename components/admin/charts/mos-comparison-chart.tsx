@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
-import { 
-  Table, 
-  TableHeader, 
-  TableColumn, 
-  TableBody, 
-  TableRow, 
-  TableCell 
+import {
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
 } from "@heroui/table";
 import { Icon } from "@iconify/react";
 import { Tooltip } from "@heroui/tooltip";
@@ -43,7 +43,7 @@ function generateLatexTable(data: ModelData[]): string {
   const rows = data
     .map(
       (d) =>
-        `${d.name} & ${d.mean.toFixed(2)} & ${d.stdDev.toFixed(2)} & [${d.ciLower.toFixed(2)}, ${d.ciUpper.toFixed(2)}] & ${d.n} & ${d.pValue || "-"} \\\\`
+        `${d.name} & ${d.mean.toFixed(2)} & ${d.stdDev.toFixed(2)} & [${d.ciLower.toFixed(2)}, ${d.ciUpper.toFixed(2)}] & ${d.n} & ${d.pValue || "-"} \\\\`,
     )
     .join("\n");
 
@@ -61,9 +61,12 @@ ${rows}
 \\end{table}`;
 }
 
-export function MOSComparisonChart({ data = defaultData, isLoading = false }: MOSComparisonChartProps) {
+export function MOSComparisonChart({
+  data = defaultData,
+  isLoading = false,
+}: MOSComparisonChartProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  
+
   // Handle empty data state
   const hasData = data && data.length > 0;
 
@@ -113,6 +116,7 @@ export function MOSComparisonChart({ data = defaultData, isLoading = false }: MO
       enabled: true,
       formatter: (val: number, opts) => {
         const model = data[opts.dataPointIndex];
+
         return `${val.toFixed(2)} ± ${model.stdDev.toFixed(2)}`;
       },
       offsetY: -25,
@@ -169,6 +173,7 @@ export function MOSComparisonChart({ data = defaultData, isLoading = false }: MO
     tooltip: {
       custom: ({ dataPointIndex }) => {
         const model = data[dataPointIndex];
+
         return `
           <div class="p-3 bg-background border border-divider rounded-lg shadow-lg">
             <p class="font-semibold text-default-900">${model.name}</p>
@@ -198,6 +203,7 @@ export function MOSComparisonChart({ data = defaultData, isLoading = false }: MO
 
   const handleCopyLatex = () => {
     const latex = generateLatexTable(data);
+
     navigator.clipboard.writeText(latex);
     // Could add a toast notification here
   };
@@ -210,25 +216,27 @@ export function MOSComparisonChart({ data = defaultData, isLoading = false }: MO
     <Card className={`shadow-sm ${isFullscreen ? "fixed inset-4 z-50" : ""}`}>
       <CardHeader className="flex items-center justify-between px-6 pt-6">
         <div className="flex items-center gap-2">
-          <Icon icon={chartIcons.barChart} className="h-5 w-5 text-primary" />
+          <Icon className="h-5 w-5 text-primary" icon={chartIcons.barChart} />
           <h3 className="text-lg font-semibold">MOS Comparison</h3>
         </div>
         <div className="flex gap-1">
           <Tooltip content="Export">
             <Button isIconOnly size="sm" variant="light">
-              <Icon icon={chartIcons.export} className="h-4 w-4" />
+              <Icon className="h-4 w-4" icon={chartIcons.export} />
             </Button>
           </Tooltip>
           <Tooltip content={isFullscreen ? "Exit" : "Expand"}>
-            <Button 
-              isIconOnly 
-              size="sm" 
+            <Button
+              isIconOnly
+              size="sm"
               variant="light"
               onPress={() => setIsFullscreen(!isFullscreen)}
             >
-              <Icon 
-                icon={isFullscreen ? chartIcons.minimize : chartIcons.fullscreen} 
-                className="h-4 w-4" 
+              <Icon
+                className="h-4 w-4"
+                icon={
+                  isFullscreen ? chartIcons.minimize : chartIcons.fullscreen
+                }
               />
             </Button>
           </Tooltip>
@@ -238,7 +246,10 @@ export function MOSComparisonChart({ data = defaultData, isLoading = false }: MO
       <CardBody className="px-6 pb-6">
         {!hasData ? (
           <div className="flex flex-col items-center justify-center h-[350px] text-center">
-            <Icon icon="solar:chart-2-bold-duotone" className="h-16 w-16 text-default-200 mb-4" />
+            <Icon
+              className="h-16 w-16 text-default-200 mb-4"
+              icon="solar:chart-2-bold-duotone"
+            />
             <p className="text-default-500 font-medium">No rating data yet</p>
             <p className="text-default-400 text-sm mt-1">
               Charts will appear once raters submit evaluations
@@ -247,23 +258,25 @@ export function MOSComparisonChart({ data = defaultData, isLoading = false }: MO
         ) : (
           <>
             {/* Chart */}
-            <div className={`w-full ${isFullscreen ? "h-[60vh]" : "h-[350px]"}`}>
+            <div
+              className={`w-full ${isFullscreen ? "h-[60vh]" : "h-[350px]"}`}
+            >
               <Chart
+                height="100%"
                 options={chartOptions}
                 series={series}
                 type="bar"
-                height="100%"
                 width="100%"
               />
             </div>
 
             {/* Compact Stats Table */}
-            <Table 
+            <Table
+              isCompact
               aria-label="MOS comparison table"
               classNames={{
                 wrapper: "shadow-none border border-divider mt-4",
               }}
-              isCompact
             >
               <TableHeader>
                 <TableColumn>Model</TableColumn>
@@ -289,7 +302,9 @@ export function MOSComparisonChart({ data = defaultData, isLoading = false }: MO
                     <TableCell className="text-center font-mono text-sm">
                       {model.stdDev.toFixed(2)}
                     </TableCell>
-                    <TableCell className="text-center text-sm">{model.n}</TableCell>
+                    <TableCell className="text-center text-sm">
+                      {model.n}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

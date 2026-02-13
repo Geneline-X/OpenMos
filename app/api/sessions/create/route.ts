@@ -1,8 +1,10 @@
+import { randomUUID } from "crypto";
+
 import { NextRequest, NextResponse } from "next/server";
+import { eq, and } from "drizzle-orm";
+
 import { db } from "@/lib/db";
 import { raters, evaluationSessions, audioSamples } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
-import { randomUUID } from "crypto";
 import { isValidLanguage } from "@/config/languages";
 
 export async function POST(request: NextRequest) {
@@ -14,21 +16,21 @@ export async function POST(request: NextRequest) {
     if (!nativeLanguage || !isValidLanguage(nativeLanguage)) {
       return NextResponse.json(
         { error: "Invalid or missing native language" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!age || age < 18 || age > 120) {
       return NextResponse.json(
         { error: "Invalid age - must be 18 or older" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!gender) {
       return NextResponse.json(
         { error: "Gender is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -55,8 +57,8 @@ export async function POST(request: NextRequest) {
       .where(
         and(
           eq(audioSamples.language, nativeLanguage),
-          eq(audioSamples.isActive, true)
-        )
+          eq(audioSamples.isActive, true),
+        ),
       );
 
     // Determine total samples (minimum of available or 20)
@@ -68,8 +70,8 @@ export async function POST(request: NextRequest) {
       .values({
         raterId: rater.id,
         totalSamples: totalSamples,
-        deviceType: request.headers.get("user-agent")?.includes("Mobile") 
-          ? "mobile" 
+        deviceType: request.headers.get("user-agent")?.includes("Mobile")
+          ? "mobile"
           : "desktop",
         browserType: request.headers.get("user-agent") || "unknown",
       })
@@ -80,9 +82,14 @@ export async function POST(request: NextRequest) {
 
     // Shuffle samples for randomization (Fisher-Yates)
     const shuffledSamples = [...samples];
+
     for (let i = shuffledSamples.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [shuffledSamples[i], shuffledSamples[j]] = [shuffledSamples[j], shuffledSamples[i]];
+
+      [shuffledSamples[i], shuffledSamples[j]] = [
+        shuffledSamples[j],
+        shuffledSamples[i],
+      ];
     }
 
     // Store sample order in response (for client-side tracking)
@@ -114,9 +121,10 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     console.error("Session creation error:", error);
+
     return NextResponse.json(
       { error: "Failed to create session" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

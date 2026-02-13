@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { sql, eq, count, avg, and, gte } from "drizzle-orm";
+
 import { db } from "@/lib/db";
-import { audioSamples, ratings, raters, evaluationSessions } from "@/lib/db/schema";
-import { sql, eq, count, avg, desc, and, gte } from "drizzle-orm";
+import {
+  audioSamples,
+  ratings,
+  raters,
+  evaluationSessions,
+} from "@/lib/db/schema";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,6 +19,7 @@ export async function GET(request: NextRequest) {
 
     // Get today's ratings
     const today = new Date();
+
     today.setHours(0, 0, 0, 0);
     const [todayRatingsResult] = await db
       .select({ count: count() })
@@ -22,13 +29,15 @@ export async function GET(request: NextRequest) {
 
     // Get last week's ratings for trend
     const lastWeek = new Date();
+
     lastWeek.setDate(lastWeek.getDate() - 7);
     const [lastWeekResult] = await db
       .select({ count: count() })
       .from(ratings)
       .where(gte(ratings.timestamp, lastWeek));
-    
+
     const twoWeeksAgo = new Date();
+
     twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
     const [prevWeekResult] = await db
       .select({ count: count() })
@@ -36,16 +45,17 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           gte(ratings.timestamp, twoWeeksAgo),
-          sql`${ratings.timestamp} < ${lastWeek}`
-        )
+          sql`${ratings.timestamp} < ${lastWeek}`,
+        ),
       );
-    
+
     const thisWeek = lastWeekResult?.count || 0;
     const prevWeek = prevWeekResult?.count || 1;
     const ratingsTrend = Math.round(((thisWeek - prevWeek) / prevWeek) * 100);
 
     // Get active sessions (sessions started in last hour without completion)
     const oneHourAgo = new Date();
+
     oneHourAgo.setHours(oneHourAgo.getHours() - 1);
     const [activeSessionsResult] = await db
       .select({ count: count() })
@@ -53,8 +63,8 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           gte(evaluationSessions.startedAt, oneHourAgo),
-          sql`${evaluationSessions.completedAt} IS NULL`
-        )
+          sql`${evaluationSessions.completedAt} IS NULL`,
+        ),
       );
     const activeSessions = activeSessionsResult?.count || 0;
 
@@ -66,10 +76,12 @@ export async function GET(request: NextRequest) {
       .select({ count: count() })
       .from(evaluationSessions)
       .where(sql`${evaluationSessions.completedAt} IS NOT NULL`);
-    
+
     const totalSessions = totalSessionsResult?.count || 1;
     const completedSessions = completedSessionsResult?.count || 0;
-    const completionRate = Math.round((completedSessions / totalSessions) * 100);
+    const completionRate = Math.round(
+      (completedSessions / totalSessions) * 100,
+    );
 
     // Get total raters
     const [totalRatersResult] = await db
@@ -113,9 +125,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Stats fetch error:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch stats" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

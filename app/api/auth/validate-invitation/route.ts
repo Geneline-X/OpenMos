@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { eq, and, gt, isNull } from "drizzle-orm";
+
 import { db } from "@/lib/db";
 import { adminInvitations, adminUsers } from "@/lib/db/schema";
-import { eq, and, gt, isNull } from "drizzle-orm";
 
 export async function POST(request: Request) {
   try {
@@ -10,7 +11,7 @@ export async function POST(request: Request) {
     if (!token) {
       return NextResponse.json(
         { valid: false, error: "Token is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -32,8 +33,8 @@ export async function POST(request: Request) {
           eq(adminInvitations.token, token),
           gt(adminInvitations.expiresAt, new Date()),
           isNull(adminInvitations.acceptedAt),
-          isNull(adminInvitations.revokedAt)
-        )
+          isNull(adminInvitations.revokedAt),
+        ),
       )
       .limit(1);
 
@@ -48,13 +49,15 @@ export async function POST(request: Request) {
       valid: true,
       email: invitation.email,
       role: invitation.role,
-      inviterName: invitation.inviterName || invitation.inviterUsername || "Team Admin",
+      inviterName:
+        invitation.inviterName || invitation.inviterUsername || "Team Admin",
     });
   } catch (error) {
     console.error("Error validating invitation:", error);
+
     return NextResponse.json(
       { valid: false, error: "Failed to validate invitation" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

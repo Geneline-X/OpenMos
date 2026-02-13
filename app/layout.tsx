@@ -3,8 +3,8 @@ import { Metadata, Viewport } from "next";
 import clsx from "clsx";
 
 import { Providers } from "./providers";
-import { PublicLayoutWrapper } from "@/components/layout/public-layout-wrapper";
 
+import { PublicLayoutWrapper } from "@/components/layout/public-layout-wrapper";
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 
@@ -17,7 +17,15 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
-  keywords: ["MOS", "Mean Opinion Score", "Speech Evaluation", "TTS", "African Languages", "Luganda", "Krio"],
+  keywords: [
+    "MOS",
+    "Mean Opinion Score",
+    "Speech Evaluation",
+    "TTS",
+    "African Languages",
+    "Luganda",
+    "Krio",
+  ],
   authors: [{ name: "GenelineX" }],
   openGraph: {
     title: siteConfig.name,

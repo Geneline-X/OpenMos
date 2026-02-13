@@ -3,7 +3,7 @@
 // ============================================
 
 // Email Jobs
-export type EmailJobType = 
+export type EmailJobType =
   | "password-reset"
   | "invitation"
   | "welcome"

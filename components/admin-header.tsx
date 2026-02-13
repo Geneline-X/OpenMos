@@ -1,5 +1,7 @@
 "use client";
 
+import type { AdminRole } from "@/lib/db/schema";
+
 import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -21,8 +23,8 @@ import {
   ModalFooter,
   useDisclosure,
 } from "@heroui/modal";
+
 import { formatRole, getRoleIcon, getRoleColor } from "@/lib/auth/utils";
-import type { AdminRole } from "@/lib/db/schema";
 
 interface AdminHeaderProps {
   showSessionWarning?: boolean;
@@ -81,11 +83,11 @@ export function AdminHeader({ showSessionWarning = true }: AdminHeaderProps) {
     <>
       <Dropdown placement="bottom-end">
         <DropdownTrigger>
-          <Button variant="light" className="gap-2 px-2">
+          <Button className="gap-2 px-2" variant="light">
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
               <Icon
-                icon="solar:user-circle-bold-duotone"
                 className="w-6 h-6 text-primary"
+                icon="solar:user-circle-bold-duotone"
               />
             </div>
             <div className="hidden sm:flex flex-col items-start">
@@ -97,8 +99,8 @@ export function AdminHeader({ showSessionWarning = true }: AdminHeaderProps) {
               </span>
             </div>
             <Icon
-              icon="solar:alt-arrow-down-linear"
               className="w-4 h-4 text-default-400"
+              icon="solar:alt-arrow-down-linear"
             />
           </Button>
         </DropdownTrigger>
@@ -106,15 +108,15 @@ export function AdminHeader({ showSessionWarning = true }: AdminHeaderProps) {
           <DropdownSection showDivider>
             <DropdownItem
               key="profile"
+              isReadOnly
               className="h-auto py-3"
               textValue="Profile"
-              isReadOnly
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <Icon
-                    icon="solar:user-circle-bold-duotone"
                     className="w-7 h-7 text-primary"
+                    icon="solar:user-circle-bold-duotone"
                   />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -129,11 +131,11 @@ export function AdminHeader({ showSessionWarning = true }: AdminHeaderProps) {
               <div className="mt-2">
                 <Chip
                   color={getRoleColor(role)}
-                  variant="flat"
                   size="sm"
                   startContent={
-                    <Icon icon={getRoleIcon(role)} className="w-3 h-3" />
+                    <Icon className="w-3 h-3" icon={getRoleIcon(role)} />
                   }
+                  variant="flat"
                 >
                   {formatRole(role)}
                 </Chip>
@@ -145,7 +147,7 @@ export function AdminHeader({ showSessionWarning = true }: AdminHeaderProps) {
             <DropdownItem
               key="settings"
               startContent={
-                <Icon icon="solar:settings-linear" className="w-4 h-4" />
+                <Icon className="w-4 h-4" icon="solar:settings-linear" />
               }
               onPress={() => router.push("/admin/settings")}
             >
@@ -153,11 +155,13 @@ export function AdminHeader({ showSessionWarning = true }: AdminHeaderProps) {
             </DropdownItem>
             <DropdownItem
               key="activity"
+              className={
+                role === "viewer" || role === "researcher" ? "hidden" : ""
+              }
               startContent={
-                <Icon icon="solar:history-linear" className="w-4 h-4" />
+                <Icon className="w-4 h-4" icon="solar:history-linear" />
               }
               onPress={() => router.push("/admin/audit-logs")}
-              className={role === "viewer" || role === "researcher" ? "hidden" : ""}
             >
               Activity Log
             </DropdownItem>
@@ -166,12 +170,12 @@ export function AdminHeader({ showSessionWarning = true }: AdminHeaderProps) {
           <DropdownSection>
             <DropdownItem
               key="session"
-              className={`text-default-400 text-xs ${!timeRemaining ? "hidden" : ""}`}
               isReadOnly
+              className={`text-default-400 text-xs ${!timeRemaining ? "hidden" : ""}`}
               textValue="Session info"
             >
               <div className="flex items-center gap-2">
-                <Icon icon="solar:clock-circle-linear" className="w-4 h-4" />
+                <Icon className="w-4 h-4" icon="solar:clock-circle-linear" />
                 <span>Session expires in {timeRemaining || "N/A"}</span>
               </div>
             </DropdownItem>
@@ -179,7 +183,7 @@ export function AdminHeader({ showSessionWarning = true }: AdminHeaderProps) {
               key="logout"
               color="danger"
               startContent={
-                <Icon icon="solar:logout-linear" className="w-4 h-4" />
+                <Icon className="w-4 h-4" icon="solar:logout-linear" />
               }
               onPress={onOpen}
             >
@@ -190,13 +194,13 @@ export function AdminHeader({ showSessionWarning = true }: AdminHeaderProps) {
       </Dropdown>
 
       {/* Sign Out Confirmation Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="sm">
+      <Modal isOpen={isOpen} size="sm" onClose={onClose}>
         <ModalContent>
           <ModalHeader className="flex flex-col items-center gap-2 pt-6">
             <div className="p-3 rounded-full bg-danger/10">
               <Icon
-                icon="solar:logout-bold-duotone"
                 className="w-8 h-8 text-danger"
+                icon="solar:logout-bold-duotone"
               />
             </div>
             <h3 className="text-lg font-semibold">Sign Out?</h3>
@@ -219,17 +223,17 @@ export function AdminHeader({ showSessionWarning = true }: AdminHeaderProps) {
 
       {/* Session Expiry Warning Modal */}
       <Modal
-        isOpen={showExpiryWarning}
-        onClose={() => setShowExpiryWarning(false)}
-        size="sm"
         hideCloseButton
+        isOpen={showExpiryWarning}
+        size="sm"
+        onClose={() => setShowExpiryWarning(false)}
       >
         <ModalContent>
           <ModalHeader className="flex flex-col items-center gap-2 pt-6">
             <div className="p-3 rounded-full bg-warning/10">
               <Icon
-                icon="solar:clock-circle-bold-duotone"
                 className="w-8 h-8 text-warning"
+                icon="solar:clock-circle-bold-duotone"
               />
             </div>
             <h3 className="text-lg font-semibold">Session Expiring Soon</h3>

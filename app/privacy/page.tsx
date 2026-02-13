@@ -10,7 +10,10 @@ export default function PrivacyPage() {
   return (
     <section className="py-8 max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-8">
-        <Icon icon="solar:shield-check-bold-duotone" className="w-10 h-10 text-primary" />
+        <Icon
+          className="w-10 h-10 text-primary"
+          icon="solar:shield-check-bold-duotone"
+        />
         <div>
           <h1 className="text-3xl font-bold">Privacy Policy</h1>
           <p className="text-default-500">Last updated: February 2026</p>
@@ -23,9 +26,10 @@ export default function PrivacyPage() {
           <CardBody className="gap-4 p-6">
             <h2 className="text-xl font-semibold">Introduction</h2>
             <p className="text-default-600 leading-relaxed">
-              OpenMOS (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your privacy. 
-              This Privacy Policy explains how we collect, use, disclose, and safeguard your 
-              information when you participate in our Mean Opinion Score evaluation research.
+              OpenMOS (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is
+              committed to protecting your privacy. This Privacy Policy explains
+              how we collect, use, disclose, and safeguard your information when
+              you participate in our Mean Opinion Score evaluation research.
             </p>
           </CardBody>
         </Card>
@@ -34,13 +38,18 @@ export default function PrivacyPage() {
         <Card shadow="sm">
           <CardBody className="gap-4 p-6">
             <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Icon icon="solar:database-bold-duotone" className="w-6 h-6 text-primary" />
+              <Icon
+                className="w-6 h-6 text-primary"
+                icon="solar:database-bold-duotone"
+              />
               Data We Collect
             </h2>
-            
+
             <div className="space-y-4">
               <div>
-                <h3 className="font-medium mb-2">Demographic Information (Optional)</h3>
+                <h3 className="font-medium mb-2">
+                  Demographic Information (Optional)
+                </h3>
                 <ul className="text-default-600 text-sm space-y-1 ml-4">
                   <li>• Age range</li>
                   <li>• Gender (optional)</li>
@@ -58,7 +67,9 @@ export default function PrivacyPage() {
               </div>
 
               <div>
-                <h3 className="font-medium mb-2">Technical Data (with consent)</h3>
+                <h3 className="font-medium mb-2">
+                  Technical Data (with consent)
+                </h3>
                 <ul className="text-default-600 text-sm space-y-1 ml-4">
                   <li>• Device type and browser (for quality analysis)</li>
                   <li>• Session duration</li>
@@ -73,24 +84,41 @@ export default function PrivacyPage() {
         <Card shadow="sm">
           <CardBody className="gap-4 p-6">
             <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Icon icon="solar:chart-bold-duotone" className="w-6 h-6 text-success" />
+              <Icon
+                className="w-6 h-6 text-success"
+                icon="solar:chart-bold-duotone"
+              />
               How We Use Your Data
             </h2>
             <ul className="text-default-600 space-y-2">
               <li className="flex items-start gap-2">
-                <Icon icon="solar:check-circle-linear" className="w-5 h-5 text-success mt-0.5" />
+                <Icon
+                  className="w-5 h-5 text-success mt-0.5"
+                  icon="solar:check-circle-linear"
+                />
                 <span>To analyze and compare text-to-speech model quality</span>
               </li>
               <li className="flex items-start gap-2">
-                <Icon icon="solar:check-circle-linear" className="w-5 h-5 text-success mt-0.5" />
+                <Icon
+                  className="w-5 h-5 text-success mt-0.5"
+                  icon="solar:check-circle-linear"
+                />
                 <span>To publish academic research on speech synthesis</span>
               </li>
               <li className="flex items-start gap-2">
-                <Icon icon="solar:check-circle-linear" className="w-5 h-5 text-success mt-0.5" />
-                <span>To improve AI voice technology for African languages</span>
+                <Icon
+                  className="w-5 h-5 text-success mt-0.5"
+                  icon="solar:check-circle-linear"
+                />
+                <span>
+                  To improve AI voice technology for African languages
+                </span>
               </li>
               <li className="flex items-start gap-2">
-                <Icon icon="solar:check-circle-linear" className="w-5 h-5 text-success mt-0.5" />
+                <Icon
+                  className="w-5 h-5 text-success mt-0.5"
+                  icon="solar:check-circle-linear"
+                />
                 <span>To ensure evaluation data quality and reliability</span>
               </li>
             </ul>
@@ -101,40 +129,51 @@ export default function PrivacyPage() {
         <Card shadow="sm">
           <CardBody className="gap-4 p-6">
             <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Icon icon="solar:settings-bold-duotone" className="w-6 h-6 text-warning" />
+              <Icon
+                className="w-6 h-6 text-warning"
+                icon="solar:settings-bold-duotone"
+              />
               Cookies &amp; Tracking
             </h2>
-            
+
             <div className="space-y-4">
               <div className="p-4 bg-default-50 rounded-lg">
-                <h3 className="font-medium text-success mb-2">Essential Cookies (Always Active)</h3>
+                <h3 className="font-medium text-success mb-2">
+                  Essential Cookies (Always Active)
+                </h3>
                 <p className="text-sm text-default-600">
-                  Required for basic functionality: session management, progress tracking, 
-                  language preference. Cannot be disabled.
+                  Required for basic functionality: session management, progress
+                  tracking, language preference. Cannot be disabled.
                 </p>
               </div>
 
               <div className="p-4 bg-default-50 rounded-lg">
-                <h3 className="font-medium text-primary mb-2">Functional Cookies (Opt-in)</h3>
+                <h3 className="font-medium text-primary mb-2">
+                  Functional Cookies (Opt-in)
+                </h3>
                 <p className="text-sm text-default-600">
-                  Remember your preferences: audio volume, theme settings, 
+                  Remember your preferences: audio volume, theme settings,
                   auto-login. Duration: 30 days.
                 </p>
               </div>
 
               <div className="p-4 bg-default-50 rounded-lg">
-                <h3 className="font-medium text-warning mb-2">Analytics Cookies (Opt-in)</h3>
+                <h3 className="font-medium text-warning mb-2">
+                  Analytics Cookies (Opt-in)
+                </h3>
                 <p className="text-sm text-default-600">
-                  Help us understand platform usage: page views, completion rates, 
-                  performance metrics. Duration: 1 year.
+                  Help us understand platform usage: page views, completion
+                  rates, performance metrics. Duration: 1 year.
                 </p>
               </div>
 
               <div className="p-4 bg-default-50 rounded-lg">
-                <h3 className="font-medium text-danger mb-2">Research Tracking (Opt-in)</h3>
+                <h3 className="font-medium text-danger mb-2">
+                  Research Tracking (Opt-in)
+                </h3>
                 <p className="text-sm text-default-600">
-                  Behavioral data for research validity: time per sample, replay count, 
-                  device info. Duration: 90 days (study period).
+                  Behavioral data for research validity: time per sample, replay
+                  count, device info. Duration: 90 days (study period).
                 </p>
               </div>
             </div>
@@ -145,25 +184,47 @@ export default function PrivacyPage() {
         <Card shadow="sm">
           <CardBody className="gap-4 p-6">
             <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Icon icon="solar:lock-password-bold-duotone" className="w-6 h-6 text-primary" />
+              <Icon
+                className="w-6 h-6 text-primary"
+                icon="solar:lock-password-bold-duotone"
+              />
               Data Protection
             </h2>
             <ul className="text-default-600 space-y-2">
               <li className="flex items-start gap-2">
-                <Icon icon="solar:shield-check-linear" className="w-5 h-5 text-success mt-0.5" />
-                <span>All data is anonymized - we don&apos;t collect names, emails, or identifying information</span>
+                <Icon
+                  className="w-5 h-5 text-success mt-0.5"
+                  icon="solar:shield-check-linear"
+                />
+                <span>
+                  All data is anonymized - we don&apos;t collect names, emails,
+                  or identifying information
+                </span>
               </li>
               <li className="flex items-start gap-2">
-                <Icon icon="solar:shield-check-linear" className="w-5 h-5 text-success mt-0.5" />
+                <Icon
+                  className="w-5 h-5 text-success mt-0.5"
+                  icon="solar:shield-check-linear"
+                />
                 <span>Data is encrypted in transit and at rest</span>
               </li>
               <li className="flex items-start gap-2">
-                <Icon icon="solar:shield-check-linear" className="w-5 h-5 text-success mt-0.5" />
-                <span>Access is restricted to authorized research team members</span>
+                <Icon
+                  className="w-5 h-5 text-success mt-0.5"
+                  icon="solar:shield-check-linear"
+                />
+                <span>
+                  Access is restricted to authorized research team members
+                </span>
               </li>
               <li className="flex items-start gap-2">
-                <Icon icon="solar:shield-check-linear" className="w-5 h-5 text-success mt-0.5" />
-                <span>Data will never be sold or shared for commercial purposes</span>
+                <Icon
+                  className="w-5 h-5 text-success mt-0.5"
+                  icon="solar:shield-check-linear"
+                />
+                <span>
+                  Data will never be sold or shared for commercial purposes
+                </span>
               </li>
             </ul>
           </CardBody>
@@ -173,7 +234,10 @@ export default function PrivacyPage() {
         <Card shadow="sm">
           <CardBody className="gap-4 p-6">
             <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Icon icon="solar:user-check-bold-duotone" className="w-6 h-6 text-success" />
+              <Icon
+                className="w-6 h-6 text-success"
+                icon="solar:user-check-bold-duotone"
+              />
               Your Rights
             </h2>
             <p className="text-default-600 mb-4">
@@ -181,35 +245,65 @@ export default function PrivacyPage() {
             </p>
             <ul className="text-default-600 space-y-2">
               <li className="flex items-start gap-2">
-                <Icon icon="solar:document-text-linear" className="w-5 h-5 text-primary mt-0.5" />
-                <span><strong>Access:</strong> Download your evaluation data at any time</span>
+                <Icon
+                  className="w-5 h-5 text-primary mt-0.5"
+                  icon="solar:document-text-linear"
+                />
+                <span>
+                  <strong>Access:</strong> Download your evaluation data at any
+                  time
+                </span>
               </li>
               <li className="flex items-start gap-2">
-                <Icon icon="solar:pen-linear" className="w-5 h-5 text-primary mt-0.5" />
-                <span><strong>Correction:</strong> Request correction of inaccurate data</span>
+                <Icon
+                  className="w-5 h-5 text-primary mt-0.5"
+                  icon="solar:pen-linear"
+                />
+                <span>
+                  <strong>Correction:</strong> Request correction of inaccurate
+                  data
+                </span>
               </li>
               <li className="flex items-start gap-2">
-                <Icon icon="solar:trash-bin-minimalistic-linear" className="w-5 h-5 text-primary mt-0.5" />
-                <span><strong>Deletion:</strong> Request deletion of your data</span>
+                <Icon
+                  className="w-5 h-5 text-primary mt-0.5"
+                  icon="solar:trash-bin-minimalistic-linear"
+                />
+                <span>
+                  <strong>Deletion:</strong> Request deletion of your data
+                </span>
               </li>
               <li className="flex items-start gap-2">
-                <Icon icon="solar:export-linear" className="w-5 h-5 text-primary mt-0.5" />
-                <span><strong>Portability:</strong> Receive your data in a standard format</span>
+                <Icon
+                  className="w-5 h-5 text-primary mt-0.5"
+                  icon="solar:export-linear"
+                />
+                <span>
+                  <strong>Portability:</strong> Receive your data in a standard
+                  format
+                </span>
               </li>
               <li className="flex items-start gap-2">
-                <Icon icon="solar:close-circle-linear" className="w-5 h-5 text-primary mt-0.5" />
-                <span><strong>Withdraw Consent:</strong> Change cookie preferences anytime</span>
+                <Icon
+                  className="w-5 h-5 text-primary mt-0.5"
+                  icon="solar:close-circle-linear"
+                />
+                <span>
+                  <strong>Withdraw Consent:</strong> Change cookie preferences
+                  anytime
+                </span>
               </li>
             </ul>
           </CardBody>
         </Card>
 
         {/* Contact */}
-        <Card shadow="sm" className="bg-primary/5 border border-primary/20">
+        <Card className="bg-primary/5 border border-primary/20" shadow="sm">
           <CardBody className="gap-4 p-6">
             <h2 className="text-xl font-semibold">Contact Us</h2>
             <p className="text-default-600">
-              For privacy-related questions or to exercise your rights, contact us at:
+              For privacy-related questions or to exercise your rights, contact
+              us at:
             </p>
             <p className="font-medium">privacy@openmos.org</p>
           </CardBody>

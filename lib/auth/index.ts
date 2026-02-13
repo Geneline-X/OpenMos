@@ -1,16 +1,17 @@
+import type { AdminRole } from "@/lib/db/schema";
+
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { eq, or } from "drizzle-orm";
+
 import { db } from "@/lib/db";
 import { adminUsers, auditLogs } from "@/lib/db/schema";
-import { eq, and, or } from "drizzle-orm";
 import {
   verifyPassword,
   isAccountLocked,
   getLockoutExpiry,
   MAX_LOGIN_ATTEMPTS,
-  getAdminSessionExpiry,
 } from "@/lib/auth/utils";
-import type { AdminRole } from "@/lib/db/schema";
 
 // Extend the default session types
 declare module "next-auth" {
@@ -65,8 +66,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           .where(
             or(
               eq(adminUsers.username, usernameOrEmail.toLowerCase()),
-              eq(adminUsers.email, usernameOrEmail.toLowerCase())
-            )
+              eq(adminUsers.email, usernameOrEmail.toLowerCase()),
+            ),
           )
           .limit(1);
 
@@ -82,10 +83,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // Check if account is locked
         if (isAccountLocked(user.lockedUntil)) {
           const remainingMinutes = Math.ceil(
-            (user.lockedUntil!.getTime() - Date.now()) / 60000
+            (user.lockedUntil!.getTime() - Date.now()) / 60000,
           );
+
           throw new Error(
-            `Account locked. Try again in ${remainingMinutes} minutes`
+            `Account locked. Try again in ${remainingMinutes} minutes`,
           );
         }
 
@@ -122,7 +124,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           });
 
           if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
-            throw new Error("Too many failed attempts. Account locked for 30 minutes");
+            throw new Error(
+              "Too many failed attempts. Account locked for 30 minutes",
+            );
           }
 
           throw new Error("Invalid credentials");
@@ -173,6 +177,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.role = user.role;
         token.fullName = user.fullName;
       }
+
       return token;
     },
     async session({ session, token }) {
@@ -182,6 +187,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.role = token.role as AdminRole;
         session.user.fullName = token.fullName as string | null;
       }
+
       return session;
     },
   },

@@ -3,10 +3,18 @@
 import { useState, useEffect } from "react";
 import { Card, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@heroui/table";
+import {
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@heroui/table";
 import { Chip } from "@heroui/chip";
 import { Spinner } from "@heroui/spinner";
 import { Icon } from "@iconify/react";
+
 import { usePagination } from "@/hooks/usePagination";
 
 interface Rating {
@@ -22,13 +30,19 @@ interface Rating {
 const getScoreColor = (score: number) => {
   if (score >= 4) return "success";
   if (score === 3) return "warning";
+
   return "danger";
 };
 
 export default function RatingsPage() {
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState({ total: 0, avgScore: "0.00", avgTime: "0s", today: 0 });
+  const [stats, setStats] = useState({
+    total: 0,
+    avgScore: "0.00",
+    avgTime: "0s",
+    today: 0,
+  });
 
   const {
     currentPage,
@@ -45,6 +59,7 @@ export default function RatingsPage() {
       try {
         const res = await fetch("/api/admin/ratings");
         const data = await res.json();
+
         setRatings(data.ratings || []);
         setStats({
           total: data.total || 0,
@@ -72,7 +87,10 @@ export default function RatingsPage() {
         <Card>
           <CardBody className="flex flex-row items-center gap-4">
             <div className="rounded-lg bg-primary/10 p-2">
-              <Icon icon="solar:star-bold-duotone" className="h-6 w-6 text-primary" />
+              <Icon
+                className="h-6 w-6 text-primary"
+                icon="solar:star-bold-duotone"
+              />
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.total}</p>
@@ -83,7 +101,10 @@ export default function RatingsPage() {
         <Card>
           <CardBody className="flex flex-row items-center gap-4">
             <div className="rounded-lg bg-success/10 p-2">
-              <Icon icon="solar:chart-bold-duotone" className="h-6 w-6 text-success" />
+              <Icon
+                className="h-6 w-6 text-success"
+                icon="solar:chart-bold-duotone"
+              />
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.avgScore}</p>
@@ -94,7 +115,10 @@ export default function RatingsPage() {
         <Card>
           <CardBody className="flex flex-row items-center gap-4">
             <div className="rounded-lg bg-warning/10 p-2">
-              <Icon icon="solar:clock-circle-bold-duotone" className="h-6 w-6 text-warning" />
+              <Icon
+                className="h-6 w-6 text-warning"
+                icon="solar:clock-circle-bold-duotone"
+              />
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.avgTime}</p>
@@ -105,7 +129,10 @@ export default function RatingsPage() {
         <Card>
           <CardBody className="flex flex-row items-center gap-4">
             <div className="rounded-lg bg-secondary/10 p-2">
-              <Icon icon="solar:calendar-bold-duotone" className="h-6 w-6 text-secondary" />
+              <Icon
+                className="h-6 w-6 text-secondary"
+                icon="solar:calendar-bold-duotone"
+              />
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.today}</p>
@@ -123,10 +150,14 @@ export default function RatingsPage() {
             </div>
           ) : ratings.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 text-center">
-              <Icon icon="solar:star-bold-duotone" className="h-12 w-12 text-default-300 mb-4" />
+              <Icon
+                className="h-12 w-12 text-default-300 mb-4"
+                icon="solar:star-bold-duotone"
+              />
               <p className="text-default-500">No ratings collected yet</p>
               <p className="text-sm text-default-400 mt-2">
-                Ratings will appear here as native speakers evaluate your audio samples
+                Ratings will appear here as native speakers evaluate your audio
+                samples
               </p>
             </div>
           ) : (
@@ -144,19 +175,26 @@ export default function RatingsPage() {
                   <TableRow key={rating.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Icon icon="solar:soundwave-linear" className="h-4 w-4 text-default-400" />
-                        <span className="font-mono text-sm">{rating.sample}</span>
+                        <Icon
+                          className="h-4 w-4 text-default-400"
+                          icon="solar:soundwave-linear"
+                        />
+                        <span className="font-mono text-sm">
+                          {rating.sample}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>{rating.model}</TableCell>
                     <TableCell>
-                      <Chip size="sm" color={getScoreColor(rating.score)}>
+                      <Chip color={getScoreColor(rating.score)} size="sm">
                         {rating.score}
                       </Chip>
                     </TableCell>
                     <TableCell>Rater {rating.rater}</TableCell>
                     <TableCell>{rating.time}</TableCell>
-                    <TableCell className="text-default-500">{rating.date}</TableCell>
+                    <TableCell className="text-default-500">
+                      {rating.date}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -172,21 +210,27 @@ export default function RatingsPage() {
               <div className="flex items-center gap-2">
                 <Button
                   isIconOnly
+                  isDisabled={!hasPrev}
                   size="sm"
                   variant="flat"
-                  isDisabled={!hasPrev}
                   onPress={prevPage}
                 >
-                  <Icon icon="solar:alt-arrow-left-linear" className="h-4 w-4" />
+                  <Icon
+                    className="h-4 w-4"
+                    icon="solar:alt-arrow-left-linear"
+                  />
                 </Button>
                 <Button
                   isIconOnly
+                  isDisabled={!hasNext}
                   size="sm"
                   variant="flat"
-                  isDisabled={!hasNext}
                   onPress={nextPage}
                 >
-                  <Icon icon="solar:alt-arrow-right-linear" className="h-4 w-4" />
+                  <Icon
+                    className="h-4 w-4"
+                    icon="solar:alt-arrow-right-linear"
+                  />
                 </Button>
               </div>
             </div>

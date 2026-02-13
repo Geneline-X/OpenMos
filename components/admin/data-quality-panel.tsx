@@ -118,15 +118,13 @@ function QualityMetricCard({ metric }: { metric: QualityMetric }) {
       <CardBody className="p-3">
         <div className="flex items-start gap-2">
           <div className={cn("rounded-lg p-1.5", config.bgColor)}>
-            <Icon icon={metric.icon} className={cn("h-5 w-5", config.color)} />
+            <Icon className={cn("h-5 w-5", config.color)} icon={metric.icon} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium text-default-500">
               {metric.title}
             </p>
-            <p className="text-xl font-bold text-default-900">
-              {metric.value}
-            </p>
+            <p className="text-xl font-bold text-default-900">{metric.value}</p>
             <p className="text-xs text-default-400">{metric.description}</p>
           </div>
         </div>
@@ -135,31 +133,44 @@ function QualityMetricCard({ metric }: { metric: QualityMetric }) {
   );
 }
 
-function QualityAlertItem({ alert, onDismiss }: { alert: QualityAlert; onDismiss?: () => void }) {
+function QualityAlertItem({
+  alert,
+  onDismiss,
+}: {
+  alert: QualityAlert;
+  onDismiss?: () => void;
+}) {
   const isError = alert.type === "error";
 
   return (
     <div
       className={cn(
         "rounded-lg border-l-3 bg-default-50 p-3",
-        isError ? "border-l-danger" : "border-l-warning"
+        isError ? "border-l-danger" : "border-l-warning",
       )}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <Icon
-            icon={isError ? qualityIcons.qualityError : qualityIcons.qualityWarning}
-            className={cn("h-4 w-4 flex-shrink-0", isError ? "text-danger" : "text-warning")}
+            className={cn(
+              "h-4 w-4 flex-shrink-0",
+              isError ? "text-danger" : "text-warning",
+            )}
+            icon={
+              isError ? qualityIcons.qualityError : qualityIcons.qualityWarning
+            }
           />
-          <p className="text-sm font-medium text-default-900 truncate">{alert.title}</p>
+          <p className="text-sm font-medium text-default-900 truncate">
+            {alert.title}
+          </p>
         </div>
         <div className="flex gap-1 flex-shrink-0">
           {alert.actions.slice(0, 2).map((action, idx) => (
             <Button
               key={idx}
+              color={action.color || "default"}
               size="sm"
               variant="light"
-              color={action.color || "default"}
               onPress={action.label === "Dismiss" ? onDismiss : undefined}
             >
               {action.label}
@@ -180,12 +191,15 @@ export function DataQualityPanel({
     <Card className="shadow-sm">
       <CardHeader className="flex items-center justify-between px-6 pt-6">
         <div className="flex items-center gap-2">
-          <Icon icon="solar:shield-check-bold-duotone" className="h-5 w-5 text-primary" />
+          <Icon
+            className="h-5 w-5 text-primary"
+            icon="solar:shield-check-bold-duotone"
+          />
           <h3 className="text-lg font-semibold">Quality Metrics</h3>
         </div>
         {alerts.length > 0 && (
-          <Chip size="sm" color="warning" variant="flat">
-            {alerts.length} alert{alerts.length > 1 ? 's' : ''}
+          <Chip color="warning" size="sm" variant="flat">
+            {alerts.length} alert{alerts.length > 1 ? "s" : ""}
           </Chip>
         )}
       </CardHeader>

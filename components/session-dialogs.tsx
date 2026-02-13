@@ -34,7 +34,7 @@ export function ResumeSessionDialog({
   isLoading,
 }: ResumeSessionDialogProps) {
   const completionPercentage = Math.round(
-    (progress.current / progress.total) * 100
+    (progress.current / progress.total) * 100,
   );
 
   const getRelativeTime = (dateString: string) => {
@@ -48,17 +48,18 @@ export function ResumeSessionDialog({
     if (diffMins < 60) return `${diffMins} minutes ago`;
     if (diffHours < 24) return `${diffHours} hours ago`;
     if (diffDays === 1) return "yesterday";
+
     return `${diffDays} days ago`;
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md" hideCloseButton>
+    <Modal hideCloseButton isOpen={isOpen} size="md" onClose={onClose}>
       <ModalContent>
         <ModalHeader className="flex flex-col items-center gap-3 pt-8 pb-0">
           <div className="p-3 rounded-full bg-primary/10">
             <Icon
-              icon="solar:login-bold-duotone"
               className="w-10 h-10 text-primary"
+              icon="solar:login-bold-duotone"
             />
           </div>
           <h2 className="text-xl font-bold">Welcome Back!</h2>
@@ -78,13 +79,13 @@ export function ResumeSessionDialog({
                 </span>
               </div>
               <Progress
-                value={completionPercentage}
-                color="primary"
                 className="max-w-full"
+                color="primary"
                 size="md"
+                value={completionPercentage}
               />
               <div className="flex items-center gap-2 text-xs text-default-400">
-                <Icon icon="solar:clock-circle-linear" className="w-4 h-4" />
+                <Icon className="w-4 h-4" icon="solar:clock-circle-linear" />
                 <span>Started {getRelativeTime(progress.startedAt)}</span>
               </div>
             </CardBody>
@@ -93,27 +94,27 @@ export function ResumeSessionDialog({
 
         <ModalFooter className="flex-col gap-2 pb-6">
           <Button
-            color="primary"
             className="w-full"
-            size="lg"
-            onPress={onResume}
+            color="primary"
             isLoading={isLoading}
+            size="lg"
             startContent={
               !isLoading && (
-                <Icon icon="solar:restart-bold" className="w-5 h-5" />
+                <Icon className="w-5 h-5" icon="solar:restart-bold" />
               )
             }
+            onPress={onResume}
           >
             Continue Evaluation
           </Button>
           <Button
-            variant="light"
             className="w-full"
-            onPress={onStartFresh}
             isDisabled={isLoading}
             startContent={
-              <Icon icon="solar:trash-bin-linear" className="w-5 h-5" />
+              <Icon className="w-5 h-5" icon="solar:trash-bin-linear" />
             }
+            variant="light"
+            onPress={onStartFresh}
           >
             Start Fresh Session
           </Button>
@@ -136,13 +137,13 @@ export function SessionLostDialog({
   onStartNew,
 }: SessionLostDialogProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md">
+    <Modal isOpen={isOpen} size="md" onClose={onClose}>
       <ModalContent>
         <ModalHeader className="flex flex-col items-center gap-3 pt-8 pb-0">
           <div className="p-3 rounded-full bg-warning/10">
             <Icon
-              icon="solar:shield-warning-bold-duotone"
               className="w-10 h-10 text-warning"
+              icon="solar:shield-warning-bold-duotone"
             />
           </div>
           <h2 className="text-xl font-bold">Session Lost</h2>
@@ -155,22 +156,22 @@ export function SessionLostDialog({
           <ul className="space-y-2 text-sm text-default-500">
             <li className="flex items-center gap-2">
               <Icon
-                icon="solar:close-circle-linear"
                 className="w-4 h-4 text-danger"
+                icon="solar:close-circle-linear"
               />
               Cleared browser data
             </li>
             <li className="flex items-center gap-2">
               <Icon
-                icon="solar:close-circle-linear"
                 className="w-4 h-4 text-danger"
+                icon="solar:close-circle-linear"
               />
               Used private/incognito mode
             </li>
             <li className="flex items-center gap-2">
               <Icon
-                icon="solar:close-circle-linear"
                 className="w-4 h-4 text-danger"
+                icon="solar:close-circle-linear"
               />
               Switched devices
             </li>
@@ -204,13 +205,13 @@ export function SessionExpiredDialog({
   onStartNew,
 }: SessionExpiredDialogProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md">
+    <Modal isOpen={isOpen} size="md" onClose={onClose}>
       <ModalContent>
         <ModalHeader className="flex flex-col items-center gap-3 pt-8 pb-0">
           <div className="p-3 rounded-full bg-default-100">
             <Icon
-              icon="solar:clock-circle-bold-duotone"
               className="w-10 h-10 text-default-400"
+              icon="solar:clock-circle-bold-duotone"
             />
           </div>
           <h2 className="text-xl font-bold">Session Expired</h2>

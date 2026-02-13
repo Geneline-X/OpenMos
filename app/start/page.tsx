@@ -10,6 +10,7 @@ import { Progress } from "@heroui/progress";
 import { Checkbox } from "@heroui/checkbox";
 import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
+
 import { LANGUAGES } from "@/config/languages";
 
 type OnboardingStep = "welcome" | "demographics" | "consent";
@@ -63,14 +64,17 @@ export default function OnboardingPage() {
       }
 
       // Store session info
-      localStorage.setItem("openmos_session", JSON.stringify({
-        sessionId: data.sessionId,
-        raterId: data.raterId,
-        token: data.token,
-        samples: data.samples,
-        totalSamples: data.totalSamples,
-        language: data.language,
-      }));
+      localStorage.setItem(
+        "openmos_session",
+        JSON.stringify({
+          sessionId: data.sessionId,
+          raterId: data.raterId,
+          token: data.token,
+          samples: data.samples,
+          totalSamples: data.totalSamples,
+          language: data.language,
+        }),
+      );
 
       router.push("/evaluate");
     } catch (err) {
@@ -80,9 +84,9 @@ export default function OnboardingPage() {
     }
   };
 
-  const canProceedFromDemographics = 
-    demographics.age && 
-    demographics.gender && 
+  const canProceedFromDemographics =
+    demographics.age &&
+    demographics.gender &&
     demographics.nativeLanguage &&
     parseInt(demographics.age) >= 18;
 
@@ -93,10 +97,10 @@ export default function OnboardingPage() {
       <div className="w-full max-w-md">
         {/* Progress */}
         <Progress
-          value={progressMap[step]}
           className="mb-6"
           color="primary"
           size="sm"
+          value={progressMap[step]}
         />
 
         {/* Welcome Step */}
@@ -104,9 +108,9 @@ export default function OnboardingPage() {
           <Card className="shadow-lg">
             <CardHeader className="flex-col items-center gap-3 pb-0 pt-8">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <Icon 
-                  icon="solar:microphone-3-bold-duotone" 
-                  className="h-8 w-8 text-primary" 
+                <Icon
+                  className="h-8 w-8 text-primary"
+                  icon="solar:microphone-3-bold-duotone"
                 />
               </div>
               <h1 className="text-2xl font-bold text-default-900">
@@ -115,28 +119,38 @@ export default function OnboardingPage() {
             </CardHeader>
             <CardBody className="gap-4 px-6 pb-8 pt-4 text-center">
               <p className="text-default-600">
-                Help us evaluate text-to-speech quality by rating short audio clips.
+                Help us evaluate text-to-speech quality by rating short audio
+                clips.
               </p>
-              
+
               <div className="mt-2 space-y-2 text-left text-sm text-default-500">
                 <div className="flex items-center gap-2">
-                  <Icon icon="solar:clock-circle-linear" className="h-4 w-4 text-primary" />
+                  <Icon
+                    className="h-4 w-4 text-primary"
+                    icon="solar:clock-circle-linear"
+                  />
                   <span>10-15 minutes</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Icon icon="solar:headphones-round-linear" className="h-4 w-4 text-primary" />
+                  <Icon
+                    className="h-4 w-4 text-primary"
+                    icon="solar:headphones-round-linear"
+                  />
                   <span>20 audio clips</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Icon icon="solar:shield-check-linear" className="h-4 w-4 text-primary" />
+                  <Icon
+                    className="h-4 w-4 text-primary"
+                    icon="solar:shield-check-linear"
+                  />
                   <span>Anonymous</span>
                 </div>
               </div>
 
               <Button
+                className="mt-4"
                 color="primary"
                 size="lg"
-                className="mt-4"
                 onPress={() => setStep("demographics")}
               >
                 Get Started
@@ -156,43 +170,51 @@ export default function OnboardingPage() {
             </CardHeader>
             <CardBody className="gap-5 px-6 pb-8">
               <Select
+                isRequired
                 label="Native Language"
                 placeholder="Select your native language"
-                selectedKeys={demographics.nativeLanguage ? [demographics.nativeLanguage] : []}
+                selectedKeys={
+                  demographics.nativeLanguage
+                    ? [demographics.nativeLanguage]
+                    : []
+                }
                 onSelectionChange={(keys) => {
                   const value = Array.from(keys)[0] as string;
+
                   setDemographics({ ...demographics, nativeLanguage: value });
                 }}
-                isRequired
               >
                 {LANGUAGES.map((lang) => (
-                  <SelectItem key={lang.code} startContent={<span>{lang.flag}</span>}>
+                  <SelectItem
+                    key={lang.code}
+                    startContent={<span>{lang.flag}</span>}
+                  >
                     {lang.name}
                   </SelectItem>
                 ))}
               </Select>
 
               <Input
-                type="number"
+                isRequired
                 label="Age"
+                max={100}
+                min={18}
                 placeholder="Your age"
+                type="number"
                 value={demographics.age}
-                onValueChange={(value) => 
+                onValueChange={(value) =>
                   setDemographics({ ...demographics, age: value })
                 }
-                min={18}
-                max={100}
-                isRequired
               />
 
               <RadioGroup
+                isRequired
                 label="Gender"
+                orientation="horizontal"
                 value={demographics.gender}
-                onValueChange={(value) => 
+                onValueChange={(value) =>
                   setDemographics({ ...demographics, gender: value })
                 }
-                isRequired
-                orientation="horizontal"
               >
                 <Radio value="male">Male</Radio>
                 <Radio value="female">Female</Radio>
@@ -200,15 +222,12 @@ export default function OnboardingPage() {
               </RadioGroup>
 
               <div className="flex gap-2 pt-2">
-                <Button
-                  variant="flat"
-                  onPress={() => setStep("welcome")}
-                >
+                <Button variant="flat" onPress={() => setStep("welcome")}>
                   Back
                 </Button>
                 <Button
-                  color="primary"
                   className="flex-1"
+                  color="primary"
                   isDisabled={!canProceedFromDemographics}
                   onPress={() => setStep("consent")}
                 >
@@ -229,7 +248,7 @@ export default function OnboardingPage() {
               <div className="space-y-3">
                 <Checkbox
                   isSelected={consent.dataUsage}
-                  onValueChange={(checked) => 
+                  onValueChange={(checked) =>
                     setConsent({ ...consent, dataUsage: checked })
                   }
                 >
@@ -240,7 +259,7 @@ export default function OnboardingPage() {
 
                 <Checkbox
                   isSelected={consent.anonymous}
-                  onValueChange={(checked) => 
+                  onValueChange={(checked) =>
                     setConsent({ ...consent, anonymous: checked })
                   }
                 >
@@ -250,20 +269,15 @@ export default function OnboardingPage() {
                 </Checkbox>
               </div>
 
-              {error && (
-                <p className="text-sm text-danger">{error}</p>
-              )}
+              {error && <p className="text-sm text-danger">{error}</p>}
 
               <div className="flex gap-2 pt-2">
-                <Button
-                  variant="flat"
-                  onPress={() => setStep("demographics")}
-                >
+                <Button variant="flat" onPress={() => setStep("demographics")}>
                   Back
                 </Button>
                 <Button
-                  color="primary"
                   className="flex-1"
+                  color="primary"
                   isDisabled={!canProceedFromConsent}
                   isLoading={isLoading}
                   onPress={handleStartSession}

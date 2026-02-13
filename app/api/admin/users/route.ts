@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
+
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { adminUsers } from "@/lib/db/schema";
-import { ne } from "drizzle-orm";
 
 export async function GET() {
   try {
@@ -40,9 +40,10 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Error fetching users:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch users" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
