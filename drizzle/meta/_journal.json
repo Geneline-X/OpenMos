@@ -8,6 +8,13 @@
       "when": 1770187767096,
       "tag": "0000_curious_the_enforcers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1770762885569,
+      "tag": "0001_wakeful_whirlwind",
+      "breakpoints": true
     }
   ]
 }
