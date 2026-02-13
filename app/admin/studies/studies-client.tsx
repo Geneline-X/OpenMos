@@ -1,0 +1,271 @@
+"use client";
+
+import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import { Switch } from "@heroui/switch";
+import { Select, SelectItem } from "@heroui/select";
+import { Icon } from "@iconify/react";
+import { toast } from "sonner";
+
+import { AiModel, Language } from "@/lib/db/schema";
+import {
+  StudyWithRelations,
+  createStudy,
+  deleteStudy,
+  toggleStudyActive,
+} from "@/app/actions/studies";
+
+interface StudiesClientProps {
+  initialStudies: StudyWithRelations[];
+  initialModels: AiModel[];
+  initialLanguages: Language[];
+}
+
+export default function StudiesClient({
+  initialStudies,
+  initialModels,
+  initialLanguages,
+}: StudiesClientProps) {
+  const searchParams = useSearchParams();
+  const filter = searchParams.get("filter");
+  const isPastStudies = filter === "past";
+
+  // Study Management State
+  const [newStudyName, setNewStudyName] = useState("");
+  const [newStudySamples, setNewStudySamples] = useState("20");
+  const [selectedModelValues, setSelectedModelValues] = useState<string[]>([]);
+  const [selectedLangCodes, setSelectedLangCodes] = useState<string[]>([]);
+  const [isAddingStudy, setIsAddingStudy] = useState(false);
+
+  // Filter studies based on view
+  const displayedStudies = isPastStudies
+    ? initialStudies.filter((s) => !s.isActive)
+    : initialStudies;
+
+  const handleAddStudy = async () => {
+    if (!newStudyName) {
+      toast.error("Please enter a study name");
+
+      return;
+    }
+
+    setIsAddingStudy(true);
+    const res = await createStudy({
+      name: newStudyName,
+      samplesPerRater: parseInt(newStudySamples) || 20,
+      modelValues: selectedModelValues,
+      languageCodes: selectedLangCodes,
+    });
+
+    setIsAddingStudy(false);
+
+    if (res.success) {
+      toast.success("Study created successfully");
+      setNewStudyName("");
+      setSelectedModelValues([]);
+      setSelectedLangCodes([]);
+    } else {
+      toast.error(res.error || "Failed to create study");
+    }
+  };
+
+  const handleToggleStudy = async (id: string, isActive: boolean) => {
+    // If turning on, warn that others will be turned off
+    if (isActive) {
+      toast.info("Activating this study will deactivate others.");
+    }
+
+    const res = await toggleStudyActive(id, isActive);
+
+    if (res.success) {
+      toast.success(isActive ? "Study activated" : "Study deactivated");
+    } else {
+      toast.error("Failed to update study status");
+    }
+  };
+
+  const handleDeleteStudy = async (id: string) => {
+    if (!confirm("Are you sure? This will delete the study configuration.")) {
+      return;
+    }
+    const res = await deleteStudy(id);
+
+    if (res.success) {
+      toast.success("Study deleted");
+    } else {
+      toast.error("Failed to delete study");
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">
+            {isPastStudies ? "Past Studies" : "Studies Management"}
+          </h1>
+          <p className="text-default-500">
+            {isPastStudies
+              ? "View details of completed and inactive studies"
+              : "Create and manage evaluation studies"}
+          </p>
+        </div>
+      </div>
+
+      {!isPastStudies && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Icon
+                className="h-5 w-5 text-primary"
+                icon="solar:clipboard-text-bold-duotone"
+              />
+              <p className="font-semibold">Create New Study</p>
+            </div>
+          </CardHeader>
+          <CardBody className="gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+              <Input
+                label="Study Name"
+                placeholder="e.g. Q1 2026 Evaluation"
+                size="sm"
+                value={newStudyName}
+                onValueChange={setNewStudyName}
+              />
+              <Input
+                label="Samples / Rater"
+                size="sm"
+                type="number"
+                value={newStudySamples}
+                onValueChange={setNewStudySamples}
+              />
+              <Select
+                label="Languages"
+                placeholder="Select languages"
+                selectedKeys={new Set(selectedLangCodes)}
+                selectionMode="multiple"
+                size="sm"
+                onSelectionChange={(keys) =>
+                  setSelectedLangCodes(Array.from(keys) as string[])
+                }
+              >
+                {initialLanguages
+                  .filter((l) => l.isActive)
+                  .map((lang) => (
+                    <SelectItem key={lang.code}>
+                      {lang.flag} {lang.name}
+                    </SelectItem>
+                  ))}
+              </Select>
+              <Select
+                label="Models"
+                placeholder="Select models"
+                selectedKeys={new Set(selectedModelValues)}
+                selectionMode="multiple"
+                size="sm"
+                onSelectionChange={(keys) =>
+                  setSelectedModelValues(Array.from(keys) as string[])
+                }
+              >
+                {initialModels
+                  .filter((m) => m.isActive)
+                  .map((model) => (
+                    <SelectItem key={model.value}>{model.name}</SelectItem>
+                  ))}
+              </Select>
+            </div>
+            <Button
+              className="w-full md:w-auto self-end"
+              color="primary"
+              isLoading={isAddingStudy}
+              onPress={handleAddStudy}
+            >
+              Create Study
+            </Button>
+          </CardBody>
+        </Card>
+      )}
+
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">
+          {isPastStudies ? "Completed Studies" : "Existing Studies"}
+        </h2>
+        {displayedStudies.length === 0 && (
+          <p className="text-default-400">
+            {isPastStudies
+              ? "No past studies found."
+              : "No studies created yet."}
+          </p>
+        )}
+        <div className="grid gap-4">
+          {displayedStudies.map((study) => (
+            <Card key={study.id}>
+              <CardBody className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-lg">{study.name}</h3>
+                    {study.isActive ? (
+                      <span className="text-xs bg-success-100 text-success-600 px-2 py-0.5 rounded-full">
+                        Active
+                      </span>
+                    ) : (
+                      <span className="text-xs bg-default-100 text-default-600 px-2 py-0.5 rounded-full">
+                        Inactive
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm text-default-500 flex flex-wrap gap-4">
+                    <span className="flex items-center gap-1">
+                      <Icon icon="solar:document-text-linear" />
+                      {study.samplesPerRater} samples/rater
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Icon icon="solar:global-linear" />
+                      {study.languages.length} languages
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Icon icon="solar:server-square-linear" />
+                      {study.models.length} models
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Icon icon="solar:calendar-linear" />
+                      Started {new Date(study.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-default-500">Status:</span>
+                    <Switch
+                      isSelected={study.isActive}
+                      size="sm"
+                      onValueChange={(val) => handleToggleStudy(study.id, val)}
+                    >
+                      <span className="sr-only">Active</span>
+                    </Switch>
+                  </div>
+                  <Button
+                    isIconOnly
+                    color="danger"
+                    size="sm"
+                    variant="light"
+                    onPress={() => handleDeleteStudy(study.id)}
+                  >
+                    <Icon
+                      className="w-5 h-5"
+                      icon="solar:trash-bin-trash-bold"
+                    />
+                  </Button>
+                </div>
+              </CardBody>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
