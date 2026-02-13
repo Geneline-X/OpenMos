@@ -1,5 +1,7 @@
 "use client";
 
+import type { AdminRole } from "@/lib/db/schema";
+
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Icon } from "@iconify/react";
@@ -26,14 +28,13 @@ import {
 } from "@heroui/modal";
 import { RadioGroup, Radio } from "@heroui/radio";
 import { addToast } from "@heroui/toast";
+
 import {
   formatRole,
   getRoleIcon,
   getRoleColor,
   PERMISSIONS,
-  type Permission,
 } from "@/lib/auth/utils";
-import type { AdminRole } from "@/lib/db/schema";
 
 interface TeamMember {
   id: string;
@@ -86,11 +87,13 @@ export default function UsersSettingsPage() {
 
       if (usersRes.ok) {
         const data = await usersRes.json();
+
         setUsers(data.users);
       }
 
       if (invitesRes.ok) {
         const data = await invitesRes.json();
+
         setInvitations(data.invitations);
       }
     } catch (error) {
@@ -105,11 +108,13 @@ export default function UsersSettingsPage() {
 
     if (!inviteData.email) {
       setInviteError("Email is required");
+
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteData.email)) {
       setInviteError("Please enter a valid email");
+
       return;
     }
 
@@ -138,7 +143,9 @@ export default function UsersSettingsPage() {
       onClose();
       fetchUsers();
     } catch (err) {
-      setInviteError(err instanceof Error ? err.message : "Failed to send invitation");
+      setInviteError(
+        err instanceof Error ? err.message : "Failed to send invitation",
+      );
     } finally {
       setIsInviting(false);
     }
@@ -226,6 +233,7 @@ export default function UsersSettingsPage() {
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 30) return `${diffDays}d ago`;
+
     return date.toLocaleDateString();
   };
 
@@ -235,13 +243,13 @@ export default function UsersSettingsPage() {
         <Card>
           <CardBody className="flex flex-col items-center gap-4 py-12">
             <Icon
-              icon="solar:shield-warning-bold-duotone"
               className="w-16 h-16 text-warning"
+              icon="solar:shield-warning-bold-duotone"
             />
             <h2 className="text-xl font-bold">Access Denied</h2>
             <p className="text-default-500 text-center max-w-sm">
-              You don&apos;t have permission to manage team members.
-              Only the project owner can access this page.
+              You don&apos;t have permission to manage team members. Only the
+              project owner can access this page.
             </p>
           </CardBody>
         </Card>
@@ -252,7 +260,7 @@ export default function UsersSettingsPage() {
   if (isLoading) {
     return (
       <div className="p-6 flex items-center justify-center min-h-[400px]">
-        <Spinner size="lg" label="Loading team members..." />
+        <Spinner label="Loading team members..." size="lg" />
       </div>
     );
   }
@@ -263,8 +271,8 @@ export default function UsersSettingsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Icon
-            icon="solar:users-group-rounded-bold-duotone"
             className="w-8 h-8 text-primary"
+            icon="solar:users-group-rounded-bold-duotone"
           />
           <div>
             <h1 className="text-2xl font-bold">Team Members</h1>
@@ -275,8 +283,10 @@ export default function UsersSettingsPage() {
         </div>
         <Button
           color="primary"
+          startContent={
+            <Icon className="w-5 h-5" icon="solar:user-plus-bold-duotone" />
+          }
           onPress={onOpen}
-          startContent={<Icon icon="solar:user-plus-bold-duotone" className="w-5 h-5" />}
         >
           Invite Researcher
         </Button>
@@ -288,7 +298,7 @@ export default function UsersSettingsPage() {
           <h2 className="font-semibold">Active Team ({users.length})</h2>
         </CardHeader>
         <CardBody className="p-0">
-          <Table aria-label="Team members table" removeWrapper>
+          <Table removeWrapper aria-label="Team members table">
             <TableHeader>
               <TableColumn>NAME</TableColumn>
               <TableColumn>EMAIL</TableColumn>
@@ -304,8 +314,8 @@ export default function UsersSettingsPage() {
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-default-100 flex items-center justify-center">
                         <Icon
-                          icon="solar:user-bold-duotone"
                           className="w-5 h-5 text-default-500"
+                          icon="solar:user-bold-duotone"
                         />
                       </div>
                       <span className="font-medium">
@@ -317,11 +327,14 @@ export default function UsersSettingsPage() {
                   <TableCell>
                     <Chip
                       color={getRoleColor(user.role)}
-                      variant="flat"
                       size="sm"
                       startContent={
-                        <Icon icon={getRoleIcon(user.role)} className="w-4 h-4" />
+                        <Icon
+                          className="w-4 h-4"
+                          icon={getRoleIcon(user.role)}
+                        />
                       }
+                      variant="flat"
                     >
                       {formatRole(user.role)}
                     </Chip>
@@ -329,8 +342,8 @@ export default function UsersSettingsPage() {
                   <TableCell>
                     <Chip
                       color={user.isActive ? "success" : "danger"}
-                      variant="dot"
                       size="sm"
+                      variant="dot"
                     >
                       {user.isActive ? "Active" : "Inactive"}
                     </Chip>
@@ -341,10 +354,12 @@ export default function UsersSettingsPage() {
                   <TableCell>
                     {user.role !== "owner" && (
                       <Button
+                        color={user.isActive ? "danger" : "success"}
                         size="sm"
                         variant="light"
-                        color={user.isActive ? "danger" : "success"}
-                        onPress={() => handleToggleUserStatus(user.id, user.isActive)}
+                        onPress={() =>
+                          handleToggleUserStatus(user.id, user.isActive)
+                        }
                       >
                         {user.isActive ? "Deactivate" : "Activate"}
                       </Button>
@@ -366,7 +381,7 @@ export default function UsersSettingsPage() {
             </h2>
           </CardHeader>
           <CardBody className="p-0">
-            <Table aria-label="Pending invitations table" removeWrapper>
+            <Table removeWrapper aria-label="Pending invitations table">
               <TableHeader>
                 <TableColumn>EMAIL</TableColumn>
                 <TableColumn>ROLE</TableColumn>
@@ -381,8 +396,8 @@ export default function UsersSettingsPage() {
                     <TableCell>
                       <Chip
                         color={getRoleColor(invite.role)}
-                        variant="flat"
                         size="sm"
+                        variant="flat"
                       >
                         {formatRole(invite.role)}
                       </Chip>
@@ -403,9 +418,9 @@ export default function UsersSettingsPage() {
                           Resend
                         </Button>
                         <Button
+                          color="danger"
                           size="sm"
                           variant="light"
-                          color="danger"
                           onPress={() => handleRevokeInvite(invite.id)}
                         >
                           Revoke
@@ -421,17 +436,23 @@ export default function UsersSettingsPage() {
       )}
 
       {/* Invite Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="lg">
+      <Modal isOpen={isOpen} size="lg" onClose={onClose}>
         <ModalContent>
           <ModalHeader className="flex items-center gap-2">
-            <Icon icon="solar:user-plus-bold-duotone" className="w-6 h-6 text-primary" />
+            <Icon
+              className="w-6 h-6 text-primary"
+              icon="solar:user-plus-bold-duotone"
+            />
             Invite Team Member
           </ModalHeader>
           <ModalBody>
             {inviteError && (
               <div className="mb-4 p-3 rounded-lg bg-danger/10 border border-danger/20">
                 <div className="flex items-center gap-2 text-danger">
-                  <Icon icon="solar:danger-circle-bold-duotone" className="w-5 h-5" />
+                  <Icon
+                    className="w-5 h-5"
+                    icon="solar:danger-circle-bold-duotone"
+                  />
                   <span className="text-sm">{inviteError}</span>
                 </div>
               </div>
@@ -441,25 +462,34 @@ export default function UsersSettingsPage() {
               <Input
                 label="Email Address"
                 placeholder="researcher@university.edu"
+                startContent={
+                  <Icon
+                    className="w-5 h-5 text-default-400"
+                    icon="solar:letter-linear"
+                  />
+                }
                 type="email"
                 value={inviteData.email}
                 onChange={(e) =>
                   setInviteData((prev) => ({ ...prev, email: e.target.value }))
-                }
-                startContent={
-                  <Icon icon="solar:letter-linear" className="w-5 h-5 text-default-400" />
                 }
               />
 
               <Input
                 label="Full Name (optional)"
                 placeholder="Dr. Jane Smith"
+                startContent={
+                  <Icon
+                    className="w-5 h-5 text-default-400"
+                    icon="solar:user-linear"
+                  />
+                }
                 value={inviteData.fullName}
                 onChange={(e) =>
-                  setInviteData((prev) => ({ ...prev, fullName: e.target.value }))
-                }
-                startContent={
-                  <Icon icon="solar:user-linear" className="w-5 h-5 text-default-400" />
+                  setInviteData((prev) => ({
+                    ...prev,
+                    fullName: e.target.value,
+                  }))
                 }
               />
 
@@ -467,24 +497,39 @@ export default function UsersSettingsPage() {
                 label="Role"
                 value={inviteData.role}
                 onValueChange={(value) =>
-                  setInviteData((prev) => ({ ...prev, role: value as AdminRole }))
+                  setInviteData((prev) => ({
+                    ...prev,
+                    role: value as AdminRole,
+                  }))
                 }
               >
-                <Radio value="admin" description="Full access except user management">
+                <Radio
+                  description="Full access except user management"
+                  value="admin"
+                >
                   <div className="flex items-center gap-2">
-                    <Icon icon="solar:shield-check-bold-duotone" className="w-4 h-4" />
+                    <Icon
+                      className="w-4 h-4"
+                      icon="solar:shield-check-bold-duotone"
+                    />
                     Admin
                   </div>
                 </Radio>
-                <Radio value="researcher" description="Upload samples and export data">
+                <Radio
+                  description="Upload samples and export data"
+                  value="researcher"
+                >
                   <div className="flex items-center gap-2">
-                    <Icon icon="solar:flask-bold-duotone" className="w-4 h-4" />
+                    <Icon className="w-4 h-4" icon="solar:flask-bold-duotone" />
                     Researcher (Recommended)
                   </div>
                 </Radio>
-                <Radio value="viewer" description="View-only access to dashboard">
+                <Radio
+                  description="View-only access to dashboard"
+                  value="viewer"
+                >
                   <div className="flex items-center gap-2">
-                    <Icon icon="solar:eye-bold-duotone" className="w-4 h-4" />
+                    <Icon className="w-4 h-4" icon="solar:eye-bold-duotone" />
                     Viewer
                   </div>
                 </Radio>
@@ -503,18 +548,18 @@ export default function UsersSettingsPage() {
                         }`}
                       >
                         <Icon
+                          className="w-4 h-4"
                           icon={
                             allowed
                               ? "solar:check-circle-bold"
                               : "solar:close-circle-linear"
                           }
-                          className="w-4 h-4"
                         />
                         {permission
                           .replace(/([A-Z])/g, " $1")
                           .replace(/^./, (str) => str.toUpperCase())}
                       </li>
-                    )
+                    ),
                   )}
                 </ul>
               </div>
@@ -524,7 +569,11 @@ export default function UsersSettingsPage() {
             <Button variant="light" onPress={onClose}>
               Cancel
             </Button>
-            <Button color="primary" isLoading={isInviting} onPress={handleInvite}>
+            <Button
+              color="primary"
+              isLoading={isInviting}
+              onPress={handleInvite}
+            >
               Send Invitation
             </Button>
           </ModalFooter>
