@@ -27,8 +27,8 @@ export async function getActiveLanguages(userId?: string) {
       .where(
         and(
           eq(languages.isActive, true),
-          or(isNull(languages.userId), eq(languages.userId, userId))
-        )
+          or(isNull(languages.userId), eq(languages.userId, userId)),
+        ),
       )
       .orderBy(desc(languages.createdAt));
   }
