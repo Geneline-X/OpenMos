@@ -4,6 +4,7 @@ import { eq, and, gt, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { adminInvitations, adminUsers, auditLogs } from "@/lib/db/schema";
 import { hashPassword, validatePassword } from "@/lib/auth/utils";
+import { initializeUserPreferences } from "@/app/actions/user-preferences";
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +13,7 @@ export async function POST(request: Request) {
     if (!token || !fullName || !password) {
       return NextResponse.json(
         { success: false, error: "All fields are required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
     if (!validation.isValid) {
       return NextResponse.json(
         { success: false, error: validation.errors[0] },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -35,15 +36,15 @@ export async function POST(request: Request) {
           eq(adminInvitations.token, token),
           gt(adminInvitations.expiresAt, new Date()),
           isNull(adminInvitations.acceptedAt),
-          isNull(adminInvitations.revokedAt),
-        ),
+          isNull(adminInvitations.revokedAt)
+        )
       )
       .limit(1);
 
     if (!invitation) {
       return NextResponse.json(
         { success: false, error: "Invalid or expired invitation" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
     if (existingUser) {
       return NextResponse.json(
         { success: false, error: "An account with this email already exists" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -84,6 +85,9 @@ export async function POST(request: Request) {
         createdBy: invitation.invitedBy,
       })
       .returning();
+
+    // Initialize default user preferences
+    await initializeUserPreferences(newUser.id);
 
     // Mark invitation as accepted
     await db
@@ -112,7 +116,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       { success: false, error: "Failed to create account" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

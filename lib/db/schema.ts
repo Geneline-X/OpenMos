@@ -8,7 +8,9 @@ import {
   jsonb,
   decimal,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // Cookie consent preferences type
 export type CookieConsent = {
@@ -57,7 +59,7 @@ export const sessions = pgTable(
     index("idx_sessions_token").on(table.sessionToken),
     index("idx_sessions_rater").on(table.raterId),
     index("idx_sessions_expires").on(table.expiresAt),
-  ],
+  ]
 );
 
 // Audio samples table - stores uploaded audio files
@@ -144,7 +146,7 @@ export const adminUsers = pgTable(
   (table) => [
     index("idx_admin_users_email").on(table.email),
     index("idx_admin_users_username").on(table.username),
-  ],
+  ]
 );
 
 // Password reset tokens
@@ -163,10 +165,30 @@ export const passwordResetTokens = pgTable(
   (table) => [
     index("idx_reset_tokens_token").on(table.token),
     index("idx_reset_tokens_expires").on(table.expiresAt),
-  ],
+  ]
+);
+
+// Email verification tokens
+export const emailVerificationTokens = pgTable(
+  "email_verification_tokens",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    adminId: uuid("admin_id")
+      .references(() => adminUsers.id, { onDelete: "cascade" })
+      .notNull(),
+    token: text("token").unique().notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    usedAt: timestamp("used_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_verification_tokens_token").on(table.token),
+    index("idx_verification_tokens_expires").on(table.expiresAt),
+  ]
 );
 
 // Admin invitations
+
 export const adminInvitations = pgTable(
   "admin_invitations",
   {
@@ -183,7 +205,7 @@ export const adminInvitations = pgTable(
   (table) => [
     index("idx_invitations_token").on(table.token),
     index("idx_invitations_email").on(table.email),
-  ],
+  ]
 );
 
 // Audit action types
@@ -221,7 +243,7 @@ export const auditLogs = pgTable(
     index("idx_audit_logs_admin").on(table.adminId),
     index("idx_audit_logs_action").on(table.action),
     index("idx_audit_logs_timestamp").on(table.timestamp),
-  ],
+  ]
 );
 
 // Backup codes for 2FA
@@ -236,7 +258,7 @@ export const backupCodes = pgTable(
     usedAt: timestamp("used_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => [index("idx_backup_codes_admin").on(table.adminId)],
+  (table) => [index("idx_backup_codes_admin").on(table.adminId)]
 );
 
 // Export logs table - tracks data exports
@@ -274,7 +296,7 @@ export const notifications = pgTable(
   (table) => [
     index("idx_notifications_read").on(table.isRead),
     index("idx_notifications_created").on(table.createdAt),
-  ],
+  ]
 );
 
 // Access request status types
@@ -301,32 +323,100 @@ export const accessRequests = pgTable(
   (table) => [
     index("idx_access_requests_email").on(table.email),
     index("idx_access_requests_status").on(table.status),
-  ],
+  ]
 );
 
 // AI Models - Dynamic list of models
-export const aiModels = pgTable("ai_models", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull(), // e.g., "NeMo"
-  value: text("value").unique().notNull(), // e.g., "nemo"
-  description: text("description"),
-  isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const aiModels = pgTable(
+  "ai_models",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(), // e.g., "NeMo"
+    value: text("value").notNull(), // e.g., "nemo"
+    description: text("description"),
+    isActive: boolean("is_active").default(true).notNull(),
+    userId: uuid("user_id").references(() => adminUsers.id, {
+      onDelete: "cascade",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("idx_ai_models_value_user").on(table.value, table.userId),
+  ]
+);
 
 // Languages - Dynamic list of languages
-export const languages = pgTable("languages", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  code: text("code").unique().notNull(), // e.g., "luganda"
-  name: text("name").notNull(), // e.g., "Luganda"
-  flag: text("flag").notNull(), // e.g., "🇺🇬"
-  region: text("region"),
-  speakers: text("speakers"),
-  isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const languages = pgTable(
+  "languages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    code: text("code").notNull(), // e.g., "luganda" - duplicate codes allowed if different users
+    name: text("name").notNull(), // e.g., "Luganda"
+    flag: text("flag").notNull(), // e.g., "🇺🇬"
+    region: text("region"),
+    speakers: text("speakers"),
+    isActive: boolean("is_active").default(true).notNull(),
+    userId: uuid("user_id").references(() => adminUsers.id, {
+      onDelete: "cascade",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    // Unique code per user
+    uniqueIndex("idx_languages_code_user").on(table.code, table.userId),
+    // We can't easily enforce "unique code where userId is null" with standard drizzle-orm pg-core distinct from "unique code per user" without partial indexes or check constraints which might be complex here.
+    // Instead, we'll rely on app logic or a partial index if we were writing raw SQL.
+    // For now, let's relax the strict unique constraint on 'code' globally,
+    // and rely on the unique index on (code, userId) for user-specific ones.
+    // Ideally we'd have `CREATE UNIQUE INDEX ... WHERE user_id IS NULL` but Drizzle supports `.where()`
+    uniqueIndex("idx_languages_code_global")
+      .on(table.code)
+      .where(sql`user_id IS NULL`),
+  ]
+);
+
+// User Model Preferences - Junction table for user-specific model preferences
+export const userModelPreferences = pgTable(
+  "user_model_preferences",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .references(() => adminUsers.id, { onDelete: "cascade" })
+      .notNull(),
+    modelId: uuid("model_id")
+      .references(() => aiModels.id, { onDelete: "cascade" })
+      .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_user_model_prefs_user").on(table.userId),
+    index("idx_user_model_prefs_model").on(table.modelId),
+    uniqueIndex("idx_user_model_unique").on(table.userId, table.modelId),
+  ]
+);
+
+// User Language Preferences - Junction table for user-specific language preferences
+export const userLanguagePreferences = pgTable(
+  "user_language_preferences",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .references(() => adminUsers.id, { onDelete: "cascade" })
+      .notNull(),
+    languageId: uuid("language_id")
+      .references(() => languages.id, { onDelete: "cascade" })
+      .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_user_lang_prefs_user").on(table.userId),
+    index("idx_user_lang_prefs_lang").on(table.languageId),
+    uniqueIndex("idx_user_lang_unique").on(table.userId, table.languageId),
+  ]
+);
 
 // Studies - Configuration for data collection
+
 export const studies = pgTable("studies", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
@@ -348,7 +438,7 @@ export const studyModels = pgTable(
   },
   (table) => [
     { pk: [table.studyId, table.modelId] }, // Composite primary key
-  ],
+  ]
 );
 
 // Study Languages - Many-to-Many relation between Studies and Languages
@@ -364,7 +454,7 @@ export const studyLanguages = pgTable(
   },
   (table) => [
     { pk: [table.studyId, table.languageId] }, // Composite primary key
-  ],
+  ]
 );
 
 // Type exports for use in application
@@ -404,3 +494,15 @@ export type StudyModel = typeof studyModels.$inferSelect;
 export type NewStudyModel = typeof studyModels.$inferInsert;
 export type StudyLanguage = typeof studyLanguages.$inferSelect;
 export type NewStudyLanguage = typeof studyLanguages.$inferInsert;
+
+export type UserModelPreference = typeof userModelPreferences.$inferSelect;
+export type NewUserModelPreference = typeof userModelPreferences.$inferInsert;
+export type UserLanguagePreference =
+  typeof userLanguagePreferences.$inferSelect;
+export type NewUserLanguagePreference =
+  typeof userLanguagePreferences.$inferInsert;
+
+export type EmailVerificationToken =
+  typeof emailVerificationTokens.$inferSelect;
+export type NewEmailVerificationToken =
+  typeof emailVerificationTokens.$inferInsert;

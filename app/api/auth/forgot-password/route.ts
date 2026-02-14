@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     if (!email) {
       return NextResponse.json(
         { success: false, error: "Email is required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -57,10 +57,15 @@ export async function POST(request: Request) {
       metadata: { email: user.email },
     });
 
-    // TODO: Send email with reset link
-    // For now, log the token (in production, use a proper email service)
-    console.log(`Password reset link: /admin/reset-password?token=${token}`);
-    console.log(`For user: ${user.email}`);
+    // Send password reset email via Resend
+    try {
+      const { sendPasswordResetEmail } = await import("@/lib/email/resend");
+
+      await sendPasswordResetEmail(user.email, user.fullName || "User", token);
+    } catch (emailError) {
+      console.error("Failed to send password reset email:", emailError);
+      // Don't expose email sending failures to prevent enumeration
+    }
 
     return NextResponse.json({
       success: true,
@@ -73,7 +78,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       { success: false, error: "Failed to process request" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

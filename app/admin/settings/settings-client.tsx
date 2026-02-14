@@ -11,12 +11,12 @@ import Link from "next/link";
 import { toast } from "sonner";
 
 import { AiModel, Language } from "@/lib/db/schema";
-import { addModel, toggleModel, deleteModel } from "@/app/actions/models";
+import { addModel, deleteModel } from "@/app/actions/models";
+import { addLanguage, deleteLanguage } from "@/app/actions/languages";
 import {
-  addLanguage,
-  toggleLanguage,
-  deleteLanguage,
-} from "@/app/actions/languages";
+  toggleUserModel,
+  toggleUserLanguage,
+} from "@/app/actions/user-preferences";
 import {
   updateAdminPreferences,
   clearTestData,
@@ -26,14 +26,20 @@ import {
 interface SettingsClientProps {
   initialModels: AiModel[];
   initialLanguages: Language[];
+  userModels: AiModel[];
+  userLanguages: Language[];
+  userId: string;
 }
 
 export default function SettingsClient({
   initialModels,
   initialLanguages,
+  userModels,
+  userLanguages,
+  userId,
 }: SettingsClientProps) {
   // Dashboard Settings State
-  const [autoRefresh, setAutoRefresh] = useState(true); // TODO: Load from user prefs
+  const [autoRefresh, setAutoRefresh] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [qualityAlerts, setQualityAlerts] = useState(true);
 
@@ -48,11 +54,20 @@ export default function SettingsClient({
   const [newLangFlag, setNewLangFlag] = useState("");
   const [isAddingLang, setIsAddingLang] = useState(false);
 
+  // Local state for user preferences (initialized from props)
+  const [enabledModelIds, setEnabledModelIds] = useState<Set<string>>(
+    new Set(userModels.map((m) => m.id))
+  );
+  const [enabledLanguageIds, setEnabledLanguageIds] = useState<Set<string>>(
+    new Set(userLanguages.map((l) => l.id))
+  );
+
   // Data Actions State
   const [isClearingData, setIsClearingData] = useState(false);
   const [isExportingData, setIsExportingData] = useState(false);
 
-  // --- Helper to update preferences ---
+  // ... (keep handleUpdatePreferences) ...
+
   const handleUpdatePreferences = async (key: string, value: any) => {
     // Optimistic update
     if (key === "autoRefresh") setAutoRefresh(value);
@@ -66,7 +81,6 @@ export default function SettingsClient({
 
     if (!res.success) {
       toast.error("Failed to save preference");
-      // Revert? (Optional complexity)
     }
   };
 
@@ -74,12 +88,15 @@ export default function SettingsClient({
   const handleAddModel = async () => {
     if (!newModelName || !newModelValue) {
       toast.error("Please fill in both name and value");
-
       return;
     }
 
     setIsAddingModel(true);
-    const res = await addModel({ name: newModelName, value: newModelValue });
+    const res = await addModel({
+      name: newModelName,
+      value: newModelValue,
+      userId,
+    });
 
     setIsAddingModel(false);
 
@@ -87,35 +104,53 @@ export default function SettingsClient({
       toast.success("Model added successfully");
       setNewModelName("");
       setNewModelValue("");
+      // Note: We might want to auto-enable it for the user or refresh the list
+      // Since this is a client component receiving props, we rely on Server Action revalidation
+      // to update the list, but user preference state might need manual update if we want instant feedback
     } else {
       toast.error(res.error || "Failed to add model");
     }
   };
 
   const handleToggleModel = async (id: string, isActive: boolean) => {
-    const res = await toggleModel(id, isActive);
+    // Optimistic update for UI
+    const newSet = new Set(enabledModelIds);
+    if (isActive) {
+      newSet.add(id);
+    } else {
+      newSet.delete(id);
+    }
+    setEnabledModelIds(newSet);
+
+    const res = await toggleUserModel(userId, id);
 
     if (res.success) {
-      toast.success(isActive ? "Model enabled" : "Model disabled");
+      toast.success(
+        isActive ? "Model enabled for you" : "Model disabled for you"
+      );
     } else {
-      toast.error("Failed to update model");
+      // Revert on failure
+      const revertedSet = new Set(enabledModelIds);
+      if (!isActive)
+        revertedSet.add(id); // was active
+      else revertedSet.delete(id); // was inactive
+      setEnabledModelIds(revertedSet);
+      toast.error("Failed to update preference");
     }
   };
 
   const handleDeleteModel = async (id: string) => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this model? data associated with it might be affected.",
-      )
-    ) {
-      return;
-    }
-    const res = await deleteModel(id);
+    // Check if user is allowed to delete
+    // We enforce this on server, but UI also hides button for non-owners of private models.
 
-    if (res.success) {
-      toast.success("Model deleted");
-    } else {
-      toast.error("Failed to delete model");
+    if (confirm("Are you sure you want to delete this model?")) {
+      // Pass current userId to deleteModel for verification
+      const res = await deleteModel(id, userId);
+      if (res?.success) {
+        toast.success("Model deleted successfully");
+      } else {
+        toast.error(res?.error || "Failed to delete model");
+      }
     }
   };
 
@@ -123,7 +158,6 @@ export default function SettingsClient({
   const handleAddLanguage = async () => {
     if (!newLangName || !newLangCode || !newLangFlag) {
       toast.error("Please fill in name, code, and flag");
-
       return;
     }
 
@@ -132,6 +166,7 @@ export default function SettingsClient({
       name: newLangName,
       code: newLangCode,
       flag: newLangFlag,
+      userId, // Pass userId for ownership
     });
 
     setIsAddingLang(false);
@@ -147,37 +182,53 @@ export default function SettingsClient({
   };
 
   const handleToggleLanguage = async (id: string, isActive: boolean) => {
-    const res = await toggleLanguage(id, isActive);
+    // Optimistic update
+    const newSet = new Set(enabledLanguageIds);
+    if (isActive) {
+      newSet.add(id);
+    } else {
+      newSet.delete(id);
+    }
+    setEnabledLanguageIds(newSet);
+
+    const res = await toggleUserLanguage(userId, id);
 
     if (res.success) {
-      toast.success(isActive ? "Language enabled" : "Language disabled");
+      toast.success(
+        isActive ? "Language enabled for you" : "Language disabled for you"
+      );
     } else {
-      toast.error("Failed to update language");
+      // Revert
+      const revertedSet = new Set(enabledLanguageIds);
+      if (!isActive) revertedSet.add(id);
+      else revertedSet.delete(id);
+      setEnabledLanguageIds(revertedSet);
+      toast.error("Failed to update preference");
     }
   };
 
   const handleDeleteLanguage = async (id: string) => {
     if (
       !confirm(
-        "Are you sure you want to delete this language? data associated with it might be affected.",
+        "Are you sure you want to delete this language? data associated with it might be affected."
       )
     ) {
       return;
     }
-    const res = await deleteLanguage(id);
+    const res = await deleteLanguage(id, userId);
 
     if (res.success) {
       toast.success("Language deleted");
     } else {
-      toast.error("Failed to delete language");
+      toast.error(res.error || "Failed to delete language");
     }
   };
 
-  // --- Data Actions ---
+  // --- Data Actions (Unchanged) ---
   const handleClearData = async () => {
     if (
       !confirm(
-        "DANGER: This will delete ALL rater sessions, ratings, and temporary data. This action cannot be undone. Are you sure?",
+        "DANGER: This will delete ALL rater sessions, ratings, and temporary data. This action cannot be undone. Are you sure?"
       )
     ) {
       return;
@@ -202,7 +253,6 @@ export default function SettingsClient({
     setIsExportingData(false);
 
     if (res.success && res.data) {
-      // Download as JSON
       const dataStr =
         "data:text/json;charset=utf-8," +
         encodeURIComponent(JSON.stringify(res.data, null, 2));
@@ -211,9 +261,9 @@ export default function SettingsClient({
       downloadAnchorNode.setAttribute("href", dataStr);
       downloadAnchorNode.setAttribute(
         "download",
-        "open_mos_export_" + new Date().toISOString() + ".json",
+        "open_mos_export_" + new Date().toISOString() + ".json"
       );
-      document.body.appendChild(downloadAnchorNode); // required for firefox
+      document.body.appendChild(downloadAnchorNode);
       downloadAnchorNode.click();
       downloadAnchorNode.remove();
 
@@ -277,6 +327,9 @@ export default function SettingsClient({
 
               {/* List Models */}
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                <p className="text-xs text-default-400 px-2 uppercase font-semibold">
+                  Enable models you want to use
+                </p>
                 {initialModels.map((model) => (
                   <div
                     key={model.id}
@@ -285,9 +338,21 @@ export default function SettingsClient({
                     <div className="flex items-center gap-2">
                       <div
                         className={`w-2 h-2 rounded-full ${model.isActive ? "bg-success" : "bg-default-300"}`}
+                        title={
+                          model.isActive
+                            ? "Globally Active"
+                            : "Globally Inactive"
+                        }
                       />
                       <div>
-                        <p className="text-sm font-medium">{model.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">{model.name}</p>
+                          {model.userId && (
+                            <span className="text-[10px] bg-secondary-100 text-secondary-600 px-1.5 py-0.5 rounded-full font-medium border border-secondary-200">
+                              PRIVATE
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-default-500">
                           {model.value}
                         </p>
@@ -295,25 +360,34 @@ export default function SettingsClient({
                     </div>
                     <div className="flex items-center gap-1">
                       <Switch
-                        isDisabled={model.value === "ground_truth"} // Prevent disabling ground truth if critical
-                        isSelected={model.isActive}
+                        isDisabled={
+                          !model.isActive && !enabledModelIds.has(model.id)
+                        } // Cannot enable if globally inactive
+                        isSelected={enabledModelIds.has(model.id)}
                         size="sm"
                         onValueChange={(val) =>
                           handleToggleModel(model.id, val)
                         }
                       />
-                      <Button
-                        isIconOnly
-                        color="danger"
-                        size="sm"
-                        variant="light"
-                        onPress={() => handleDeleteModel(model.id)}
-                      >
-                        <Icon
-                          className="w-4 h-4"
-                          icon="solar:trash-bin-trash-bold"
-                        />
-                      </Button>
+                      {/* Delete button: Only show if user owns the model (private) or if admin (simulated by checking !userId for now, but really regular user shouldn't see/delete global) 
+                          Actually: 
+                          - If model.userId === userId, it's mine -> allow delete.
+                          - If model.userId is null (global) -> user cannot delete.
+                      */}
+                      {(model.userId === userId || !model.userId) && (
+                        <Button
+                          isIconOnly
+                          color="danger"
+                          size="sm"
+                          variant="light"
+                          onPress={() => handleDeleteModel(model.id)}
+                        >
+                          <Icon
+                            className="w-4 h-4"
+                            icon="solar:trash-bin-trash-bold"
+                          />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -376,6 +450,9 @@ export default function SettingsClient({
 
               {/* List Languages */}
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                <p className="text-xs text-default-400 px-2 uppercase font-semibold">
+                  Enable languages you want to use
+                </p>
                 {initialLanguages.map((lang) => (
                   <div
                     key={lang.id}
@@ -384,33 +461,51 @@ export default function SettingsClient({
                     <div className="flex items-center gap-2">
                       <div
                         className={`w-2 h-2 rounded-full ${lang.isActive ? "bg-success" : "bg-default-300"}`}
+                        title={
+                          lang.isActive
+                            ? "Globally Active"
+                            : "Globally Inactive"
+                        }
                       />
                       <span className="text-xl">{lang.flag}</span>
                       <div>
-                        <p className="text-sm font-medium">{lang.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">{lang.name}</p>
+                          {lang.userId && (
+                            <span className="text-[10px] bg-secondary-100 text-secondary-600 px-1.5 py-0.5 rounded-full font-medium border border-secondary-200">
+                              PRIVATE
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-default-500">{lang.code}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
                       <Switch
-                        isSelected={lang.isActive}
+                        isDisabled={
+                          !lang.isActive && !enabledLanguageIds.has(lang.id)
+                        }
+                        isSelected={enabledLanguageIds.has(lang.id)}
                         size="sm"
                         onValueChange={(val) =>
                           handleToggleLanguage(lang.id, val)
                         }
                       />
-                      <Button
-                        isIconOnly
-                        color="danger"
-                        size="sm"
-                        variant="light"
-                        onPress={() => handleDeleteLanguage(lang.id)}
-                      >
-                        <Icon
-                          className="w-4 h-4"
-                          icon="solar:trash-bin-trash-bold"
-                        />
-                      </Button>
+                      {/* Delete button: Only show if user owns the language or if admin (global) */}
+                      {(lang.userId === userId || !lang.userId) && (
+                        <Button
+                          isIconOnly
+                          color="danger"
+                          size="sm"
+                          variant="light"
+                          onPress={() => handleDeleteLanguage(lang.id)}
+                        >
+                          <Icon
+                            className="w-4 h-4"
+                            icon="solar:trash-bin-trash-bold"
+                          />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}

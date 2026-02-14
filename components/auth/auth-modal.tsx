@@ -4,7 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { Icon } from "@iconify/react";
 import { Button } from "@heroui/button";
-import { Input, Textarea } from "@heroui/input";
+import { Input } from "@heroui/input";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Checkbox } from "@heroui/checkbox";
 import {
@@ -17,7 +17,7 @@ import {
 import { Divider } from "@heroui/divider";
 import { addToast } from "@heroui/toast";
 
-type AuthView = "login" | "forgot-password" | "request-access";
+type AuthView = "login" | "forgot-password" | "signup";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -47,17 +47,15 @@ export function AuthModal({
   const [forgotError, setForgotError] = useState("");
   const [resetSent, setResetSent] = useState(false);
 
-  // Request access state
-  const [requestData, setRequestData] = useState({
+  // Signup state
+  const [signupData, setSignupData] = useState({
     name: "",
     email: "",
-    institution: "",
-    reason: "",
+    username: "",
+    password: "",
   });
-  const [requestErrors, setRequestErrors] = useState<Record<string, string>>(
-    {},
-  );
-  const [requestSubmitted, setRequestSubmitted] = useState(false);
+  const [signupErrors, setSignupErrors] = useState<Record<string, string>>({});
+  const [signupSubmitted, setSignupSubmitted] = useState(false);
 
   // OAuth Coming Soon modal
   const [showComingSoon, setShowComingSoon] = useState(false);
@@ -74,8 +72,8 @@ export function AuthModal({
     setLoginErrors({});
     setForgotError("");
     setResetSent(false);
-    setRequestErrors({});
-    setRequestSubmitted(false);
+    setSignupErrors({});
+    setSignupSubmitted(false);
   };
 
   // Handle login submission
@@ -168,41 +166,41 @@ export function AuthModal({
     }
   };
 
-  // Handle request access submission
-  const handleRequestAccess = async (e: React.FormEvent) => {
+  // Handle signup submission
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setRequestErrors({});
+    setSignupErrors({});
 
-    if (!requestData.name.trim()) {
-      setRequestErrors((prev) => ({ ...prev, name: "Name is required" }));
-
-      return;
-    }
-    if (!requestData.email.trim()) {
-      setRequestErrors((prev) => ({ ...prev, email: "Email is required" }));
+    if (!signupData.name.trim()) {
+      setSignupErrors((prev) => ({ ...prev, name: "Name is required" }));
 
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(requestData.email)) {
-      setRequestErrors((prev) => ({
+    if (!signupData.email.trim()) {
+      setSignupErrors((prev) => ({ ...prev, email: "Email is required" }));
+
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signupData.email)) {
+      setSignupErrors((prev) => ({
         ...prev,
         email: "Please enter a valid email",
       }));
 
       return;
     }
-    if (!requestData.institution.trim()) {
-      setRequestErrors((prev) => ({
+    if (!signupData.username.trim()) {
+      setSignupErrors((prev) => ({
         ...prev,
-        institution: "Institution is required",
+        username: "Username is required",
       }));
 
       return;
     }
-    if (!requestData.reason.trim()) {
-      setRequestErrors((prev) => ({
+    if (!signupData.password.trim()) {
+      setSignupErrors((prev) => ({
         ...prev,
-        reason: "Please explain why you need access",
+        password: "Password is required",
       }));
 
       return;
@@ -211,22 +209,33 @@ export function AuthModal({
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/request-access", {
+      const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestData),
+        body: JSON.stringify(signupData),
       });
 
-      if (!response.ok) throw new Error("Failed to submit request");
+      const data = await response.json();
 
-      setRequestSubmitted(true);
+      if (!response.ok) {
+        setSignupErrors({ form: data.error || "Failed to create account" });
+        addToast({
+          title: "Signup Failed",
+          description: data.error || "Failed to create account",
+          color: "danger",
+        });
+
+        return;
+      }
+
+      setSignupSubmitted(true);
       addToast({
-        title: "Request Submitted",
-        description: "We'll review your request and get back to you",
+        title: "Account Created!",
+        description: "Check your email to verify your account",
         color: "success",
       });
     } catch {
-      setRequestErrors({ form: "Failed to submit request. Please try again." });
+      setSignupErrors({ form: "Failed to create account. Please try again." });
     } finally {
       setIsLoading(false);
     }
@@ -414,9 +423,9 @@ export function AuthModal({
             <button
               className="text-primary hover:underline"
               type="button"
-              onClick={() => switchView("request-access")}
+              onClick={() => switchView("signup")}
             >
-              Request Account
+              Sign Up
             </button>
           </p>
         </div>
@@ -537,26 +546,26 @@ export function AuthModal({
     </>
   );
 
-  // Render Request Access View
-  const renderRequestAccessView = () => (
+  // Render Signup View
+  const renderSignupView = () => (
     <>
       <CardHeader className="flex flex-col items-center gap-3 pt-8 pb-0">
         <div className="p-3 rounded-full bg-primary/10">
           <Icon
             className="w-12 h-12 text-primary"
-            icon="solar:letter-bold-duotone"
+            icon="solar:user-plus-bold-duotone"
           />
         </div>
         <div className="text-center">
-          <h1 className="text-2xl font-bold">Request Access</h1>
+          <h1 className="text-2xl font-bold">Create Account</h1>
           <p className="text-default-500 text-sm mt-1 max-w-xs">
-            Tell us about yourself and why you need access
+            Sign up as a researcher to access OpenMOS
           </p>
         </div>
       </CardHeader>
 
       <CardBody className="px-6 py-8">
-        {requestSubmitted ? (
+        {signupSubmitted ? (
           <div className="text-center space-y-4">
             <div className="p-4 rounded-full bg-success/10 w-fit mx-auto">
               <Icon
@@ -564,13 +573,13 @@ export function AuthModal({
                 icon="solar:check-circle-bold-duotone"
               />
             </div>
-            <h2 className="text-xl font-bold">Request Submitted</h2>
+            <h2 className="text-xl font-bold">Check Your Email</h2>
             <p className="text-default-500">
-              We&apos;ll review your request and get back to you at{" "}
-              <strong>{requestData.email}</strong>.
+              We&apos;ve sent a verification link to{" "}
+              <strong>{signupData.email}</strong>.
             </p>
             <p className="text-sm text-default-400">
-              This usually takes 1-2 business days.
+              Click the link in the email to activate your account.
             </p>
             <Button
               className="w-full mt-4"
@@ -582,23 +591,24 @@ export function AuthModal({
           </div>
         ) : (
           <>
-            {requestErrors.form && (
+            {signupErrors.form && (
               <div className="mb-4 p-3 rounded-lg bg-danger/10 border border-danger/20">
                 <div className="flex items-center gap-2 text-danger">
                   <Icon
                     className="w-5 h-5"
                     icon="solar:danger-circle-bold-duotone"
                   />
-                  <span className="text-sm">{requestErrors.form}</span>
+                  <span className="text-sm">{signupErrors.form}</span>
                 </div>
               </div>
             )}
 
-            <form className="space-y-4" onSubmit={handleRequestAccess}>
+            <form className="space-y-4" onSubmit={handleSignup}>
               <Input
-                errorMessage={requestErrors.name}
+                autoComplete="name"
+                errorMessage={signupErrors.name}
                 isDisabled={isLoading}
-                isInvalid={!!requestErrors.name}
+                isInvalid={!!signupErrors.name}
                 label="Full Name"
                 placeholder="Dr. Jane Smith"
                 startContent={
@@ -607,16 +617,17 @@ export function AuthModal({
                     icon="solar:user-linear"
                   />
                 }
-                value={requestData.name}
+                value={signupData.name}
                 onChange={(e) =>
-                  setRequestData((prev) => ({ ...prev, name: e.target.value }))
+                  setSignupData((prev) => ({ ...prev, name: e.target.value }))
                 }
               />
 
               <Input
-                errorMessage={requestErrors.email}
+                autoComplete="email"
+                errorMessage={signupErrors.email}
                 isDisabled={isLoading}
-                isInvalid={!!requestErrors.email}
+                isInvalid={!!signupErrors.email}
                 label="Email Address"
                 placeholder="researcher@university.edu"
                 startContent={
@@ -626,45 +637,70 @@ export function AuthModal({
                   />
                 }
                 type="email"
-                value={requestData.email}
+                value={signupData.email}
                 onChange={(e) =>
-                  setRequestData((prev) => ({ ...prev, email: e.target.value }))
+                  setSignupData((prev) => ({ ...prev, email: e.target.value }))
                 }
               />
 
               <Input
-                errorMessage={requestErrors.institution}
+                autoComplete="username"
+                errorMessage={signupErrors.username}
                 isDisabled={isLoading}
-                isInvalid={!!requestErrors.institution}
-                label="Institution / Organization"
-                placeholder="University of Example"
+                isInvalid={!!signupErrors.username}
+                label="Username"
+                placeholder="janesmith"
                 startContent={
                   <Icon
                     className="w-5 h-5 text-default-400"
-                    icon="solar:buildings-linear"
+                    icon="solar:user-id-linear"
                   />
                 }
-                value={requestData.institution}
+                value={signupData.username}
                 onChange={(e) =>
-                  setRequestData((prev) => ({
+                  setSignupData((prev) => ({
                     ...prev,
-                    institution: e.target.value,
+                    username: e.target.value.toLowerCase(),
                   }))
                 }
               />
 
-              <Textarea
-                errorMessage={requestErrors.reason}
+              <Input
+                autoComplete="new-password"
+                endContent={
+                  <button
+                    className="focus:outline-none"
+                    disabled={isLoading}
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    <Icon
+                      className="w-5 h-5 text-default-400 hover:text-default-600 transition-colors"
+                      icon={
+                        showPassword
+                          ? "solar:eye-closed-linear"
+                          : "solar:eye-linear"
+                      }
+                    />
+                  </button>
+                }
+                errorMessage={signupErrors.password}
                 isDisabled={isLoading}
-                isInvalid={!!requestErrors.reason}
-                label="Why do you need access?"
-                minRows={2}
-                placeholder="I'm researching speech synthesis..."
-                value={requestData.reason}
+                isInvalid={!!signupErrors.password}
+                label="Password"
+                placeholder="Create a strong password"
+                startContent={
+                  <Icon
+                    className="w-5 h-5 text-default-400"
+                    icon="solar:lock-password-linear"
+                  />
+                }
+                type={showPassword ? "text" : "password"}
+                value={signupData.password}
                 onChange={(e) =>
-                  setRequestData((prev) => ({
+                  setSignupData((prev) => ({
                     ...prev,
-                    reason: e.target.value,
+                    password: e.target.value,
                   }))
                 }
               />
@@ -676,7 +712,7 @@ export function AuthModal({
                 size="lg"
                 type="submit"
               >
-                Submit Request
+                {isLoading ? "Creating Account..." : "Create Account"}
               </Button>
             </form>
 
@@ -711,7 +747,7 @@ export function AuthModal({
         <Card className="relative w-full max-w-md mx-4 shadow-2xl border border-default-200 dark:border-default-100 max-h-[90vh] overflow-y-auto">
           {currentView === "login" && renderLoginView()}
           {currentView === "forgot-password" && renderForgotPasswordView()}
-          {currentView === "request-access" && renderRequestAccessView()}
+          {currentView === "signup" && renderSignupView()}
         </Card>
       </div>
 
