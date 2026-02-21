@@ -111,7 +111,7 @@ const TESTIMONIALS = [
 
 const STATS = [
   { value: "31+", label: "Evaluations Completed" },
-  { value: "2", label: "Languages Supported" },
+  { value: "All", label: "African Languages Supported" },
   { value: "~2 min", label: "Average Per Sample" },
   { value: "100%", label: "Open Source" },
 ];
@@ -389,11 +389,12 @@ export default function Home() {
         <div className="max-w-[1280px] mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4">
-              Built for African Languages
+              Supports All African Languages
             </h2>
             <p className="text-lg text-default-500 max-w-xl mx-auto">
               We&apos;re seeking native speakers to help evaluate AI speech
-              quality in underrepresented languages
+              quality across all underrepresented languages on the African
+              continent
             </p>
           </div>
 
