@@ -1,8 +1,9 @@
 "use server";
 
-import { desc, eq, inArray } from "drizzle-orm";
+import { desc, eq, inArray, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
+import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
   studies,
@@ -18,9 +19,15 @@ export type StudyWithRelations = typeof studies.$inferSelect & {
 };
 
 export async function getStudies() {
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  if (!userId) return [];
+
   const allStudies = await db
     .select()
     .from(studies)
+    .where(eq(studies.userId, userId))
     .orderBy(desc(studies.createdAt));
 
   // Enrich with relations
@@ -50,8 +57,13 @@ export async function getStudies() {
 }
 
 export async function getActiveStudy() {
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  if (!userId) return null;
+
   const activeStudy = await db.query.studies.findFirst({
-    where: eq(studies.isActive, true),
+    where: and(eq(studies.isActive, true), eq(studies.userId, userId)),
   });
 
   if (!activeStudy) return null;
@@ -83,6 +95,11 @@ export async function createStudy(data: {
   languageCodes: string[];
 }) {
   try {
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) throw new Error("Unauthorized");
+
     // 1. Create Study
     const [newStudy] = await db
       .insert(studies)
@@ -90,6 +107,7 @@ export async function createStudy(data: {
         name: data.name,
         samplesPerRater: data.samplesPerRater,
         isActive: false, // Default to inactive
+        userId,
       })
       .returning();
 
@@ -141,7 +159,14 @@ export async function createStudy(data: {
 
 export async function deleteStudy(id: string) {
   try {
-    await db.delete(studies).where(eq(studies.id, id));
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) throw new Error("Unauthorized");
+
+    await db
+      .delete(studies)
+      .where(and(eq(studies.id, id), eq(studies.userId, userId)));
     revalidatePath("/admin/settings");
     revalidatePath("/admin/studies");
 
@@ -155,15 +180,23 @@ export async function deleteStudy(id: string) {
 
 export async function toggleStudyActive(id: string, isActive: boolean) {
   try {
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) throw new Error("Unauthorized");
+
     if (isActive) {
       // Deactivate all other studies if we are activating one
       await db
         .update(studies)
         .set({ isActive: false })
-        .where(eq(studies.isActive, true));
+        .where(and(eq(studies.isActive, true), eq(studies.userId, userId)));
     }
 
-    await db.update(studies).set({ isActive }).where(eq(studies.id, id));
+    await db
+      .update(studies)
+      .set({ isActive })
+      .where(and(eq(studies.id, id), eq(studies.userId, userId)));
 
     revalidatePath("/admin/settings");
     revalidatePath("/admin/studies");

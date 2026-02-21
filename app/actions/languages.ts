@@ -3,31 +3,44 @@
 import { desc, eq, and, or, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
+import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { languages, userLanguagePreferences } from "@/lib/db/schema";
 
 export async function getLanguages(userId?: string) {
-  if (userId) {
+  const session = await auth();
+  const effectiveUserId = userId || session?.user?.id;
+
+  if (effectiveUserId) {
     return await db
       .select()
       .from(languages)
-      .where(or(isNull(languages.userId), eq(languages.userId, userId)))
+      .where(
+        or(isNull(languages.userId), eq(languages.userId, effectiveUserId)),
+      )
       .orderBy(desc(languages.createdAt));
   }
 
-  // Admin view or fallback
-  return await db.select().from(languages).orderBy(desc(languages.createdAt));
+  // Admin view or fallback - only globals if no user
+  return await db
+    .select()
+    .from(languages)
+    .where(isNull(languages.userId))
+    .orderBy(desc(languages.createdAt));
 }
 
 export async function getActiveLanguages(userId?: string) {
-  if (userId) {
+  const session = await auth();
+  const effectiveUserId = userId || session?.user?.id;
+
+  if (effectiveUserId) {
     return await db
       .select()
       .from(languages)
       .where(
         and(
           eq(languages.isActive, true),
-          or(isNull(languages.userId), eq(languages.userId, userId)),
+          or(isNull(languages.userId), eq(languages.userId, effectiveUserId)),
         ),
       )
       .orderBy(desc(languages.createdAt));
@@ -46,22 +59,22 @@ export async function addLanguage(data: {
   flag: string;
   region?: string;
   speakers?: string;
-  userId?: string;
 }) {
   try {
-    // Sanitize userId
-    const userIdToUse =
-      data.userId && data.userId.trim() !== "" ? data.userId : undefined;
+    const session = await auth();
+    const currentUserId = session?.user?.id;
+
+    if (!currentUserId) throw new Error("Unauthorized");
 
     const [newLang] = await db
       .insert(languages)
-      .values({ ...data, userId: userIdToUse })
+      .values({ ...data, userId: currentUserId })
       .returning({ id: languages.id });
 
     // If a user created this language, auto-enable it for them
-    if (userIdToUse && newLang) {
+    if (newLang) {
       await db.insert(userLanguagePreferences).values({
-        userId: userIdToUse,
+        userId: currentUserId,
         languageId: newLang.id,
       });
     }
@@ -83,7 +96,21 @@ export async function addLanguage(data: {
 
 export async function toggleLanguage(id: string, isActive: boolean) {
   try {
-    await db.update(languages).set({ isActive }).where(eq(languages.id, id));
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) throw new Error("Unauthorized");
+
+    // Make sure the language belongs to the user or is global
+    await db
+      .update(languages)
+      .set({ isActive })
+      .where(
+        and(
+          eq(languages.id, id),
+          or(isNull(languages.userId), eq(languages.userId, userId)),
+        ),
+      );
     revalidatePath("/admin/settings");
     revalidatePath("/admin/upload");
     revalidatePath("/admin/studies");
@@ -96,8 +123,13 @@ export async function toggleLanguage(id: string, isActive: boolean) {
   }
 }
 
-export async function deleteLanguage(id: string, userId?: string) {
+export async function deleteLanguage(id: string) {
   try {
+    const session = await auth();
+    const currentUserId = session?.user?.id;
+
+    if (!currentUserId) throw new Error("Unauthorized");
+
     const existingLang = await db.query.languages.findFirst({
       where: eq(languages.id, id),
     });
@@ -107,7 +139,7 @@ export async function deleteLanguage(id: string, userId?: string) {
     }
 
     // Permission check
-    if (existingLang.userId && existingLang.userId !== userId) {
+    if (existingLang.userId && existingLang.userId !== currentUserId) {
       return { success: false, error: "Unauthorized to delete this language." };
     }
 

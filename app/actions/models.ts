@@ -3,20 +3,40 @@
 import { eq, desc, or, isNull, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
+import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { aiModels, userModelPreferences } from "@/lib/db/schema";
 
 // ... existing imports ...
 
 export async function getModels() {
-  return await db.select().from(aiModels).orderBy(desc(aiModels.createdAt));
-}
+  const session = await auth();
+  const userId = session?.user?.id;
 
-export async function getActiveModels() {
+  if (!userId) return [];
+
   return await db
     .select()
     .from(aiModels)
-    .where(eq(aiModels.isActive, true))
+    .where(or(isNull(aiModels.userId), eq(aiModels.userId, userId)))
+    .orderBy(desc(aiModels.createdAt));
+}
+
+export async function getActiveModels() {
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  if (!userId) return [];
+
+  return await db
+    .select()
+    .from(aiModels)
+    .where(
+      and(
+        eq(aiModels.isActive, true),
+        or(isNull(aiModels.userId), eq(aiModels.userId, userId)),
+      ),
+    )
     .orderBy(desc(aiModels.createdAt));
 }
 
@@ -40,8 +60,8 @@ export async function getAvailableModels(userId?: string) {
     .where(
       or(
         isNull(aiModels.userId), // Global
-        eq(aiModels.userId, userId) // Owned by user
-      )
+        eq(aiModels.userId, userId), // Owned by user
+      ),
     )
     .orderBy(desc(aiModels.createdAt));
 }
@@ -50,22 +70,22 @@ export async function addModel(data: {
   name: string;
   value: string;
   description?: string;
-  userId?: string;
 }) {
   try {
-    // Sanitize userId (handle empty string from UI)
-    const userIdToUse =
-      data.userId && data.userId.trim() !== "" ? data.userId : undefined;
+    const session = await auth();
+    const currentUserId = session?.user?.id;
+
+    if (!currentUserId) throw new Error("Unauthorized");
 
     const [newModel] = await db
       .insert(aiModels)
-      .values({ ...data, userId: userIdToUse })
+      .values({ ...data, userId: currentUserId })
       .returning({ id: aiModels.id });
 
     // If a user created this model, auto-enable it for them
-    if (userIdToUse && newModel) {
+    if (newModel) {
       await db.insert(userModelPreferences).values({
-        userId: userIdToUse,
+        userId: currentUserId,
         modelId: newModel.id,
       });
     }
@@ -88,7 +108,21 @@ export async function addModel(data: {
 
 export async function toggleModel(id: string, isActive: boolean) {
   try {
-    await db.update(aiModels).set({ isActive }).where(eq(aiModels.id, id));
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) throw new Error("Unauthorized");
+
+    // Make sure the model belongs to the user or is global
+    await db
+      .update(aiModels)
+      .set({ isActive })
+      .where(
+        and(
+          eq(aiModels.id, id),
+          or(isNull(aiModels.userId), eq(aiModels.userId, userId)),
+        ),
+      );
     revalidatePath("/admin/settings");
     revalidatePath("/admin/upload");
     revalidatePath("/admin/studies");
@@ -101,8 +135,13 @@ export async function toggleModel(id: string, isActive: boolean) {
   }
 }
 
-export async function deleteModel(id: string, userId?: string) {
+export async function deleteModel(id: string) {
   try {
+    const session = await auth();
+    const currentUserId = session?.user?.id;
+
+    if (!currentUserId) throw new Error("Unauthorized");
+
     const existingModel = await db.query.aiModels.findFirst({
       where: eq(aiModels.id, id),
     });
@@ -116,7 +155,7 @@ export async function deleteModel(id: string, userId?: string) {
     // If model has no userId (global), only admins can delete it (we assume admin check happens upstream or we check role here?)
     // For now, if userId is passed, we check against it.
 
-    if (existingModel.userId && existingModel.userId !== userId) {
+    if (existingModel.userId && existingModel.userId !== currentUserId) {
       return { success: false, error: "Unauthorized to delete this model." };
     }
 
