@@ -8,7 +8,6 @@ import Image from "next/image";
 import NextLink from "next/link";
 
 import { LANGUAGES } from "@/config/languages";
-import { siteConfig } from "@/config/site";
 
 const FEATURES = [
   {
@@ -398,7 +397,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-6 max-w-2xl mx-auto">
+          <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
             {LANGUAGES.map((lang) => (
               <Card
                 key={lang.code}
@@ -413,7 +412,7 @@ export default function Home() {
                     </p>
                     <p className="text-sm text-default-500">{lang.region}</p>
                     {lang.speakers && (
-                      <p className="text-xs text-primary font-medium mt-0.5">
+                      <p className="text-xs text-default-400 mt-0.5">
                         {lang.speakers} speakers
                       </p>
                     )}
@@ -421,18 +420,24 @@ export default function Home() {
                 </CardBody>
               </Card>
             ))}
-          </div>
-
-          <p className="text-center text-sm text-default-400 mt-8">
-            More languages coming soon — contribute on{" "}
-            <Link
-              isExternal
-              className="text-primary text-sm"
-              href={siteConfig.links.github}
+            <Card
+              className="landing-card border border-primary/20 bg-primary/5 min-w-[250px] flex-1"
+              shadow="none"
             >
-              GitHub
-            </Link>
-          </p>
+              <CardBody className="flex flex-row items-center gap-4 p-5">
+                <span className="text-4xl">🌍</span>
+                <div>
+                  <p className="font-bold text-foreground text-lg">
+                    All African Languages
+                  </p>
+                  <p className="text-sm text-default-500">Entire Continent</p>
+                  <p className="text-xs text-primary font-medium mt-0.5">
+                    2000+ languages
+                  </p>
+                </div>
+              </CardBody>
+            </Card>
+          </div>
         </div>
       </section>
 
