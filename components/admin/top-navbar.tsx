@@ -18,12 +18,12 @@ import Link from "next/link";
 
 import { useSidebar } from "./sidebar-context";
 import {
-  logoIcon,
   navigationIcons,
   quickActionIcons,
   notificationIcons,
   userIcons,
 } from "./icons";
+import { Logo } from "@/components/icons";
 
 interface Notification {
   id: string;
@@ -110,9 +110,7 @@ export function TopNavbar() {
 
           {/* Logo */}
           <Link className="flex items-center gap-2" href="/admin">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-              <Icon className="h-5 w-5 text-primary" icon={logoIcon} />
-            </div>
+            <Logo size={32} />
             <span className="hidden text-lg font-semibold sm:block">
               OpenMOS
             </span>
