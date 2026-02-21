@@ -286,6 +286,9 @@ export const notifications = pgTable(
   "notifications",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").references(() => adminUsers.id, {
+      onDelete: "cascade",
+    }),
     type: text("type").$type<NotificationType>().notNull(),
     title: text("title").notNull(),
     message: text("message").notNull(),
@@ -422,6 +425,9 @@ export const studies = pgTable("studies", {
   name: text("name").notNull(),
   samplesPerRater: integer("samples_per_rater").default(20).notNull(),
   isActive: boolean("is_active").default(false).notNull(),
+  userId: uuid("user_id").references(() => adminUsers.id, {
+    onDelete: "cascade",
+  }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
