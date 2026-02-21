@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { notifications, type NotificationType } from "@/lib/db/schema";
 
 interface CreateNotificationOptions {
+  userId?: string;
   type: NotificationType;
   title: string;
   message: string;
@@ -15,6 +16,7 @@ export async function createNotification(options: CreateNotificationOptions) {
   const [notification] = await db
     .insert(notifications)
     .values({
+      userId: options.userId || null,
       type: options.type,
       title: options.title,
       message: options.message,
@@ -32,8 +34,9 @@ export const NotificationService = {
   /**
    * Create notification when a new rater starts evaluation
    */
-  async raterStarted(raterId: string, language: string) {
+  async raterStarted(raterId: string, language: string, userId?: string) {
     return createNotification({
+      userId,
       type: "rater_started",
       title: "New Rater Started",
       message: `A new ${language} speaker started evaluation`,
@@ -48,8 +51,10 @@ export const NotificationService = {
     raterId: string,
     language: string,
     totalRatings: number,
+    userId?: string,
   ) {
     return createNotification({
+      userId,
       type: "rater_completed",
       title: "Evaluation Completed",
       message: `A ${language} speaker completed all ${totalRatings} ratings`,
@@ -60,8 +65,14 @@ export const NotificationService = {
   /**
    * Create notification when audio samples are uploaded
    */
-  async samplesUploaded(count: number, language: string, modelType: string) {
+  async samplesUploaded(
+    count: number,
+    language: string,
+    modelType: string,
+    userId?: string,
+  ) {
     return createNotification({
+      userId,
       type: "samples_uploaded",
       title: "Samples Uploaded",
       message: `${count} new ${modelType} samples added for ${language}`,
@@ -72,8 +83,9 @@ export const NotificationService = {
   /**
    * Create notification for rating milestones
    */
-  async ratingMilestone(totalRatings: number) {
+  async ratingMilestone(totalRatings: number, userId?: string) {
     return createNotification({
+      userId,
       type: "rating_milestone",
       title: "Milestone Reached! 🎉",
       message: `Your study has reached ${totalRatings} total ratings`,
@@ -84,8 +96,14 @@ export const NotificationService = {
   /**
    * Create notification when an export is completed
    */
-  async exportCompleted(exportId: string, format: string, recordCount: number) {
+  async exportCompleted(
+    exportId: string,
+    format: string,
+    recordCount: number,
+    userId?: string,
+  ) {
     return createNotification({
+      userId,
       type: "export_completed",
       title: "Export Ready",
       message: `Your ${format.toUpperCase()} export with ${recordCount} records is ready`,
@@ -96,8 +114,9 @@ export const NotificationService = {
   /**
    * Create a system notification
    */
-  async system(title: string, message: string) {
+  async system(title: string, message: string, userId?: string) {
     return createNotification({
+      userId,
       type: "system",
       title,
       message,

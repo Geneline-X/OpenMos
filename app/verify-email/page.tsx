@@ -5,14 +5,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Icon } from "@iconify/react";
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Suspense } from "react";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
   const [status, setStatus] = useState<"loading" | "success" | "error">(
-    "loading"
+    "loading",
   );
   const [message, setMessage] = useState("");
 
@@ -38,12 +39,12 @@ export default function VerifyEmailPage() {
         if (response.ok && data.success) {
           setStatus("success");
           setMessage(
-            data.message || "Email verified successfully! You can now sign in."
+            data.message || "Email verified successfully! You can now sign in.",
           );
         } else {
           setStatus("error");
           setMessage(
-            data.error || "Email verification failed. Please try again."
+            data.error || "Email verification failed. Please try again.",
           );
         }
       } catch (error) {
@@ -143,5 +144,19 @@ export default function VerifyEmailPage() {
         </CardBody>
       </Card>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-default-100">
+          <div className="animate-pulse text-default-400">Loading...</div>
+        </div>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

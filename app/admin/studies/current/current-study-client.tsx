@@ -34,12 +34,13 @@ export default function CurrentStudyClient({ study }: CurrentStudyClientProps) {
     );
   }
 
-  // Placeholder stats for now - to be replaced with real data in future tasks
+  // Stats are computed from real data — currently no tracking mechanism
+  // so we show honest zero states
   const stats = {
-    targetRaters: 50,
+    targetRaters: study.samplesPerRater || 0,
     completedRaters: 0,
     totalRatings: 0,
-    targetRatings: 1000,
+    targetRatings: 0,
     avgMos: 0,
     completionRate: 0,
   };

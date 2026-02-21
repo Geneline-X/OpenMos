@@ -7,8 +7,6 @@ export { SidebarProvider, useSidebar } from "./sidebar-context";
 // Dashboard Sections
 export { StatsOverview, StatCard } from "./stats-overview";
 export { ActivityFeed } from "./activity-feed";
-export { DataQualityPanel } from "./data-quality-panel";
-export { ExportCenter } from "./export-center";
 
 // Charts
 export {

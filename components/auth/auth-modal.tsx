@@ -106,10 +106,22 @@ export function AuthModal({
       });
 
       if (result?.error) {
-        setLoginErrors({ form: result.error });
+        let displayError = result.error;
+
+        if (displayError === "CredentialsSignin") {
+          displayError =
+            "Invalid username or password, or your account may be locked.";
+        } else if (displayError === "Configuration") {
+          displayError =
+            "There is a server configuration issue. Please contact support.";
+        } else if (displayError === "AccessDenied") {
+          displayError = "Access denied. Your account may be deactivated.";
+        }
+
+        setLoginErrors({ form: displayError });
         addToast({
           title: "Login Failed",
-          description: result.error,
+          description: displayError,
           color: "danger",
         });
         setIsLoading(false);

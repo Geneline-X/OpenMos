@@ -17,12 +17,15 @@ import { initializeUserPreferences } from "@/app/actions/user-preferences";
 
 export async function POST(request: Request) {
   try {
+    console.time("signup parsing");
     const { name, email, username, password } = await request.json();
+
+    console.timeEnd("signup parsing");
 
     if (!name || !email || !username || !password) {
       return NextResponse.json(
         { error: "All fields are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -30,7 +33,7 @@ export async function POST(request: Request) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json(
         { error: "Please enter a valid email address" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -41,7 +44,7 @@ export async function POST(request: Request) {
           error:
             "Username must be 3-20 characters and contain only lowercase letters, numbers, hyphens, and underscores",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -51,11 +54,12 @@ export async function POST(request: Request) {
     if (!validation.isValid) {
       return NextResponse.json(
         { error: validation.errors[0] },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Check if email already exists
+    console.time("DB user check");
     const [existingEmailUser] = await db
       .select()
       .from(adminUsers)
@@ -65,7 +69,7 @@ export async function POST(request: Request) {
     if (existingEmailUser) {
       return NextResponse.json(
         { error: "An account with this email already exists" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -79,14 +83,19 @@ export async function POST(request: Request) {
     if (existingUsernameUser) {
       return NextResponse.json(
         { error: "This username is already taken" },
-        { status: 400 }
+        { status: 400 },
       );
     }
+    console.timeEnd("DB user check");
 
     // Hash password
+    console.time("password hash");
     const passwordHash = await hashPassword(password);
 
+    console.timeEnd("password hash");
+
     // Create user with researcher role and unverified status
+    console.time("DB user creation");
     const [newUser] = await db
       .insert(adminUsers)
       .values({
@@ -102,6 +111,7 @@ export async function POST(request: Request) {
 
     // Initialize default user preferences (enable all models/languages)
     await initializeUserPreferences(newUser.id);
+    console.timeEnd("DB user creation");
 
     // Generate verification token
     const verificationToken = generateResetToken();
@@ -114,13 +124,14 @@ export async function POST(request: Request) {
     });
 
     // Send verification email via Resend
+    console.time("send verification email");
     try {
       const { sendVerificationEmail } = await import("@/lib/email/resend");
 
       await sendVerificationEmail(
         newUser.email,
         newUser.fullName || "Researcher",
-        verificationToken
+        verificationToken,
       );
     } catch (emailError: any) {
       console.error("Failed to send verification email:", emailError);
@@ -135,9 +146,10 @@ export async function POST(request: Request) {
             "Failed to send verification email. Please try again with a valid email address.",
           details: emailError.message,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
+    console.timeEnd("send verification email");
 
     // Log the signup
     await db.insert(auditLogs).values({
@@ -161,7 +173,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       { error: "Failed to create account. Please try again." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

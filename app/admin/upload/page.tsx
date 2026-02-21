@@ -1,3 +1,5 @@
+import UploadClient from "./upload-client";
+
 import { auth } from "@/lib/auth";
 import { getActiveModels } from "@/app/actions/models";
 import { getActiveLanguages } from "@/app/actions/languages";
@@ -5,7 +7,6 @@ import {
   getUserModels,
   getUserLanguages,
 } from "@/app/actions/user-preferences";
-import UploadClient from "./upload-client";
 
 export default async function AdminUploadPage() {
   const session = await auth();

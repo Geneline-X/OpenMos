@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { desc, eq, count } from "drizzle-orm";
+import { desc, eq, count, and, or, isNull } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { notifications } from "@/lib/db/schema";
+import { auth } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,10 +11,18 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "10");
     const unreadOnly = searchParams.get("unread") === "true";
 
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Build query
     let query = db
       .select()
       .from(notifications)
+      .where(or(eq(notifications.userId, userId), isNull(notifications.userId)))
       .orderBy(desc(notifications.createdAt))
       .limit(limit);
 
@@ -22,7 +31,15 @@ export async function GET(request: NextRequest) {
       ? await db
           .select()
           .from(notifications)
-          .where(eq(notifications.isRead, false))
+          .where(
+            and(
+              or(
+                eq(notifications.userId, userId),
+                isNull(notifications.userId),
+              ),
+              eq(notifications.isRead, false),
+            ),
+          )
           .orderBy(desc(notifications.createdAt))
           .limit(limit)
       : await query;
@@ -31,7 +48,12 @@ export async function GET(request: NextRequest) {
     const [unreadResult] = await db
       .select({ count: count() })
       .from(notifications)
-      .where(eq(notifications.isRead, false));
+      .where(
+        and(
+          or(eq(notifications.userId, userId), isNull(notifications.userId)),
+          eq(notifications.isRead, false),
+        ),
+      );
 
     return NextResponse.json({
       notifications: notificationsList.map((n) => ({
@@ -59,6 +81,13 @@ export async function GET(request: NextRequest) {
 // Mark notifications as read
 export async function PATCH(request: NextRequest) {
   try {
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { ids, markAll } = body;
 
@@ -66,13 +95,26 @@ export async function PATCH(request: NextRequest) {
       await db
         .update(notifications)
         .set({ isRead: true })
-        .where(eq(notifications.isRead, false));
+        .where(
+          and(
+            or(eq(notifications.userId, userId), isNull(notifications.userId)),
+            eq(notifications.isRead, false),
+          ),
+        );
     } else if (ids && Array.isArray(ids)) {
       for (const id of ids) {
         await db
           .update(notifications)
           .set({ isRead: true })
-          .where(eq(notifications.id, id));
+          .where(
+            and(
+              eq(notifications.id, id),
+              or(
+                eq(notifications.userId, userId),
+                isNull(notifications.userId),
+              ),
+            ),
+          );
       }
     }
 

@@ -33,12 +33,15 @@ export async function queueEmail(
 /**
  * Queue a password reset email
  */
-export async function queuePasswordResetEmail(email: string, resetUrl: string) {
+export async function queuePasswordResetEmail(
+  email: string,
+  userName: string,
+  resetUrl: string,
+) {
   return queueEmail({
     type: "password-reset",
     to: email,
-    subject: "Reset Your Password - OpenMOS",
-    data: { resetUrl },
+    data: { userName, resetUrl },
   });
 }
 
@@ -47,6 +50,7 @@ export async function queuePasswordResetEmail(email: string, resetUrl: string) {
  */
 export async function queueInvitationEmail(
   email: string,
+  inviteeName: string,
   inviteUrl: string,
   inviterName: string,
   role: string,
@@ -54,8 +58,7 @@ export async function queueInvitationEmail(
   return queueEmail({
     type: "invitation",
     to: email,
-    subject: "You've Been Invited to OpenMOS",
-    data: { inviteUrl, inviterName, role },
+    data: { inviteeName, inviteUrl, inviterName, role },
   });
 }
 
@@ -74,6 +77,36 @@ export async function queueAccessRequestNotification(
     to: adminEmail,
     subject: "New Access Request - OpenMOS",
     data: { requesterName, requesterEmail, institution, reason },
+  });
+}
+
+/**
+ * Queue welcome email
+ */
+export async function queueWelcomeEmail(
+  email: string,
+  name: string,
+  role: string,
+) {
+  return queueEmail({
+    type: "welcome",
+    to: email,
+    data: { name, role },
+  });
+}
+
+/**
+ * Queue verification email
+ */
+export async function queueVerificationEmail(
+  email: string,
+  name: string,
+  verificationUrl: string,
+) {
+  return queueEmail({
+    type: "verify-email",
+    to: email,
+    data: { name, verificationUrl },
   });
 }
 
@@ -159,7 +192,7 @@ export async function queueReport(data: ReportJobData) {
 export async function queueEvaluationExport(
   requestedBy: string,
   filters?: ReportJobData["filters"],
-  format: "csv" | "json" = "csv",
+  format: "csv" | "json" | "pdf" = "csv",
 ) {
   return queueReport({
     type: "export-evaluations",

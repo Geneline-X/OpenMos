@@ -8,7 +8,16 @@ export type EmailJobType =
   | "invitation"
   | "welcome"
   | "access-request"
-  | "evaluation-complete";
+  | "evaluation-complete"
+  | "verify-email"
+  | "password-changed"
+  | "data-export-ready"
+  | "study-milestone"
+  | "data-quality-alert"
+  | "weekly-digest"
+  | "two-factor-code"
+  | "error-alert"
+  | "maintenance-notice";
 
 export interface EmailJobData {
   type: EmailJobType;

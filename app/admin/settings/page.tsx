@@ -1,6 +1,6 @@
-import { auth } from "@/lib/auth";
 import SettingsClient from "./settings-client";
 
+import { auth } from "@/lib/auth";
 import { getAvailableModels } from "@/app/actions/models";
 import { getLanguages } from "@/app/actions/languages";
 import {

@@ -22,8 +22,10 @@ import {
   ModalFooter,
   useDisclosure,
 } from "@heroui/modal";
+import { Textarea } from "@heroui/input";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 import { useAudioPlayer } from "@/components/admin/audio-player-context";
 import { usePagination } from "@/hooks/usePagination";
@@ -33,6 +35,7 @@ interface Sample {
   url: string;
   model: string;
   language: string;
+  text: string | null;
   duration: string;
   ratings: number;
   avgScore: string;
@@ -46,7 +49,17 @@ export default function SamplesPage() {
   const [deletingSampleId, setDeletingSampleId] = useState<string | null>(null);
   const [sampleToDelete, setSampleToDelete] = useState<Sample | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { playTrack, currentTrack, isPlaying, stop } = useAudioPlayer();
+  const { currentTrack, isPlaying, playTrack, stop } = useAudioPlayer();
+
+  // Transcript edit state
+  const {
+    isOpen: isTranscriptOpen,
+    onOpen: onTranscriptOpen,
+    onClose: onTranscriptClose,
+  } = useDisclosure();
+  const [editingSample, setEditingSample] = useState<Sample | null>(null);
+  const [transcriptValue, setTranscriptValue] = useState("");
+  const [isSavingTranscript, setIsSavingTranscript] = useState(false);
 
   const {
     currentPage,
@@ -114,6 +127,47 @@ export default function SamplesPage() {
     }
   };
 
+  const handleEditTranscript = (sample: Sample) => {
+    setEditingSample(sample);
+    setTranscriptValue(sample.text || "");
+    onTranscriptOpen();
+  };
+
+  const handleSaveTranscript = async () => {
+    if (!editingSample) return;
+
+    setIsSavingTranscript(true);
+    try {
+      const res = await fetch("/api/admin/samples", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingSample.id,
+          textContent: transcriptValue.trim(),
+        }),
+      });
+
+      if (res.ok) {
+        // Update local state
+        setSamples((prev) =>
+          prev.map((s) =>
+            s.id === editingSample.id
+              ? { ...s, text: transcriptValue.trim() || null }
+              : s,
+          ),
+        );
+        toast.success("Transcript saved");
+        onTranscriptClose();
+      } else {
+        toast.error("Failed to save transcript");
+      }
+    } catch {
+      toast.error("Failed to save transcript");
+    } finally {
+      setIsSavingTranscript(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -158,6 +212,7 @@ export default function SamplesPage() {
               <TableHeader>
                 <TableColumn>MODEL</TableColumn>
                 <TableColumn>LANGUAGE</TableColumn>
+                <TableColumn>TRANSCRIPT</TableColumn>
                 <TableColumn>DURATION</TableColumn>
                 <TableColumn>RATINGS</TableColumn>
                 <TableColumn>AVG SCORE</TableColumn>
@@ -177,6 +232,19 @@ export default function SamplesPage() {
                       </div>
                     </TableCell>
                     <TableCell>{sample.language}</TableCell>
+                    <TableCell>
+                      <div className="max-w-[200px]">
+                        {sample.text ? (
+                          <Tooltip content={sample.text}>
+                            <p className="text-sm truncate cursor-help">
+                              {sample.text}
+                            </p>
+                          </Tooltip>
+                        ) : (
+                          <span className="text-default-400 text-sm">—</span>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>{sample.duration}</TableCell>
                     <TableCell>{sample.ratings}</TableCell>
                     <TableCell>
@@ -233,6 +301,17 @@ export default function SamplesPage() {
                                   : "solar:play-bold"
                               }
                             />
+                          </Button>
+                        </Tooltip>
+                        <Tooltip content="Edit Transcript">
+                          <Button
+                            isIconOnly
+                            color="default"
+                            size="sm"
+                            variant="light"
+                            onPress={() => handleEditTranscript(sample)}
+                          >
+                            <Icon className="h-4 w-4" icon="solar:pen-bold" />
                           </Button>
                         </Tooltip>
                         <Tooltip color="danger" content="Delete">
@@ -336,6 +415,54 @@ export default function SamplesPage() {
               onPress={handleDeleteConfirm}
             >
               Delete
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Edit Transcript Modal */}
+      <Modal isOpen={isTranscriptOpen} size="lg" onClose={onTranscriptClose}>
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <Icon
+                className="h-5 w-5 text-primary"
+                icon="solar:document-text-bold-duotone"
+              />
+              Edit Transcript
+            </div>
+            {editingSample && (
+              <p className="text-sm text-default-500 font-normal">
+                {editingSample.model} • {editingSample.language}
+              </p>
+            )}
+          </ModalHeader>
+          <ModalBody>
+            <Textarea
+              label="Transcript"
+              labelPlacement="outside"
+              maxRows={10}
+              minRows={4}
+              placeholder="Type the transcript of the audio content here..."
+              value={transcriptValue}
+              onValueChange={setTranscriptValue}
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="flat" onPress={onTranscriptClose}>
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              isLoading={isSavingTranscript}
+              startContent={
+                !isSavingTranscript && (
+                  <Icon className="h-4 w-4" icon="solar:check-circle-bold" />
+                )
+              }
+              onPress={handleSaveTranscript}
+            >
+              Save Transcript
             </Button>
           </ModalFooter>
         </ModalContent>

@@ -52,7 +52,7 @@ export default function ExportPage() {
             totalRatings: data.totalRatings || 0,
             totalRaters: data.totalRaters || 0,
             totalSamples: data.totalSamples || 0,
-            languages: 2, // From config/languages.ts
+            languages: data.totalLanguages || 0,
           });
         }
       } catch (error) {

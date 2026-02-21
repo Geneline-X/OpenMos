@@ -147,6 +147,7 @@ export async function POST(request: Request) {
 
     await queueInvitationEmail(
       email,
+      "Colleague", // Default inviteeName since it's not provided in the request
       inviteUrl,
       session.user.fullName || session.user.username || "Admin",
       role,

@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     if (!token || !fullName || !password) {
       return NextResponse.json(
         { success: false, error: "All fields are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     if (!validation.isValid) {
       return NextResponse.json(
         { success: false, error: validation.errors[0] },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -36,15 +36,15 @@ export async function POST(request: Request) {
           eq(adminInvitations.token, token),
           gt(adminInvitations.expiresAt, new Date()),
           isNull(adminInvitations.acceptedAt),
-          isNull(adminInvitations.revokedAt)
-        )
+          isNull(adminInvitations.revokedAt),
+        ),
       )
       .limit(1);
 
     if (!invitation) {
       return NextResponse.json(
         { success: false, error: "Invalid or expired invitation" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     if (existingUser) {
       return NextResponse.json(
         { success: false, error: "An account with this email already exists" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       { success: false, error: "Failed to create account" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

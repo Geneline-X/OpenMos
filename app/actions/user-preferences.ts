@@ -1,5 +1,7 @@
 "use server";
 
+import { eq, and } from "drizzle-orm";
+
 import { db } from "@/lib/db";
 import {
   userModelPreferences,
@@ -7,7 +9,6 @@ import {
   aiModels,
   languages,
 } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
 
 /**
  * Get user's enabled models
@@ -65,7 +66,7 @@ export async function getUserModels(userId: string) {
     .from(userModelPreferences)
     .innerJoin(aiModels, eq(userModelPreferences.modelId, aiModels.id))
     .where(
-      and(eq(userModelPreferences.userId, userId), eq(aiModels.isActive, true))
+      and(eq(userModelPreferences.userId, userId), eq(aiModels.isActive, true)),
     );
 }
 
@@ -83,6 +84,7 @@ export async function getUserLanguages(userId: string) {
       speakers: languages.speakers,
       isActive: languages.isActive,
       createdAt: languages.createdAt,
+      userId: languages.userId,
     })
 
     .from(userLanguagePreferences)
@@ -90,8 +92,8 @@ export async function getUserLanguages(userId: string) {
     .where(
       and(
         eq(userLanguagePreferences.userId, userId),
-        eq(languages.isActive, true) // Only show if language is still active globally
-      )
+        eq(languages.isActive, true), // Only show if language is still active globally
+      ),
     );
 }
 
@@ -105,8 +107,8 @@ export async function isUserModelEnabled(userId: string, modelId: string) {
     .where(
       and(
         eq(userModelPreferences.userId, userId),
-        eq(userModelPreferences.modelId, modelId)
-      )
+        eq(userModelPreferences.modelId, modelId),
+      ),
     )
     .limit(1);
 
@@ -118,7 +120,7 @@ export async function isUserModelEnabled(userId: string, modelId: string) {
  */
 export async function isUserLanguageEnabled(
   userId: string,
-  languageId: string
+  languageId: string,
 ) {
   const result = await db
     .select()
@@ -126,8 +128,8 @@ export async function isUserLanguageEnabled(
     .where(
       and(
         eq(userLanguagePreferences.userId, userId),
-        eq(userLanguagePreferences.languageId, languageId)
-      )
+        eq(userLanguagePreferences.languageId, languageId),
+      ),
     )
     .limit(1);
 
@@ -158,8 +160,8 @@ export async function toggleUserModel(userId: string, modelId: string) {
       .where(
         and(
           eq(userModelPreferences.userId, userId),
-          eq(userModelPreferences.modelId, modelId)
-        )
+          eq(userModelPreferences.modelId, modelId),
+        ),
       )
       .limit(1);
 
@@ -206,8 +208,8 @@ export async function toggleUserLanguage(userId: string, languageId: string) {
       .where(
         and(
           eq(userLanguagePreferences.userId, userId),
-          eq(userLanguagePreferences.languageId, languageId)
-        )
+          eq(userLanguagePreferences.languageId, languageId),
+        ),
       )
       .limit(1);
 
@@ -253,7 +255,7 @@ export async function initializeUserPreferences(userId: string) {
         activeModels.map((model) => ({
           userId,
           modelId: model.id,
-        }))
+        })),
       );
     }
 
@@ -263,7 +265,7 @@ export async function initializeUserPreferences(userId: string) {
         activeLanguages.map((lang) => ({
           userId,
           languageId: lang.id,
-        }))
+        })),
       );
     }
 

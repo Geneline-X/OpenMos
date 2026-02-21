@@ -1,6 +1,14 @@
 import type { AdminRole } from "@/lib/db/schema";
 
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
+
+class CustomAuthError extends CredentialsSignin {
+  constructor(message: string) {
+    super(message);
+    this.code = message;
+  }
+}
+
 import Credentials from "next-auth/providers/credentials";
 import { eq, or } from "drizzle-orm";
 
@@ -53,7 +61,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.usernameOrEmail || !credentials?.password) {
-          throw new Error("Missing credentials");
+          throw new CustomAuthError("Missing credentials");
         }
 
         const usernameOrEmail = credentials.usernameOrEmail as string;
@@ -72,12 +80,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           .limit(1);
 
         if (!user) {
-          throw new Error("Invalid credentials");
+          throw new CustomAuthError("Invalid credentials");
         }
 
         // Check if account is active
         if (!user.isActive) {
-          throw new Error("Account has been deactivated");
+          throw new CustomAuthError("Account has been deactivated");
         }
 
         // Check if account is locked
@@ -86,14 +94,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             (user.lockedUntil!.getTime() - Date.now()) / 60000,
           );
 
-          throw new Error(
+          throw new CustomAuthError(
             `Account locked. Try again in ${remainingMinutes} minutes`,
           );
         }
 
         // Verify password
         if (!user.passwordHash) {
-          throw new Error("Please use OAuth to sign in");
+          throw new CustomAuthError("Please use OAuth to sign in");
         }
 
         const isValid = await verifyPassword(password, user.passwordHash);
@@ -124,12 +132,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           });
 
           if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
-            throw new Error(
+            throw new CustomAuthError(
               "Too many failed attempts. Account locked for 30 minutes",
             );
           }
 
-          throw new Error("Invalid credentials");
+          throw new CustomAuthError("Invalid credentials");
         }
 
         // Reset failed attempts and update last login
@@ -170,12 +178,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     updateAge: 60 * 60, // Extend every 1 hour of activity
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.username = user.username;
         token.role = user.role;
         token.fullName = user.fullName;
+      }
+
+      if (trigger === "update" && session && session.fullName !== undefined) {
+        token.fullName = session.fullName;
       }
 
       return token;

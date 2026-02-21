@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     if (!token) {
       return NextResponse.json(
         { success: false, error: "Verification token is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -23,15 +23,15 @@ export async function POST(request: Request) {
         and(
           eq(emailVerificationTokens.token, token),
           gt(emailVerificationTokens.expiresAt, new Date()),
-          isNull(emailVerificationTokens.usedAt)
-        )
+          isNull(emailVerificationTokens.usedAt),
+        ),
       )
       .limit(1);
 
     if (!verificationToken) {
       return NextResponse.json(
         { success: false, error: "Invalid or expired verification token" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     if (!updatedUser) {
       return NextResponse.json(
         { success: false, error: "User not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       { success: false, error: "Failed to verify email" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

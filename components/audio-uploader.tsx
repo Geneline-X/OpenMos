@@ -7,6 +7,7 @@ import { Button } from "@heroui/button";
 import { Progress } from "@heroui/progress";
 import { RadioGroup, Radio } from "@heroui/radio";
 import { Select, SelectItem } from "@heroui/select";
+import { Textarea } from "@heroui/input";
 import { Icon } from "@iconify/react";
 
 import { useUploadThing } from "@/lib/uploadthing-react";
@@ -37,12 +38,14 @@ export function AudioUploader({
     models?.[0]?.value || "orpheus",
   );
   const [language, setLanguage] = useState<string>("luganda");
+  const [textContent, setTextContent] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
 
   const { startUpload } = useUploadThing("audioUploader", {
     headers: {
       "x-model-type": modelType,
       "x-language": language,
+      "x-text-content": textContent,
     },
     onUploadProgress: (progress) => {
       // Update progress for all uploading files
@@ -199,6 +202,18 @@ export function AudioUploader({
             )}
           </Select>
         </div>
+
+        {/* Transcript Input */}
+        <Textarea
+          description="The text content spoken in the audio. Can also be added/edited later."
+          label="Transcript (optional)"
+          labelPlacement="outside"
+          maxRows={4}
+          minRows={2}
+          placeholder="Type the transcript of the audio content here..."
+          value={textContent}
+          onValueChange={setTextContent}
+        />
 
         {/* Drop Zone */}
         <div

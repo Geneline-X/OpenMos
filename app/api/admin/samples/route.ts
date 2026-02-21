@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq, count, avg, desc } from "drizzle-orm";
+import { eq, count, avg, desc, and } from "drizzle-orm";
 import { UTApi } from "uploadthing/server";
 
 import { db } from "@/lib/db";
 import { audioSamples, ratings } from "@/lib/db/schema";
+import { auth } from "@/lib/auth";
 
 const utapi = new UTApi();
 
@@ -13,6 +14,13 @@ export async function GET(request: NextRequest) {
     const language = searchParams.get("language");
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = parseInt(searchParams.get("offset") || "0");
+
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     // Base query for samples with aggregated rating data
     let query = db
@@ -30,6 +38,7 @@ export async function GET(request: NextRequest) {
       })
       .from(audioSamples)
       .leftJoin(ratings, eq(audioSamples.id, ratings.audioId))
+      .where(eq(audioSamples.uploadedBy, userId))
       .groupBy(audioSamples.id)
       .orderBy(desc(audioSamples.createdAt))
       .limit(limit)
@@ -52,7 +61,12 @@ export async function GET(request: NextRequest) {
           })
           .from(audioSamples)
           .leftJoin(ratings, eq(audioSamples.id, ratings.audioId))
-          .where(eq(audioSamples.language, language))
+          .where(
+            and(
+              eq(audioSamples.language, language),
+              eq(audioSamples.uploadedBy, userId),
+            ),
+          )
           .groupBy(audioSamples.id)
           .orderBy(desc(audioSamples.createdAt))
           .limit(limit)
@@ -62,7 +76,8 @@ export async function GET(request: NextRequest) {
     // Get total count
     const [totalResult] = await db
       .select({ count: count() })
-      .from(audioSamples);
+      .from(audioSamples)
+      .where(eq(audioSamples.uploadedBy, userId));
 
     return NextResponse.json({
       samples: samples.map((s) => ({
@@ -107,6 +122,13 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Delete the sample (ratings will cascade due to FK or we handle manually)
     // First delete associated ratings
     await db.delete(ratings).where(eq(ratings.audioId, id));
@@ -115,7 +137,7 @@ export async function DELETE(request: NextRequest) {
     const [sample] = await db
       .select({ uploadthingKey: audioSamples.uploadthingKey })
       .from(audioSamples)
-      .where(eq(audioSamples.id, id));
+      .where(and(eq(audioSamples.id, id), eq(audioSamples.uploadedBy, userId)));
 
     if (!sample) {
       return NextResponse.json({ error: "Sample not found" }, { status: 404 });
@@ -148,6 +170,52 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json(
       { error: "Failed to delete sample" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, textContent } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Sample ID is required" },
+        { status: 400 },
+      );
+    }
+
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const [updated] = await db
+      .update(audioSamples)
+      .set({ textContent: textContent || null })
+      .where(and(eq(audioSamples.id, id), eq(audioSamples.uploadedBy, userId)))
+      .returning({
+        id: audioSamples.id,
+        textContent: audioSamples.textContent,
+      });
+
+    if (!updated) {
+      return NextResponse.json({ error: "Sample not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      sample: updated,
+    });
+  } catch (error) {
+    console.error("Sample update error:", error);
+
+    return NextResponse.json(
+      { error: "Failed to update sample" },
       { status: 500 },
     );
   }

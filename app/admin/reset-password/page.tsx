@@ -90,7 +90,7 @@ function ResetPasswordContent() {
 
       return () => clearTimeout(timer);
     } else if (isSuccess && countdown === 0) {
-      router.push("/admin/login");
+      router.push("/admin");
     }
   }, [isSuccess, countdown, router]);
 
@@ -209,7 +209,7 @@ function ResetPasswordContent() {
               <Button
                 as={Link}
                 className="w-full"
-                href="/admin/login"
+                href="/admin"
                 variant="light"
               >
                 Back to Login
@@ -243,7 +243,7 @@ function ResetPasswordContent() {
               as={Link}
               className="w-full mt-4"
               color="primary"
-              href="/admin/login"
+              href="/admin"
               size="lg"
               startContent={
                 <Icon className="w-5 h-5" icon="solar:login-bold-duotone" />

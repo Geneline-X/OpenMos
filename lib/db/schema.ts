@@ -59,7 +59,7 @@ export const sessions = pgTable(
     index("idx_sessions_token").on(table.sessionToken),
     index("idx_sessions_rater").on(table.raterId),
     index("idx_sessions_expires").on(table.expiresAt),
-  ]
+  ],
 );
 
 // Audio samples table - stores uploaded audio files
@@ -146,7 +146,7 @@ export const adminUsers = pgTable(
   (table) => [
     index("idx_admin_users_email").on(table.email),
     index("idx_admin_users_username").on(table.username),
-  ]
+  ],
 );
 
 // Password reset tokens
@@ -165,7 +165,7 @@ export const passwordResetTokens = pgTable(
   (table) => [
     index("idx_reset_tokens_token").on(table.token),
     index("idx_reset_tokens_expires").on(table.expiresAt),
-  ]
+  ],
 );
 
 // Email verification tokens
@@ -184,7 +184,7 @@ export const emailVerificationTokens = pgTable(
   (table) => [
     index("idx_verification_tokens_token").on(table.token),
     index("idx_verification_tokens_expires").on(table.expiresAt),
-  ]
+  ],
 );
 
 // Admin invitations
@@ -205,7 +205,7 @@ export const adminInvitations = pgTable(
   (table) => [
     index("idx_invitations_token").on(table.token),
     index("idx_invitations_email").on(table.email),
-  ]
+  ],
 );
 
 // Audit action types
@@ -243,7 +243,7 @@ export const auditLogs = pgTable(
     index("idx_audit_logs_admin").on(table.adminId),
     index("idx_audit_logs_action").on(table.action),
     index("idx_audit_logs_timestamp").on(table.timestamp),
-  ]
+  ],
 );
 
 // Backup codes for 2FA
@@ -258,7 +258,7 @@ export const backupCodes = pgTable(
     usedAt: timestamp("used_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => [index("idx_backup_codes_admin").on(table.adminId)]
+  (table) => [index("idx_backup_codes_admin").on(table.adminId)],
 );
 
 // Export logs table - tracks data exports
@@ -299,7 +299,7 @@ export const notifications = pgTable(
   (table) => [
     index("idx_notifications_read").on(table.isRead),
     index("idx_notifications_created").on(table.createdAt),
-  ]
+  ],
 );
 
 // Access request status types
@@ -326,7 +326,7 @@ export const accessRequests = pgTable(
   (table) => [
     index("idx_access_requests_email").on(table.email),
     index("idx_access_requests_status").on(table.status),
-  ]
+  ],
 );
 
 // AI Models - Dynamic list of models
@@ -345,7 +345,7 @@ export const aiModels = pgTable(
   },
   (table) => [
     uniqueIndex("idx_ai_models_value_user").on(table.value, table.userId),
-  ]
+  ],
 );
 
 // Languages - Dynamic list of languages
@@ -375,7 +375,7 @@ export const languages = pgTable(
     uniqueIndex("idx_languages_code_global")
       .on(table.code)
       .where(sql`user_id IS NULL`),
-  ]
+  ],
 );
 
 // User Model Preferences - Junction table for user-specific model preferences
@@ -395,7 +395,7 @@ export const userModelPreferences = pgTable(
     index("idx_user_model_prefs_user").on(table.userId),
     index("idx_user_model_prefs_model").on(table.modelId),
     uniqueIndex("idx_user_model_unique").on(table.userId, table.modelId),
-  ]
+  ],
 );
 
 // User Language Preferences - Junction table for user-specific language preferences
@@ -415,7 +415,7 @@ export const userLanguagePreferences = pgTable(
     index("idx_user_lang_prefs_user").on(table.userId),
     index("idx_user_lang_prefs_lang").on(table.languageId),
     uniqueIndex("idx_user_lang_unique").on(table.userId, table.languageId),
-  ]
+  ],
 );
 
 // Studies - Configuration for data collection
@@ -444,7 +444,7 @@ export const studyModels = pgTable(
   },
   (table) => [
     { pk: [table.studyId, table.modelId] }, // Composite primary key
-  ]
+  ],
 );
 
 // Study Languages - Many-to-Many relation between Studies and Languages
@@ -460,7 +460,7 @@ export const studyLanguages = pgTable(
   },
   (table) => [
     { pk: [table.studyId, table.languageId] }, // Composite primary key
-  ]
+  ],
 );
 
 // Type exports for use in application

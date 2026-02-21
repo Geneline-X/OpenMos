@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     if (!email) {
       return NextResponse.json(
         { success: false, error: "Email is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       { success: false, error: "Failed to process request" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

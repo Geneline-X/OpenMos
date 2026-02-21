@@ -1,120 +1,240 @@
-import type { EmailJobData } from "../types";
+import type { EmailJobData, EmailJobType } from "../types";
 
+import React from "react";
 import { Worker, Job } from "bullmq";
-import { Resend } from "resend";
 
 import { createConnection } from "../connection";
+import { renderEmail } from "../../../emails/lib/render-email";
+import { sendEmail } from "../../../emails/lib/send-email";
 
-// Initialize Resend with API key
-const resend = new Resend(process.env.RESEND_API_KEY);
-const EMAIL_FROM = process.env.EMAIL_FROM || "OpenMOS <onboarding@resend.dev>";
+// Import all templates
+import { PasswordReset } from "../../../emails/templates/researcher/PasswordReset";
+import { InviteResearcher } from "../../../emails/templates/researcher/InviteResearcher";
+import { WelcomeResearcher } from "../../../emails/templates/researcher/WelcomeResearcher";
+import { VerifyEmail } from "../../../emails/templates/researcher/VerifyEmail";
+import { PasswordChanged } from "../../../emails/templates/researcher/PasswordChanged";
+import { DataExportReady } from "../../../emails/templates/researcher/DataExportReady";
+import { StudyMilestone } from "../../../emails/templates/researcher/StudyMilestone";
+import { DataQualityAlert } from "../../../emails/templates/researcher/DataQualityAlert";
+import { WeeklyDigest } from "../../../emails/templates/researcher/WeeklyDigest";
+import { TwoFactorCode } from "../../../emails/templates/researcher/TwoFactorCode";
+import { ErrorAlert } from "../../../emails/templates/system/ErrorAlert";
+import { MaintenanceNotice } from "../../../emails/templates/system/MaintenanceNotice";
 
-// Email templates
-const emailTemplates = {
-  "password-reset": (data: Record<string, unknown>) => ({
-    subject: "Reset Your Password - OpenMOS",
-    html: `
-      <h1>Password Reset Request</h1>
-      <p>Click the link below to reset your password:</p>
-      <a href="${data.resetUrl}">${data.resetUrl}</a>
-      <p>This link expires in 1 hour.</p>
-      <p>If you didn't request this, ignore this email.</p>
-    `,
-  }),
+// Get app URL for templates
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-  invitation: (data: Record<string, unknown>) => ({
-    subject: "You've Been Invited to OpenMOS",
-    html: `
-      <h1>Welcome to OpenMOS!</h1>
-      <p>${data.inviterName} has invited you to join OpenMOS as a <strong>${data.role}</strong>.</p>
-      <p>Click below to accept your invitation:</p>
-      <a href="${data.inviteUrl}">${data.inviteUrl}</a>
-      <p>This invitation expires in 7 days.</p>
-    `,
-  }),
+/**
+ * Render appropriate React Email template based on job type
+ */
+async function renderTemplateForJob(type: EmailJobType, data: any) {
+  let element: React.ReactElement | null = null;
+  let subject = "";
 
-  welcome: (data: Record<string, unknown>) => ({
-    subject: "Welcome to OpenMOS",
-    html: `
-      <h1>Welcome, ${data.name}!</h1>
-      <p>Your account has been created successfully.</p>
-      <p>You can now log in at: <a href="${data.loginUrl}">${data.loginUrl}</a></p>
-    `,
-  }),
+  switch (type) {
+    case "password-reset":
+      subject = "Reset Your Password - OpenMOS";
+      element = React.createElement(PasswordReset, {
+        userName: data.userName || "User",
+        resetUrl: data.resetUrl,
+        expiresInMinutes: 60,
+        appUrl,
+      });
+      break;
 
-  "access-request": (data: Record<string, unknown>) => ({
-    subject: "New Access Request - OpenMOS",
-    html: `
-      <h1>New Access Request</h1>
-      <p><strong>Name:</strong> ${data.requesterName}</p>
-      <p><strong>Email:</strong> ${data.requesterEmail}</p>
-      <p><strong>Institution:</strong> ${data.institution}</p>
-      <p><strong>Reason:</strong> ${data.reason}</p>
-      <p>Review this request in the admin dashboard.</p>
-    `,
-  }),
+    case "invitation":
+      subject = "You've Been Invited to OpenMOS";
+      element = React.createElement(InviteResearcher, {
+        inviterName: data.inviterName,
+        inviteeName: data.inviteeName || "Colleague",
+        role: data.role,
+        acceptUrl: data.inviteUrl,
+        expiresInDays: 7,
+        appUrl,
+      });
+      break;
 
-  "evaluation-complete": (data: Record<string, unknown>) => ({
-    subject: "Thank You for Your Contribution - OpenMOS",
-    html: `
-      <h1>Thank You!</h1>
-      <p>You've completed ${data.totalRatings} evaluations.</p>
-      <p>Your contribution helps improve AI voice technology for African languages.</p>
-    `,
-  }),
-};
+    case "welcome":
+      subject = "Welcome to OpenMOS";
+      element = React.createElement(WelcomeResearcher, {
+        userName: data.name,
+        role: data.role || "Researcher",
+        dashboardUrl: `${appUrl}/admin`,
+        docsUrl: `${appUrl}/docs`,
+        appUrl,
+      });
+      break;
 
-async function sendEmail(to: string, subject: string, html: string) {
-  if (!process.env.RESEND_API_KEY) {
-    console.warn(
-      "⚠️ RESEND_API_KEY is not set. Emails will be logged but not sent.",
-    );
-    console.log(`📧 [MOCK EMAIL] To: ${to}`);
-    console.log(`   Subject: ${subject}`);
-    console.log(`   Body: ${html.substring(0, 100)}...`);
+    case "verify-email":
+      subject = "Verify your OpenMOS account";
+      element = React.createElement(VerifyEmail, {
+        userName: data.name,
+        verificationUrl: data.verificationUrl,
+        appUrl,
+      });
+      break;
 
-    return;
+    case "password-changed":
+      subject = "Your OpenMOS password was changed";
+      element = React.createElement(PasswordChanged, {
+        userName: data.userName,
+        changedAt: new Date().toLocaleString(),
+        ipAddress: data.ipAddress,
+        device: data.device,
+        supportUrl: `${appUrl}/help`,
+        appUrl,
+      });
+      break;
+
+    case "data-export-ready":
+      subject = "Your OpenMOS export is ready";
+      element = React.createElement(DataExportReady, {
+        researcherName: data.researcherName,
+        exportType: data.exportType,
+        downloadUrl: data.downloadUrl,
+        recordCount: data.recordCount,
+        fileSize: data.fileSize,
+        expiresInDays: 7,
+        appUrl,
+      });
+      break;
+
+    case "study-milestone":
+      subject = `🎉 Milestone reached: ${data.milestone}`;
+      element = React.createElement(StudyMilestone, {
+        researcherName: data.researcherName,
+        studyName: data.studyName,
+        milestone: data.milestone,
+        totalRatings: data.totalRatings,
+        completedSessions: data.completedSessions,
+        completionRate: data.completionRate,
+        dashboardUrl: `${appUrl}/admin/studies/${data.studyId}`,
+        appUrl,
+      });
+      break;
+
+    case "data-quality-alert":
+      subject = `⚠️ Data quality alert for ${data.studyName}`;
+      element = React.createElement(DataQualityAlert, {
+        researcherName: data.researcherName,
+        studyName: data.studyName,
+        alertType: data.alertType,
+        alertDescription: data.alertDescription,
+        affectedCount: data.affectedCount,
+        reviewUrl: `${appUrl}/admin/studies/${data.studyId}/review`,
+        appUrl,
+      });
+      break;
+
+    case "weekly-digest":
+      subject = "Your weekly OpenMOS summary";
+      element = React.createElement(WeeklyDigest, {
+        researcherName: data.researcherName,
+        weekStart: data.weekStart,
+        weekEnd: data.weekEnd,
+        newRatings: data.newRatings,
+        completionRate: data.completionRate,
+        activeStudies: data.activeStudies,
+        topInsights: data.topInsights || [],
+        dashboardUrl: `${appUrl}/admin`,
+        appUrl,
+      });
+      break;
+
+    case "two-factor-code":
+      subject = "Your OpenMOS verification code";
+      element = React.createElement(TwoFactorCode, {
+        userName: data.userName,
+        code: data.code,
+        expiresInMinutes: 5,
+        appUrl,
+      });
+      break;
+
+    case "error-alert":
+      subject = `🚨 System Error: ${data.errorType}`;
+      element = React.createElement(ErrorAlert, {
+        errorType: data.errorType,
+        errorMessage: data.errorMessage,
+        occurredAt: new Date().toLocaleString(),
+        affectedService: data.affectedService,
+        dashboardUrl: `${appUrl}/admin/system`,
+        appUrl,
+      });
+      break;
+
+    case "maintenance-notice":
+      subject = `Scheduled maintenance: ${data.maintenanceStart}`;
+      element = React.createElement(MaintenanceNotice, {
+        maintenanceStart: data.maintenanceStart,
+        maintenanceEnd: data.maintenanceEnd,
+        duration: data.duration,
+        affectedServices: data.affectedServices || [
+          "OpenMOS Admin Portal",
+          "Evaluation interface",
+        ],
+        reason: data.reason,
+        appUrl,
+      });
+      break;
+
+    // Fallbacks for legacy basic templates not converted to React Email yet
+    case "access-request":
+      subject = "New Access Request - OpenMOS";
+
+      return {
+        subject,
+        html: `<h1>New Access Request</h1><p>From: ${data.requesterName} (${data.requesterEmail})</p><p>Reason: ${data.reason}</p>`,
+        text: `New access request from ${data.requesterName}`,
+      };
+    case "evaluation-complete":
+      subject = "Thank You for Your Contribution - OpenMOS";
+
+      return {
+        subject,
+        html: `<h1>Thank You!</h1><p>You've completed ${data.totalRatings} evaluations.</p>`,
+        text: `Thank you for completing ${data.totalRatings} evaluations.`,
+      };
+
+    default:
+      throw new Error(`Unknown email job type: ${type}`);
   }
 
-  try {
-    const { data: emailData, error } = await resend.emails.send({
-      from: EMAIL_FROM,
-      to,
-      subject,
-      html,
-    });
+  if (element) {
+    const { html, text } = await renderEmail(element);
 
-    if (error) {
-      console.error("❌ Resend API Error:", error);
-      throw new Error(error.message);
-    }
-
-    console.log(`📧 Email sent via Resend: ${emailData?.id} to ${to}`);
-  } catch (error) {
-    console.error("❌ Failed to send email:", error);
-    throw error;
+    return { subject, html, text };
   }
+
+  throw new Error("Failed to render email template");
 }
 
 export function createEmailWorker() {
   const worker = new Worker<EmailJobData>(
     "email",
     async (job: Job<EmailJobData>) => {
-      const { type, to, subject, data } = job.data;
+      const { type, to, subject: overrideSubject, data } = job.data;
 
-      console.log(`📧 Processing email job: ${job.name}`);
+      console.log(`📧 Processing email job: ${job.name} (type: ${type})`);
 
-      const template = emailTemplates[type];
+      try {
+        const rendered = await renderTemplateForJob(type, data);
 
-      if (!template) {
-        throw new Error(`Unknown email template: ${type}`);
+        await sendEmail({
+          to,
+          subject: overrideSubject || rendered.subject,
+          html: rendered.html,
+          text: rendered.text,
+        });
+
+        return { sent: true, to, type };
+      } catch (error) {
+        console.error(
+          `❌ Failed to render/send email for job ${job.name}:`,
+          error,
+        );
+        throw error;
       }
-
-      const { subject: templateSubject, html } = template(data);
-
-      await sendEmail(to, subject || templateSubject, html);
-
-      return { sent: true, to, type };
     },
     {
       connection: createConnection(),
