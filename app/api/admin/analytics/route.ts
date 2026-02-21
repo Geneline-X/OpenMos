@@ -1,11 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sql, eq, count, desc } from "drizzle-orm";
+import { sql, eq, count, desc, inArray, and } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { ratings, audioSamples, raters } from "@/lib/db/schema";
+import { auth } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userAudioIds = db
+      .select({ id: audioSamples.id })
+      .from(audioSamples)
+      .where(eq(audioSamples.uploadedBy, userId));
+
     // 1. MOS Comparison by Model Type
     const mosComparison = await db
       .select({
@@ -16,6 +29,7 @@ export async function GET(request: NextRequest) {
       })
       .from(ratings)
       .innerJoin(audioSamples, eq(ratings.audioId, audioSamples.id))
+      .where(eq(audioSamples.uploadedBy, userId))
       .groupBy(audioSamples.modelType)
       .orderBy(desc(sql`AVG(${ratings.score})`));
 
@@ -50,6 +64,7 @@ export async function GET(request: NextRequest) {
       })
       .from(ratings)
       .innerJoin(audioSamples, eq(ratings.audioId, audioSamples.id))
+      .where(eq(audioSamples.uploadedBy, userId))
       .groupBy(audioSamples.modelType, ratings.score)
       .orderBy(audioSamples.modelType, ratings.score);
 
@@ -92,7 +107,12 @@ export async function GET(request: NextRequest) {
         daily: count(),
       })
       .from(ratings)
-      .where(sql`${ratings.timestamp} >= ${sevenDaysAgo}`)
+      .where(
+        and(
+          sql`${ratings.timestamp} >= ${sevenDaysAgo}`,
+          inArray(ratings.audioId, userAudioIds),
+        ),
+      )
       .groupBy(sql`DATE(${ratings.timestamp})`)
       .orderBy(sql`DATE(${ratings.timestamp})`);
 
@@ -105,7 +125,12 @@ export async function GET(request: NextRequest) {
     const [beforePeriodResult] = await db
       .select({ count: count() })
       .from(ratings)
-      .where(sql`${ratings.timestamp} < ${sevenDaysAgo}`);
+      .where(
+        and(
+          sql`${ratings.timestamp} < ${sevenDaysAgo}`,
+          inArray(ratings.audioId, userAudioIds),
+        ),
+      );
 
     let cumulative = beforePeriodResult?.count || 0;
 
@@ -131,12 +156,18 @@ export async function GET(request: NextRequest) {
     }
 
     // 4. Demographics breakdown
+    const userRaterIds = db
+      .select({ id: ratings.raterId })
+      .from(ratings)
+      .where(inArray(ratings.audioId, userAudioIds));
+
     const genderStats = await db
       .select({
         gender: raters.gender,
         count: count(),
       })
       .from(raters)
+      .where(inArray(raters.id, userRaterIds))
       .groupBy(raters.gender);
 
     const ageStats = await db
@@ -152,7 +183,8 @@ export async function GET(request: NextRequest) {
         `,
         count: count(),
       })
-      .from(raters).groupBy(sql`
+      .from(raters)
+      .where(inArray(raters.id, userRaterIds)).groupBy(sql`
         CASE 
           WHEN ${raters.age} < 25 THEN '18-24'
           WHEN ${raters.age} < 35 THEN '25-34'
@@ -168,13 +200,19 @@ export async function GET(request: NextRequest) {
         count: count(),
       })
       .from(raters)
+      .where(inArray(raters.id, userRaterIds))
       .groupBy(raters.nativeLanguage);
 
     // Get target from total samples * desired ratings per sample
     const [samplesResult] = await db
       .select({ count: count() })
       .from(audioSamples)
-      .where(eq(audioSamples.isActive, true));
+      .where(
+        and(
+          eq(audioSamples.isActive, true),
+          eq(audioSamples.uploadedBy, userId),
+        ),
+      );
     const totalSamples = samplesResult?.count || 0;
     const targetRatings = totalSamples * 10; // 10 ratings per sample target
 
