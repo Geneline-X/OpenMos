@@ -45,10 +45,10 @@ export default function SettingsClient({
 
   // Local state for user preferences (initialized from props)
   const [enabledModelIds, setEnabledModelIds] = useState<Set<string>>(
-    new Set(userModels.map((m) => m.id))
+    new Set(userModels.map((m) => m.id)),
   );
   const [enabledLanguageIds, setEnabledLanguageIds] = useState<Set<string>>(
-    new Set(userLanguages.map((l) => l.id))
+    new Set(userLanguages.map((l) => l.id)),
   );
 
   // --- Model Actions ---
@@ -94,7 +94,7 @@ export default function SettingsClient({
 
     if (res.success) {
       toast.success(
-        isActive ? "Model enabled for you" : "Model disabled for you"
+        isActive ? "Model enabled for you" : "Model disabled for you",
       );
     } else {
       // Revert on failure
@@ -166,7 +166,7 @@ export default function SettingsClient({
 
     if (res.success) {
       toast.success(
-        isActive ? "Language enabled for you" : "Language disabled for you"
+        isActive ? "Language enabled for you" : "Language disabled for you",
       );
     } else {
       // Revert
@@ -182,7 +182,7 @@ export default function SettingsClient({
   const handleDeleteLanguage = async (id: string) => {
     if (
       !confirm(
-        "Are you sure you want to delete this language? data associated with it might be affected."
+        "Are you sure you want to delete this language? data associated with it might be affected.",
       )
     ) {
       return;
