@@ -90,6 +90,42 @@ export function AuthModal({
     setIsLoading(true);
 
     try {
+      // PRE-CHECK: NextAuth v5 masks custom errors to "CredentialsSignin" for security.
+      // We perform a pre-check to get the exact reason if login is going to fail (e.g. unverified, locked)
+      const preCheckRes = await fetch("/api/auth/pre-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          usernameOrEmail: loginData.usernameOrEmail,
+          password: loginData.password,
+        }),
+      });
+
+      const preCheck = await preCheckRes.json();
+
+      if (preCheck.error) {
+        if (preCheck.error === "unverified-email") {
+          setUnverifiedEmail(loginData.usernameOrEmail);
+          switchView("unverified");
+        } else if (preCheck.error === "account-locked") {
+          setLoginErrors({
+            form: "Your account is temporarily locked due to too many failed attempts.",
+          });
+        } else if (preCheck.error === "deactivated") {
+          setLoginErrors({
+            form: "Access denied. Your account may be deactivated.",
+          });
+        } else if (preCheck.error === "oauth") {
+          setLoginErrors({ form: "Please use OAuth to sign in." });
+        } else {
+          setLoginErrors({ form: "Invalid username or password." });
+        }
+        setIsLoading(false);
+
+        return;
+      }
+
+      // If pre-check passes, proceed with NextAuth signIn to establish the session
       const result = await signIn("credentials", {
         usernameOrEmail: loginData.usernameOrEmail,
         password: loginData.password,
@@ -98,37 +134,11 @@ export function AuthModal({
       });
 
       if (result?.error) {
-        const errorCode = (result as any).code || result.error;
-        const errorUrl = result.url || "";
-        let displayError = result.error;
+        let displayError = "An unexpected server error occurred.";
 
-        if (
-          errorCode === "unverified-email" ||
-          errorUrl.includes("code=unverified-email") ||
-          displayError === "Please verify your email before logging in"
-        ) {
-          setUnverifiedEmail(loginData.usernameOrEmail);
-          switchView("unverified");
-          setIsLoading(false);
-
-          return;
-        } else if (
-          errorCode === "account-locked" ||
-          errorUrl.includes("code=account-locked")
-        ) {
-          displayError =
-            "Your account is temporarily locked due to too many failed attempts.";
-        } else if (
-          displayError === "CredentialsSignin" ||
-          errorCode === "credentials"
-        ) {
-          displayError =
-            "Invalid username or password, or your account may be locked.";
-        } else if (displayError === "Configuration") {
+        if (result.error === "Configuration") {
           displayError =
             "There is a server configuration issue. Please contact support.";
-        } else if (displayError === "AccessDenied") {
-          displayError = "Access denied. Your account may be deactivated.";
         }
 
         setLoginErrors({ form: displayError });
