@@ -36,6 +36,7 @@ export default async function SettingsPage() {
       userId={session?.user?.id || ""}
       userLanguages={userLanguages}
       userModels={userModels}
+      userRole={session?.user?.role}
     />
   );
 }

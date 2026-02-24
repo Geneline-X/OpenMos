@@ -16,7 +16,7 @@ export async function getLanguages(userId?: string) {
       .select()
       .from(languages)
       .where(
-        or(isNull(languages.userId), eq(languages.userId, effectiveUserId)),
+        or(isNull(languages.userId), eq(languages.userId, effectiveUserId))
       )
       .orderBy(desc(languages.createdAt));
   }
@@ -40,8 +40,8 @@ export async function getActiveLanguages(userId?: string) {
       .where(
         and(
           eq(languages.isActive, true),
-          or(isNull(languages.userId), eq(languages.userId, effectiveUserId)),
-        ),
+          or(isNull(languages.userId), eq(languages.userId, effectiveUserId))
+        )
       )
       .orderBy(desc(languages.createdAt));
   }
@@ -54,7 +54,6 @@ export async function getActiveLanguages(userId?: string) {
 }
 
 export async function addLanguage(data: {
-  code: string;
   name: string;
   flag: string;
   region?: string;
@@ -66,9 +65,14 @@ export async function addLanguage(data: {
 
     if (!currentUserId) throw new Error("Unauthorized");
 
+    const code = data.name
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-");
+
     const [newLang] = await db
       .insert(languages)
-      .values({ ...data, userId: currentUserId })
+      .values({ ...data, code, userId: currentUserId })
       .returning({ id: languages.id });
 
     // If a user created this language, auto-enable it for them
@@ -108,8 +112,8 @@ export async function toggleLanguage(id: string, isActive: boolean) {
       .where(
         and(
           eq(languages.id, id),
-          or(isNull(languages.userId), eq(languages.userId, userId)),
-        ),
+          or(isNull(languages.userId), eq(languages.userId, userId))
+        )
       );
     revalidatePath("/admin/settings");
     revalidatePath("/admin/upload");
@@ -139,8 +143,21 @@ export async function deleteLanguage(id: string) {
     }
 
     // Permission check
-    if (existingLang.userId && existingLang.userId !== currentUserId) {
-      return { success: false, error: "Unauthorized to delete this language." };
+    if (existingLang.userId) {
+      if (existingLang.userId !== currentUserId) {
+        return {
+          success: false,
+          error: "Unauthorized to delete this language.",
+        };
+      }
+    } else {
+      // It's a global language. Only 'owner' can delete.
+      if (session.user.role !== "owner") {
+        return {
+          success: false,
+          error: "Only owners can delete global languages.",
+        };
+      }
     }
 
     await db.delete(languages).where(eq(languages.id, id));

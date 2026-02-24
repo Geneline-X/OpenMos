@@ -34,8 +34,8 @@ export async function getActiveModels() {
     .where(
       and(
         eq(aiModels.isActive, true),
-        or(isNull(aiModels.userId), eq(aiModels.userId, userId)),
-      ),
+        or(isNull(aiModels.userId), eq(aiModels.userId, userId))
+      )
     )
     .orderBy(desc(aiModels.createdAt));
 }
@@ -60,8 +60,8 @@ export async function getAvailableModels(userId?: string) {
     .where(
       or(
         isNull(aiModels.userId), // Global
-        eq(aiModels.userId, userId), // Owned by user
-      ),
+        eq(aiModels.userId, userId) // Owned by user
+      )
     )
     .orderBy(desc(aiModels.createdAt));
 }
@@ -120,8 +120,8 @@ export async function toggleModel(id: string, isActive: boolean) {
       .where(
         and(
           eq(aiModels.id, id),
-          or(isNull(aiModels.userId), eq(aiModels.userId, userId)),
-        ),
+          or(isNull(aiModels.userId), eq(aiModels.userId, userId))
+        )
       );
     revalidatePath("/admin/settings");
     revalidatePath("/admin/upload");
@@ -151,17 +151,19 @@ export async function deleteModel(id: string) {
     }
 
     // Permission check:
-    // If model has a userId (private), only that user can delete it
-    // If model has no userId (global), only admins can delete it (we assume admin check happens upstream or we check role here?)
-    // For now, if userId is passed, we check against it.
-
-    if (existingModel.userId && existingModel.userId !== currentUserId) {
-      return { success: false, error: "Unauthorized to delete this model." };
+    if (existingModel.userId) {
+      if (existingModel.userId !== currentUserId) {
+        return { success: false, error: "Unauthorized to delete this model." };
+      }
+    } else {
+      // If global model (no userId), only owners can delete it
+      if (session.user.role !== "owner") {
+        return {
+          success: false,
+          error: "Only owners can delete global models.",
+        };
+      }
     }
-
-    // If global model (no userId), we should probably block deletion by regular users if we had role info here.
-    // For now, assuming UI handles role-based access for global models,
-    // but strict check for private models is good.
 
     await db.delete(aiModels).where(eq(aiModels.id, id));
     revalidatePath("/admin/settings");

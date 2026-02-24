@@ -6,6 +6,7 @@ import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Switch } from "@heroui/switch";
 import { Divider } from "@heroui/divider";
+import { Select, SelectItem } from "@heroui/select";
 import { Icon } from "@iconify/react";
 import { toast } from "sonner";
 
@@ -23,6 +24,7 @@ interface SettingsClientProps {
   userModels: AiModel[];
   userLanguages: Language[];
   userId: string;
+  userRole?: string;
 }
 
 export default function SettingsClient({
@@ -31,6 +33,7 @@ export default function SettingsClient({
   userModels,
   userLanguages,
   userId,
+  userRole,
 }: SettingsClientProps) {
   // Model Management State
   const [newModelName, setNewModelName] = useState("");
@@ -39,16 +42,32 @@ export default function SettingsClient({
 
   // Language Management State
   const [newLangName, setNewLangName] = useState("");
-  const [newLangCode, setNewLangCode] = useState("");
   const [newLangFlag, setNewLangFlag] = useState("");
   const [isAddingLang, setIsAddingLang] = useState(false);
 
+  const flagOptions = [
+    { key: "🇺🇬", label: "🇺🇬" },
+    { key: "🇸🇱", label: "🇸🇱" },
+    { key: "🇰🇪", label: "🇰🇪" },
+    { key: "🇹🇿", label: "🇹🇿" },
+    { key: "🇷🇼", label: "🇷🇼" },
+    { key: "🇧🇮", label: "🇧🇮" },
+    { key: "🇨🇩", label: "🇨🇩" },
+    { key: "🇿🇦", label: "🇿🇦" },
+    { key: "🇳🇬", label: "🇳🇬" },
+    { key: "🇬🇭", label: "🇬🇭" },
+    { key: "🇺🇸", label: "🇺🇸" },
+    { key: "🇬🇧", label: "🇬🇧" },
+    { key: "🇫🇷", label: "🇫🇷" },
+    { key: "🇪🇸", label: "🇪🇸" },
+  ];
+
   // Local state for user preferences (initialized from props)
   const [enabledModelIds, setEnabledModelIds] = useState<Set<string>>(
-    new Set(userModels.map((m) => m.id)),
+    new Set(userModels.map((m) => m.id))
   );
   const [enabledLanguageIds, setEnabledLanguageIds] = useState<Set<string>>(
-    new Set(userLanguages.map((l) => l.id)),
+    new Set(userLanguages.map((l) => l.id))
   );
 
   // --- Model Actions ---
@@ -94,7 +113,7 @@ export default function SettingsClient({
 
     if (res.success) {
       toast.success(
-        isActive ? "Model enabled for you" : "Model disabled for you",
+        isActive ? "Model enabled for you" : "Model disabled for you"
       );
     } else {
       // Revert on failure
@@ -126,8 +145,8 @@ export default function SettingsClient({
 
   // --- Language Actions ---
   const handleAddLanguage = async () => {
-    if (!newLangName || !newLangCode || !newLangFlag) {
-      toast.error("Please fill in name, code, and flag");
+    if (!newLangName || !newLangFlag) {
+      toast.error("Please fill in name and flag");
 
       return;
     }
@@ -135,7 +154,6 @@ export default function SettingsClient({
     setIsAddingLang(true);
     const res = await addLanguage({
       name: newLangName,
-      code: newLangCode,
       flag: newLangFlag,
     });
 
@@ -144,7 +162,6 @@ export default function SettingsClient({
     if (res.success) {
       toast.success("Language added successfully");
       setNewLangName("");
-      setNewLangCode("");
       setNewLangFlag("");
     } else {
       toast.error(res.error || "Failed to add language");
@@ -166,7 +183,7 @@ export default function SettingsClient({
 
     if (res.success) {
       toast.success(
-        isActive ? "Language enabled for you" : "Language disabled for you",
+        isActive ? "Language enabled for you" : "Language disabled for you"
       );
     } else {
       // Revert
@@ -182,7 +199,7 @@ export default function SettingsClient({
   const handleDeleteLanguage = async (id: string) => {
     if (
       !confirm(
-        "Are you sure you want to delete this language? data associated with it might be affected.",
+        "Are you sure you want to delete this language? data associated with it might be affected."
       )
     ) {
       return;
@@ -292,12 +309,12 @@ export default function SettingsClient({
                           handleToggleModel(model.id, val)
                         }
                       />
-                      {/* Delete button: Only show if user owns the model (private) or if admin (simulated by checking !userId for now, but really regular user shouldn't see/delete global) 
-                          Actually: 
+                      {/* Delete button: 
                           - If model.userId === userId, it's mine -> allow delete.
-                          - If model.userId is null (global) -> user cannot delete.
+                          - If model.userId is null (global) -> user can only delete if owner role.
                       */}
-                      {model.userId === userId && (
+                      {(model.userId === userId ||
+                        (!model.userId && userRole === "owner")) && (
                         <Button
                           isIconOnly
                           color="danger"
@@ -342,22 +359,22 @@ export default function SettingsClient({
                   value={newLangName}
                   onValueChange={setNewLangName}
                 />
-                <Input
+                <Select
                   className="w-24"
-                  label="Code"
-                  placeholder="sw"
-                  size="sm"
-                  value={newLangCode}
-                  onValueChange={setNewLangCode}
-                />
-                <Input
-                  className="w-16"
                   label="Flag"
-                  placeholder="🇰🇪"
+                  placeholder="🇺🇬"
                   size="sm"
-                  value={newLangFlag}
-                  onValueChange={setNewLangFlag}
-                />
+                  selectedKeys={newLangFlag ? [newLangFlag] : []}
+                  items={flagOptions}
+                  onSelectionChange={(keys) => {
+                    const selected = Array.from(keys)[0] as string;
+                    setNewLangFlag(selected || "");
+                  }}
+                >
+                  {(flag) => (
+                    <SelectItem key={flag.key}>{flag.label}</SelectItem>
+                  )}
+                </Select>
                 <Button
                   isIconOnly
                   color="secondary"
@@ -414,8 +431,9 @@ export default function SettingsClient({
                           handleToggleLanguage(lang.id, val)
                         }
                       />
-                      {/* Delete button: Only show if user owns this language */}
-                      {lang.userId === userId && (
+                      {/* Delete button: Only show if user owns this language, or if they are owner editing a global language */}
+                      {(lang.userId === userId ||
+                        (!lang.userId && userRole === "owner")) && (
                         <Button
                           isIconOnly
                           color="danger"
