@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq, count, desc } from "drizzle-orm";
+import { eq, count, desc, inArray } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { raters, evaluationSessions } from "@/lib/db/schema";
+import {
+  raters,
+  evaluationSessions,
+  ratings,
+  audioSamples,
+} from "@/lib/db/schema";
+import { auth } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,6 +16,24 @@ export async function GET(request: NextRequest) {
     const language = searchParams.get("language");
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = parseInt(searchParams.get("offset") || "0");
+
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get raters that have participated in a session containing audio samples uploaded by the current user
+    const userAudioIds = db
+      .select({ id: audioSamples.id })
+      .from(audioSamples)
+      .where(eq(audioSamples.uploadedBy, userId));
+
+    const userRaterIds = db
+      .select({ id: ratings.raterId })
+      .from(ratings)
+      .where(inArray(ratings.audioId, userAudioIds));
 
     // Get raters with their session info
     const ratersData = await db
@@ -27,12 +51,16 @@ export async function GET(request: NextRequest) {
       })
       .from(raters)
       .leftJoin(evaluationSessions, eq(raters.id, evaluationSessions.raterId))
+      .where(inArray(raters.id, userRaterIds))
       .orderBy(desc(raters.createdAt))
       .limit(limit)
       .offset(offset);
 
     // Get total count
-    const [totalResult] = await db.select({ count: count() }).from(raters);
+    const [totalResult] = await db
+      .select({ count: count() })
+      .from(raters)
+      .where(inArray(raters.id, userRaterIds));
 
     // Transform data
     const transformedRaters = ratersData.map((r) => {

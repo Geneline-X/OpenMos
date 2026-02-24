@@ -1,14 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq, desc, count, avg, gte } from "drizzle-orm";
+import { eq, desc, count, avg, gte, inArray, and } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { ratings, audioSamples, raters } from "@/lib/db/schema";
+import { auth } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = parseInt(searchParams.get("offset") || "0");
+
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get raters that have participated in a session containing audio samples uploaded by the current user
+    const userAudioIds = db
+      .select({ id: audioSamples.id })
+      .from(audioSamples)
+      .where(eq(audioSamples.uploadedBy, userId));
 
     // Get ratings with joined sample and rater info
     const ratingsData = await db
@@ -26,20 +40,26 @@ export async function GET(request: NextRequest) {
       .from(ratings)
       .leftJoin(audioSamples, eq(ratings.audioId, audioSamples.id))
       .leftJoin(raters, eq(ratings.raterId, raters.id))
+      .where(inArray(ratings.audioId, userAudioIds))
       .orderBy(desc(ratings.timestamp))
       .limit(limit)
       .offset(offset);
 
     // Get totals
-    const [totalResult] = await db.select({ count: count() }).from(ratings);
+    const [totalResult] = await db
+      .select({ count: count() })
+      .from(ratings)
+      .where(inArray(ratings.audioId, userAudioIds));
 
     const [avgResult] = await db
       .select({ avg: avg(ratings.score) })
-      .from(ratings);
+      .from(ratings)
+      .where(inArray(ratings.audioId, userAudioIds));
 
     const [avgTimeResult] = await db
       .select({ avg: avg(ratings.timeToRateMs) })
-      .from(ratings);
+      .from(ratings)
+      .where(inArray(ratings.audioId, userAudioIds));
 
     // Get today's count
     const today = new Date();
@@ -48,7 +68,12 @@ export async function GET(request: NextRequest) {
     const [todayResult] = await db
       .select({ count: count() })
       .from(ratings)
-      .where(gte(ratings.timestamp, today));
+      .where(
+        and(
+          gte(ratings.timestamp, today),
+          inArray(ratings.audioId, userAudioIds),
+        ),
+      );
 
     // Format the response
     const formattedRatings = ratingsData.map((r) => {
