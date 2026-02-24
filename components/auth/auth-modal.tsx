@@ -9,7 +9,7 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Checkbox } from "@heroui/checkbox";
 import { addToast } from "@heroui/toast";
 
-type AuthView = "login" | "forgot-password" | "signup";
+type AuthView = "login" | "forgot-password" | "signup" | "unverified";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -49,6 +49,13 @@ export function AuthModal({
   const [signupErrors, setSignupErrors] = useState<Record<string, string>>({});
   const [signupSubmitted, setSignupSubmitted] = useState(false);
 
+  // Unverified state
+  const [unverifiedEmail, setUnverifiedEmail] = useState("");
+  const [resendStatus, setResendStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [resendMessage, setResendMessage] = useState("");
+
   // Reset all forms when switching views
   const switchView = (view: AuthView) => {
     setCurrentView(view);
@@ -57,6 +64,8 @@ export function AuthModal({
     setResetSent(false);
     setSignupErrors({});
     setSignupSubmitted(false);
+    setResendStatus("idle");
+    setResendMessage("");
   };
 
   // Handle login submission
@@ -94,6 +103,14 @@ export function AuthModal({
         if (displayError === "CredentialsSignin") {
           displayError =
             "Invalid username or password, or your account may be locked.";
+        } else if (
+          displayError === "Please verify your email before logging in"
+        ) {
+          setUnverifiedEmail(loginData.usernameOrEmail);
+          switchView("unverified");
+          setIsLoading(false);
+
+          return;
         } else if (displayError === "Configuration") {
           displayError =
             "There is a server configuration issue. Please contact support.";
@@ -677,6 +694,121 @@ export function AuthModal({
     </>
   );
 
+  // Render Unverified View
+  const handleResendVerification = async () => {
+    setResendStatus("loading");
+    setResendMessage("");
+
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: unverifiedEmail }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setResendStatus("error");
+        setResendMessage(data.error || "Failed to resend verification link");
+
+        return;
+      }
+
+      setResendStatus("success");
+      setResendMessage("Verification link sent! Check your email.");
+    } catch {
+      setResendStatus("error");
+      setResendMessage("An unexpected error occurred. Please try again.");
+    }
+  };
+
+  const renderUnverifiedView = () => (
+    <>
+      <CardHeader className="flex flex-col items-center gap-3 pt-8 pb-0">
+        <div className="p-3 rounded-full bg-warning/10">
+          <Icon
+            className="w-12 h-12 text-warning"
+            icon="solar:letter-unread-bold-duotone"
+          />
+        </div>
+        <div className="text-center">
+          <h1 className="text-2xl font-bold">Email Not Verified</h1>
+          <p className="text-default-500 text-sm mt-1 max-w-xs">
+            Please verify your email address to continue accessing OpenMOS.
+          </p>
+        </div>
+      </CardHeader>
+
+      <CardBody className="px-6 py-8">
+        {resendStatus === "success" ? (
+          <div className="text-center space-y-4">
+            <div className="p-4 rounded-full bg-success/10 w-fit mx-auto">
+              <Icon
+                className="w-16 h-16 text-success"
+                icon="solar:check-circle-bold-duotone"
+              />
+            </div>
+            <h2 className="text-xl font-bold">Check Your Email</h2>
+            <p className="text-default-500">
+              We&apos;ve sent a new verification link to{" "}
+              <strong>{unverifiedEmail}</strong>.
+            </p>
+            <Button
+              className="w-full mt-4"
+              color="primary"
+              onPress={() => switchView("login")}
+            >
+              Back to Login
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {resendStatus === "error" && (
+              <div className="p-3 rounded-lg bg-danger/10 border border-danger/20">
+                <div className="flex items-center gap-2 text-danger">
+                  <Icon
+                    className="w-5 h-5"
+                    icon="solar:danger-circle-bold-duotone"
+                  />
+                  <span className="text-sm">{resendMessage}</span>
+                </div>
+              </div>
+            )}
+
+            <p className="text-sm text-center text-default-600 mb-6">
+              Didn&apos;t receive the email? Check your spam folder or request a
+              new verification link below.
+            </p>
+
+            <Button
+              className="w-full"
+              color="primary"
+              isLoading={resendStatus === "loading"}
+              size="lg"
+              onPress={handleResendVerification}
+            >
+              {resendStatus === "loading"
+                ? "Sending..."
+                : "Resend Verification Email"}
+            </Button>
+
+            <div className="mt-6 text-center">
+              <button
+                className="text-sm text-default-500 hover:text-primary inline-flex items-center gap-1 transition-colors"
+                type="button"
+                onClick={() => switchView("login")}
+              >
+                <Icon className="w-4 h-4" icon="solar:alt-arrow-left-linear" />
+                Back to Login
+              </button>
+            </div>
+          </div>
+        )}
+      </CardBody>
+    </>
+  );
+
   return (
     <>
       {/* Main Auth Modal */}
@@ -693,6 +825,7 @@ export function AuthModal({
           {currentView === "login" && renderLoginView()}
           {currentView === "forgot-password" && renderForgotPasswordView()}
           {currentView === "signup" && renderSignupView()}
+          {currentView === "unverified" && renderUnverifiedView()}
         </Card>
       </div>
     </>

@@ -83,6 +83,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           throw new CustomAuthError("Invalid credentials");
         }
 
+        // Check if email is verified
+        if (!user.emailVerified) {
+          throw new CustomAuthError(
+            "Please verify your email before logging in",
+          );
+        }
+
         // Check if account is active
         if (!user.isActive) {
           throw new CustomAuthError("Account has been deactivated");
