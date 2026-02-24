@@ -10,12 +10,29 @@ import { PasswordReset } from "../../emails/templates/researcher/PasswordReset";
 /**
  * Send email verification link to new users
  */
+const getAppUrl = () => {
+  if (
+    process.env.NEXT_PUBLIC_APP_URL &&
+    process.env.NEXT_PUBLIC_APP_URL !== "http://localhost:3000"
+  ) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+};
+
 export async function sendVerificationEmail(
   email: string,
   name: string,
   verificationToken: string,
 ) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const appUrl = getAppUrl();
   const verificationUrl = `${appUrl}/verify-email?token=${verificationToken}`;
 
   try {
@@ -49,7 +66,7 @@ export async function sendPasswordResetEmail(
   name: string,
   resetToken: string,
 ) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const appUrl = getAppUrl();
   const resetUrl = `${appUrl}/admin/reset-password?token=${resetToken}`;
 
   try {

@@ -21,8 +21,25 @@ import { TwoFactorCode } from "../../../emails/templates/researcher/TwoFactorCod
 import { ErrorAlert } from "../../../emails/templates/system/ErrorAlert";
 import { MaintenanceNotice } from "../../../emails/templates/system/MaintenanceNotice";
 
-// Get app URL for templates
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+// Get app URL for templates. Prefer explicitly set NEXT_PUBLIC_APP_URL if it's not localhost.
+// Fallback to Vercel URLs if available, otherwise default to localhost.
+const getAppUrl = () => {
+  if (
+    process.env.NEXT_PUBLIC_APP_URL &&
+    process.env.NEXT_PUBLIC_APP_URL !== "http://localhost:3000"
+  ) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+};
+const appUrl = getAppUrl();
 
 /**
  * Render appropriate React Email template based on job type
