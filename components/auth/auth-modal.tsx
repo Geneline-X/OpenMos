@@ -748,20 +748,22 @@ export function AuthModal({
 
   const renderUnverifiedView = () => (
     <>
-      <CardHeader className="flex flex-col items-center gap-3 pt-8 pb-0">
-        <div className="p-3 rounded-full bg-warning/10">
-          <Icon
-            className="w-12 h-12 text-warning"
-            icon="solar:letter-unread-bold-duotone"
-          />
-        </div>
-        <div className="text-center">
-          <h1 className="text-2xl font-bold">Email Not Verified</h1>
-          <p className="text-default-500 text-sm mt-1 max-w-xs">
-            Please verify your email address to continue accessing OpenMOS.
-          </p>
-        </div>
-      </CardHeader>
+      {resendStatus !== "success" && (
+        <CardHeader className="flex flex-col items-center gap-3 pt-8 pb-0">
+          <div className="p-3 rounded-full bg-warning/10">
+            <Icon
+              className="w-12 h-12 text-warning"
+              icon="solar:letter-unread-bold-duotone"
+            />
+          </div>
+          <div className="text-center">
+            <h1 className="text-2xl font-bold">Email Not Verified</h1>
+            <p className="text-default-500 text-sm mt-1 max-w-xs">
+              Please verify your email address to continue accessing OpenMOS.
+            </p>
+          </div>
+        </CardHeader>
+      )}
 
       <CardBody className="px-6 py-8">
         {resendStatus === "success" ? (
