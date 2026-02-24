@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, and } from "drizzle-orm";
+import { eq, and, or, isNull } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import {
@@ -58,15 +58,17 @@ export async function getUserModels(userId: string) {
       id: aiModels.id,
       name: aiModels.name,
       value: aiModels.value,
-      description: aiModels.description,
-      isActive: aiModels.isActive,
       createdAt: aiModels.createdAt,
       userId: aiModels.userId, // Return ownership info
     })
     .from(userModelPreferences)
     .innerJoin(aiModels, eq(userModelPreferences.modelId, aiModels.id))
     .where(
-      and(eq(userModelPreferences.userId, userId), eq(aiModels.isActive, true)),
+      and(
+        eq(userModelPreferences.userId, userId),
+        eq(aiModels.isActive, true),
+        or(isNull(aiModels.userId), eq(aiModels.userId, userId)),
+      ),
     );
 }
 
@@ -81,18 +83,16 @@ export async function getUserLanguages(userId: string) {
       name: languages.name,
       flag: languages.flag,
       region: languages.region,
-      speakers: languages.speakers,
-      isActive: languages.isActive,
       createdAt: languages.createdAt,
       userId: languages.userId,
     })
-
     .from(userLanguagePreferences)
     .innerJoin(languages, eq(userLanguagePreferences.languageId, languages.id))
     .where(
       and(
         eq(userLanguagePreferences.userId, userId),
         eq(languages.isActive, true), // Only show if language is still active globally
+        or(isNull(languages.userId), eq(languages.userId, userId)),
       ),
     );
 }
@@ -237,17 +237,17 @@ export async function toggleUserLanguage(userId: string, languageId: string) {
  */
 export async function initializeUserPreferences(userId: string) {
   try {
-    // Get all active models
+    // Get all active GLOBAL models
     const activeModels = await db
       .select({ id: aiModels.id })
       .from(aiModels)
-      .where(eq(aiModels.isActive, true));
+      .where(and(eq(aiModels.isActive, true), isNull(aiModels.userId)));
 
-    // Get all active languages
+    // Get all active GLOBAL languages
     const activeLanguages = await db
       .select({ id: languages.id })
       .from(languages)
-      .where(eq(languages.isActive, true));
+      .where(and(eq(languages.isActive, true), isNull(languages.userId)));
 
     // Enable all models for user
     if (activeModels.length > 0) {
