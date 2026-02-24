@@ -98,12 +98,13 @@ export function AuthModal({
       });
 
       if (result?.error) {
+        const errorCode = (result as any).code || result.error;
+        const errorUrl = result.url || "";
         let displayError = result.error;
 
-        if (displayError === "CredentialsSignin") {
-          displayError =
-            "Invalid username or password, or your account may be locked.";
-        } else if (
+        if (
+          errorCode === "unverified-email" ||
+          errorUrl.includes("code=unverified-email") ||
           displayError === "Please verify your email before logging in"
         ) {
           setUnverifiedEmail(loginData.usernameOrEmail);
@@ -111,6 +112,18 @@ export function AuthModal({
           setIsLoading(false);
 
           return;
+        } else if (
+          errorCode === "account-locked" ||
+          errorUrl.includes("code=account-locked")
+        ) {
+          displayError =
+            "Your account is temporarily locked due to too many failed attempts.";
+        } else if (
+          displayError === "CredentialsSignin" ||
+          errorCode === "credentials"
+        ) {
+          displayError =
+            "Invalid username or password, or your account may be locked.";
         } else if (displayError === "Configuration") {
           displayError =
             "There is a server configuration issue. Please contact support.";

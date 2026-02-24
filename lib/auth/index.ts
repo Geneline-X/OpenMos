@@ -3,9 +3,10 @@ import type { AdminRole } from "@/lib/db/schema";
 import NextAuth, { CredentialsSignin } from "next-auth";
 
 class CustomAuthError extends CredentialsSignin {
-  constructor(message: string) {
+  code: string;
+  constructor(message: string, code?: string) {
     super(message);
-    this.code = message;
+    this.code = code || "credentials";
   }
 }
 
@@ -87,6 +88,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!user.emailVerified) {
           throw new CustomAuthError(
             "Please verify your email before logging in",
+            "unverified-email",
           );
         }
 
@@ -103,6 +105,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           throw new CustomAuthError(
             `Account locked. Try again in ${remainingMinutes} minutes`,
+            "account-locked",
           );
         }
 
@@ -141,6 +144,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
             throw new CustomAuthError(
               "Too many failed attempts. Account locked for 30 minutes",
+              "account-locked",
             );
           }
 
