@@ -48,12 +48,33 @@ export function PublicLayoutWrapper({ children }: PublicLayoutWrapperProps) {
       <footer className="w-full border-t border-default-200 py-6 no-print">
         <div className="container mx-auto max-w-4xl px-4 md:px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-default-500 text-sm">
-              <Icon
-                className="w-5 h-5 text-primary"
-                icon="solar:soundwave-bold-duotone"
-              />
-              <span>OpenMOS Research Platform</span>
+            <div className="flex flex-col items-center md:items-start gap-1 text-default-500 text-sm">
+              <div className="flex items-center gap-2">
+                <Icon
+                  className="w-5 h-5 text-primary"
+                  icon="solar:soundwave-bold-duotone"
+                />
+                <span className="font-semibold">OpenMOS Research Platform</span>
+              </div>
+              <span className="text-xs mt-1 text-center md:text-left">
+                For support or contact:{" "}
+                <Link
+                  className="text-xs text-primary"
+                  href="mailto:info@geneline-x.net"
+                >
+                  info@geneline-x.net
+                </Link>
+              </span>
+              <span className="text-xs text-center md:text-left">
+                Powered by{" "}
+                <Link
+                  isExternal
+                  className="text-xs text-primary font-semibold"
+                  href="https://geneline-x.net/"
+                >
+                  Geneline
+                </Link>
+              </span>
             </div>
             <div className="flex items-center gap-4 text-sm">
               <Link
