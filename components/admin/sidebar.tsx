@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { Icon } from "@iconify/react";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@heroui/theme";
 
 import { useSidebar } from "./sidebar-context";
@@ -145,7 +145,7 @@ function SidebarNavLink({
     if (hasChildren && item.children) {
       const isChildActive = item.children.some(
         (child) =>
-          pathname === child.href || pathname.startsWith(child.href + "/"),
+          pathname === child.href || pathname.startsWith(child.href + "/")
       );
 
       if (isChildActive) {
@@ -176,7 +176,7 @@ function SidebarNavLink({
             ? "bg-primary text-primary-foreground hover:bg-primary/90"
             : "text-default-600 hover:text-default-900",
           isCollapsed && "justify-center px-2",
-          isChild && "pl-9 text-xs", // Indent children
+          isChild && "pl-9 text-xs" // Indent children
         )}
       >
         <Icon
@@ -244,6 +244,7 @@ interface SidebarContentProps {
 
 function SidebarContent({ isCollapsed, onClose }: SidebarContentProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [badgeCounts, setBadgeCounts] = useState<BadgeCounts>({
     samples: 0,
     activeRaters: 0,
@@ -283,8 +284,22 @@ function SidebarContent({ isCollapsed, onClose }: SidebarContentProps) {
     }
     if (href.startsWith("#")) return false; // Parents are never "active" in the same way
 
+    const [baseHref, queryString] = href.split("?");
+
+    if (baseHref === "/admin/studies") {
+      if (pathname === "/admin/studies") {
+        if (queryString) {
+          const queryParams = new URLSearchParams(queryString);
+          return searchParams.get("filter") === queryParams.get("filter");
+        }
+        return !searchParams.has("filter");
+      }
+      return false; // Prevent /admin/studies from highlighting for /admin/studies/current
+    }
+
     return (
-      pathname === href || (pathname.startsWith(href) && href !== "/admin")
+      pathname === baseHref ||
+      (pathname.startsWith(baseHref) && baseHref !== "/admin")
     );
   };
 
@@ -354,7 +369,7 @@ export function Sidebar() {
     <aside
       className={cn(
         "hidden lg:flex flex-col border-r border-divider bg-default-50 transition-all duration-300 overflow-hidden",
-        isCollapsed ? "w-16" : "w-60",
+        isCollapsed ? "w-16" : "w-60"
       )}
     >
       {/* Collapse Toggle */}
@@ -377,7 +392,15 @@ export function Sidebar() {
         </Button>
       </div>
       <div className="flex-1 overflow-y-auto">
-        <SidebarContent isCollapsed={isCollapsed} />
+        <Suspense
+          fallback={
+            <div className="p-4 text-center text-sm text-default-500">
+              Loading menu...
+            </div>
+          }
+        >
+          <SidebarContent isCollapsed={isCollapsed} />
+        </Suspense>
       </div>
     </aside>
   );
@@ -417,7 +440,15 @@ export function MobileSidebar() {
             <Icon className="h-5 w-5" icon={navigationIcons.close} />
           </Button>
         </div>
-        <SidebarContent isCollapsed={false} onClose={closeMobileSidebar} />
+        <Suspense
+          fallback={
+            <div className="p-4 text-center text-sm text-default-500">
+              Loading menu...
+            </div>
+          }
+        >
+          <SidebarContent isCollapsed={false} onClose={closeMobileSidebar} />
+        </Suspense>
       </aside>
     </>
   );
