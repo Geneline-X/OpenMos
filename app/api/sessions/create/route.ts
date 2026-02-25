@@ -4,33 +4,41 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq, and } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { raters, evaluationSessions, audioSamples } from "@/lib/db/schema";
-import { isValidLanguage } from "@/config/languages";
+import {
+  raters,
+  evaluationSessions,
+  audioSamples,
+  languages,
+} from "@/lib/db/schema";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { age, gender, nativeLanguage } = body;
 
-    // Validate input
-    if (!nativeLanguage || !isValidLanguage(nativeLanguage)) {
+    // Validate that the selected language code exists in the database
+    const matchedLanguage = await db.query.languages.findFirst({
+      where: eq(languages.code, nativeLanguage),
+    });
+
+    if (!nativeLanguage || !matchedLanguage) {
       return NextResponse.json(
         { error: "Invalid or missing native language" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     if (!age || age < 18 || age > 120) {
       return NextResponse.json(
         { error: "Invalid age - must be 18 or older" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     if (!gender) {
       return NextResponse.json(
         { error: "Gender is required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -57,8 +65,8 @@ export async function POST(request: NextRequest) {
       .where(
         and(
           eq(audioSamples.language, nativeLanguage),
-          eq(audioSamples.isActive, true),
-        ),
+          eq(audioSamples.isActive, true)
+        )
       );
 
     // Determine total samples (minimum of available or 20)
@@ -124,7 +132,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { error: "Failed to create session" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
