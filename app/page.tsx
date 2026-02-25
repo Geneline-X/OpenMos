@@ -35,348 +35,459 @@ const STEPS = [
 export default function Home() {
   return (
     <>
-      {/* ─── HERO SECTION ─── */}
-      <section className="landing-section pb-0 lg:pb-0">
-        <div className="max-w-[1280px] mx-auto">
-          <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
-            <Chip
-              className="mb-6 animate-fade-in-up"
-              color="primary"
-              size="sm"
-              startContent={
-                <Icon className="w-3.5 h-3.5 ml-1" icon="solar:star-bold" />
-              }
-              variant="flat"
-            >
-              Open Source Research Platform
-            </Chip>
+      {/* Skip-to-main-content link — WCAG AAA: 2.4.1 Bypass Blocks */}
+      <a
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg focus:font-semibold focus:outline-none focus:ring-2 focus:ring-white"
+        href="#main-content"
+      >
+        Skip to main content
+      </a>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground mb-6 animate-fade-in-up animate-delay-100">
-              Evaluate AI Voice Quality{" "}
-              <span className="text-primary">for African Languages</span>
-            </h1>
-
-            <p className="text-lg md:text-xl text-default-500 mb-8 max-w-2xl leading-relaxed animate-fade-in-up animate-delay-200">
-              Help researchers improve text-to-speech technology by rating how
-              natural AI-generated speech sounds. Anonymous, fast, and
-              impactful.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 mb-6 animate-fade-in-up animate-delay-300">
-              <Button
-                as={Link}
-                className="font-semibold text-base h-12 px-8"
+      <main id="main-content">
+        {/* ─── HERO SECTION ─── */}
+        <section
+          aria-labelledby="hero-heading"
+          className="landing-section pb-0 lg:pb-0"
+        >
+          <div className="max-w-[1280px] mx-auto">
+            <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
+              <Chip
+                aria-hidden="true"
+                className="mb-6 animate-fade-in-up"
                 color="primary"
+                size="sm"
+                startContent={
+                  <Icon className="w-3.5 h-3.5 ml-1" icon="solar:star-bold" />
+                }
+                variant="flat"
+              >
+                Open Source Research Platform
+              </Chip>
+
+              <h1
+                className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground mb-6 animate-fade-in-up animate-delay-100"
+                id="hero-heading"
+              >
+                Evaluate AI Voice Quality{" "}
+                <span className="text-primary">for African Languages</span>
+              </h1>
+
+              <p className="text-lg md:text-xl text-default-600 mb-8 max-w-2xl leading-relaxed animate-fade-in-up animate-delay-200">
+                Help researchers improve text-to-speech technology by rating how
+                natural AI-generated speech sounds. Anonymous, fast, and
+                impactful.
+              </p>
+
+              <div
+                className="flex flex-col sm:flex-row gap-3 mb-6 animate-fade-in-up animate-delay-300"
+                role="group"
+                aria-label="Primary actions"
+              >
+                <Button
+                  as={Link}
+                  className="font-semibold text-base h-12 px-8"
+                  color="primary"
+                  href="/start"
+                  size="lg"
+                  startContent={
+                    <Icon
+                      aria-hidden="true"
+                      className="w-5 h-5"
+                      icon="solar:play-circle-bold-duotone"
+                    />
+                  }
+                >
+                  Start Evaluation
+                </Button>
+                <Button
+                  as={Link}
+                  className="font-semibold text-base h-12 px-8"
+                  href="/admin"
+                  size="lg"
+                  startContent={
+                    <Icon
+                      aria-hidden="true"
+                      className="w-5 h-5"
+                      icon="solar:user-id-bold"
+                    />
+                  }
+                  variant="bordered"
+                >
+                  Researcher Login
+                </Button>
+              </div>
+
+              {/* Trust badges */}
+              <ul
+                aria-label="Evaluation benefits"
+                className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-default-500 animate-fade-in-up animate-delay-400 list-none p-0"
+              >
+                <li className="flex items-center gap-1.5">
+                  <Icon
+                    aria-hidden="true"
+                    className="w-4 h-4 text-success"
+                    icon="solar:check-circle-bold"
+                  />
+                  No account needed
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <Icon
+                    aria-hidden="true"
+                    className="w-4 h-4 text-success"
+                    icon="solar:check-circle-bold"
+                  />
+                  Takes 10–15 minutes
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <Icon
+                    aria-hidden="true"
+                    className="w-4 h-4 text-success"
+                    icon="solar:check-circle-bold"
+                  />
+                  Fully anonymous
+                </li>
+              </ul>
+            </div>
+
+            {/* Hero Image */}
+            <div className="mt-12 md:mt-16 animate-fade-in-up animate-delay-500">
+              <div className="animate-float">
+                <Image
+                  priority
+                  alt="Screenshot of the OpenMOS Admin Dashboard displaying MOS evaluation analytics, including score distributions and active rater statistics."
+                  className="product-screenshot w-full"
+                  height={800}
+                  src="/open-mos.png"
+                  width={1400}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── HOW IT WORKS ─── */}
+        <section
+          aria-labelledby="how-it-works-heading"
+          className="landing-section"
+          id="how-it-works"
+        >
+          <div className="max-w-[1280px] mx-auto">
+            <div className="text-center mb-12 md:mb-16">
+              <h2
+                className="text-3xl md:text-4xl font-extrabold text-foreground mb-4"
+                id="how-it-works-heading"
+              >
+                How It Works
+              </h2>
+              <p className="text-lg text-default-600 max-w-xl mx-auto">
+                Three simple steps to contribute to groundbreaking research
+              </p>
+            </div>
+
+            <ol
+              aria-label="Steps to participate in the evaluation"
+              className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 list-none p-0"
+            >
+              {STEPS.map((item, index) => (
+                <li key={item.step} className="relative text-center">
+                  {/* Connector line — decorative, hidden from assistive tech */}
+                  {index < STEPS.length - 1 && (
+                    <div
+                      aria-hidden="true"
+                      className="hidden md:block absolute top-10 left-[60%] w-[80%] h-px bg-default-200"
+                    />
+                  )}
+
+                  <div className="flex flex-col items-center">
+                    <div className="relative mb-6">
+                      <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
+                        <Icon
+                          aria-hidden="true"
+                          className="w-9 h-9 text-primary"
+                          icon={item.icon}
+                        />
+                      </div>
+                      <span
+                        aria-hidden="true"
+                        className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center"
+                      >
+                        {item.step}
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground mb-2">
+                      {item.step}. {item.title}
+                    </h3>
+                    <p className="text-default-600 leading-relaxed max-w-xs">
+                      {item.description}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* ─── SUPPORTED LANGUAGES ─── */}
+        <section
+          aria-labelledby="languages-heading"
+          className="landing-section bg-default-50 border-y border-default-200"
+          id="languages"
+        >
+          <div className="max-w-[1280px] mx-auto">
+            <div className="text-center mb-12">
+              <h2
+                className="text-3xl md:text-4xl font-extrabold text-foreground mb-4"
+                id="languages-heading"
+              >
+                Supports All African Languages
+              </h2>
+              <p className="text-lg text-default-600 max-w-xl mx-auto">
+                We&apos;re seeking native speakers to help evaluate AI speech
+                quality across all underrepresented languages on the African
+                continent
+              </p>
+            </div>
+
+            {/* Language cards as an accessible list */}
+            <ul
+              aria-label="Supported African languages"
+              className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto list-none p-0"
+            >
+              {LANGUAGES.map((lang) => (
+                <li key={lang.code}>
+                  <Card
+                    className="landing-card border border-default-200 min-w-[200px]"
+                    shadow="none"
+                  >
+                    <CardBody className="flex flex-row items-center gap-4 p-5">
+                      <span aria-hidden="true" className="text-4xl" role="img">
+                        {lang.flag}
+                      </span>
+                      <div>
+                        <p className="font-bold text-foreground text-lg">
+                          {lang.name}
+                        </p>
+                        <p className="text-sm text-default-500">
+                          {lang.region}
+                        </p>
+                        {lang.speakers && (
+                          <p className="text-xs text-default-400 mt-0.5">
+                            {lang.speakers} speakers
+                          </p>
+                        )}
+                      </div>
+                    </CardBody>
+                  </Card>
+                </li>
+              ))}
+              <li>
+                <Card
+                  className="landing-card border border-primary/20 bg-primary/5 min-w-[250px]"
+                  shadow="none"
+                >
+                  <CardBody className="flex flex-row items-center gap-4 p-5">
+                    <span
+                      aria-label="Globe showing Africa"
+                      className="text-4xl"
+                      role="img"
+                    >
+                      🌍
+                    </span>
+                    <div>
+                      <p className="font-bold text-foreground text-lg">
+                        All African Languages
+                      </p>
+                      <p className="text-sm text-default-500">
+                        Entire Continent
+                      </p>
+                      <p className="text-xs text-primary font-medium mt-0.5">
+                        2000+ languages
+                      </p>
+                    </div>
+                  </CardBody>
+                </Card>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        {/* ─── ADMIN DASHBOARD SHOWCASE ─── */}
+        <section
+          aria-labelledby="dashboard-heading"
+          className="landing-section"
+        >
+          <div className="max-w-[1280px] mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <div>
+                <h2
+                  className="text-3xl md:text-4xl font-extrabold text-foreground mb-6"
+                  id="dashboard-heading"
+                >
+                  Powerful Admin Dashboard
+                </h2>
+                <p className="text-lg text-default-600 mb-8 leading-relaxed">
+                  Manage your entire evaluation study from one clean interface.
+                  Upload audio, monitor progress, and export publication-ready
+                  data.
+                </p>
+
+                <ul
+                  aria-label="Dashboard capabilities"
+                  className="space-y-4 list-none p-0"
+                >
+                  {[
+                    "Real-time MOS score distributions and analytics",
+                    "Audio sample management with multi-model support",
+                    "Rater demographics and completion tracking",
+                    "One-click data export for academic papers",
+                  ].map((item) => (
+                    <li
+                      key={item}
+                      className="flex items-start gap-3 text-default-700"
+                    >
+                      <Icon
+                        aria-hidden="true"
+                        className="w-5 h-5 text-success mt-0.5 shrink-0"
+                        icon="solar:check-circle-bold"
+                      />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Button
+                  as={Link}
+                  className="mt-8 font-semibold h-11"
+                  color="primary"
+                  href="/about"
+                  variant="flat"
+                >
+                  Learn More
+                  <Icon
+                    aria-hidden="true"
+                    className="w-4 h-4 ml-1"
+                    icon="solar:arrow-right-linear"
+                  />
+                </Button>
+              </div>
+
+              <div>
+                <Image
+                  alt="OpenMOS Dashboard screenshot showing the MOS comparison chart with score distributions for different AI text-to-speech models."
+                  className="product-screenshot w-full"
+                  height={800}
+                  src="/open-mos.png"
+                  width={1200}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── CALL TO ACTION ─── */}
+        <section
+          aria-labelledby="cta-heading"
+          className="landing-section bg-primary"
+          id="cta"
+        >
+          <div className="max-w-[1280px] mx-auto text-center">
+            <h2
+              className="text-3xl md:text-4xl font-extrabold text-white mb-4"
+              id="cta-heading"
+            >
+              Ready to Make an Impact?
+            </h2>
+            <p className="text-lg text-white/90 max-w-xl mx-auto mb-8">
+              Your voice matters. Help us build better speech technology for
+              millions of African language speakers.
+            </p>
+            <div
+              className="flex flex-col sm:flex-row gap-3 justify-center"
+              role="group"
+              aria-label="Get started actions"
+            >
+              <Button
+                as={NextLink}
+                className="font-semibold text-base h-12 px-8 bg-white text-primary"
                 href="/start"
                 size="lg"
                 startContent={
                   <Icon
+                    aria-hidden="true"
                     className="w-5 h-5"
                     icon="solar:play-circle-bold-duotone"
                   />
                 }
               >
-                Start Evaluation
+                Start Evaluation Now
               </Button>
               <Button
-                as={Link}
-                className="font-semibold text-base h-12 px-8"
+                as={NextLink}
+                className="font-semibold text-base h-12 px-8 text-white border-white/50"
                 href="/admin"
                 size="lg"
                 startContent={
-                  <Icon className="w-5 h-5" icon="solar:user-id-bold" />
+                  <Icon
+                    aria-hidden="true"
+                    className="w-5 h-5"
+                    icon="solar:user-id-bold"
+                  />
                 }
                 variant="bordered"
               >
                 Researcher Login
               </Button>
             </div>
-
-            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-default-400 animate-fade-in-up animate-delay-400">
-              <span className="flex items-center gap-1.5">
-                <Icon
-                  className="w-4 h-4 text-success"
-                  icon="solar:check-circle-bold"
-                />
-                No account needed
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Icon
-                  className="w-4 h-4 text-success"
-                  icon="solar:check-circle-bold"
-                />
-                Takes 10–15 minutes
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Icon
-                  className="w-4 h-4 text-success"
-                  icon="solar:check-circle-bold"
-                />
-                Fully anonymous
-              </span>
-            </div>
           </div>
+        </section>
 
-          {/* Hero Image */}
-          <div className="mt-12 md:mt-16 animate-fade-in-up animate-delay-500">
-            <div className="animate-float">
-              <Image
-                priority
-                alt="OpenMOS Admin Dashboard showing MOS evaluation analytics"
-                className="product-screenshot w-full"
-                height={800}
-                src="/open-mos.png"
-                width={1400}
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── HOW IT WORKS ─── */}
-      <section className="landing-section" id="how-it-works">
-        <div className="max-w-[1280px] mx-auto">
-          <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4">
-              How It Works
-            </h2>
-            <p className="text-lg text-default-500 max-w-xl mx-auto">
-              Three simple steps to contribute to groundbreaking research
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
-            {STEPS.map((item, index) => (
-              <div key={item.step} className="relative text-center">
-                {/* Connector line */}
-                {index < STEPS.length - 1 && (
-                  <div className="hidden md:block absolute top-10 left-[60%] w-[80%] h-px bg-default-200" />
-                )}
-
-                <div className="flex flex-col items-center">
-                  <div className="relative mb-6">
-                    <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
-                      <Icon className="w-9 h-9 text-primary" icon={item.icon} />
-                    </div>
-                    <span className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">
-                      {item.step}
-                    </span>
-                  </div>
-                  <h3 className="text-xl font-bold text-foreground mb-2">
-                    {item.title}
-                  </h3>
-                  <p className="text-default-500 leading-relaxed max-w-xs">
-                    {item.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── PRODUCT SHOWCASE ─── */}
-      <section className="landing-section">
-        <div className="max-w-[1280px] mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-6">
-                Powerful Admin Dashboard
-              </h2>
-              <p className="text-lg text-default-500 mb-8 leading-relaxed">
-                Manage your entire evaluation study from one clean interface.
-                Upload audio, monitor progress, and export publication-ready
-                data.
-              </p>
-
-              <ul className="space-y-4">
-                {[
-                  "Real-time MOS score distributions and analytics",
-                  "Audio sample management with multi-model support",
-                  "Rater demographics and completion tracking",
-                  "One-click data export for academic papers",
-                ].map((item) => (
-                  <li
-                    key={item}
-                    className="flex items-start gap-3 text-default-600"
-                  >
-                    <Icon
-                      className="w-5 h-5 text-success mt-0.5 shrink-0"
-                      icon="solar:check-circle-bold"
-                    />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Button
-                as={Link}
-                className="mt-8 font-semibold h-11"
-                color="primary"
-                href="/about"
-                variant="flat"
-              >
-                Learn More
-                <Icon
-                  className="w-4 h-4 ml-1"
-                  icon="solar:arrow-right-linear"
-                />
-              </Button>
-            </div>
-
-            <div>
-              <Image
-                alt="OpenMOS Dashboard with analytics and MOS comparison chart"
-                className="product-screenshot w-full"
-                height={800}
-                src="/open-mos.png"
-                width={1200}
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── SUPPORTED LANGUAGES ─── */}
-      <section
-        className="landing-section bg-default-50 border-y border-default-200"
-        id="languages"
-      >
-        <div className="max-w-[1280px] mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4">
-              Supports All African Languages
-            </h2>
-            <p className="text-lg text-default-500 max-w-xl mx-auto">
-              We&apos;re seeking native speakers to help evaluate AI speech
-              quality across all underrepresented languages on the African
-              continent
-            </p>
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
-            {LANGUAGES.map((lang) => (
-              <Card
-                key={lang.code}
-                className="landing-card border border-default-200 min-w-[200px]"
-                shadow="none"
-              >
-                <CardBody className="flex flex-row items-center gap-4 p-5">
-                  <span className="text-4xl">{lang.flag}</span>
-                  <div>
-                    <p className="font-bold text-foreground text-lg">
-                      {lang.name}
-                    </p>
-                    <p className="text-sm text-default-500">{lang.region}</p>
-                    {lang.speakers && (
-                      <p className="text-xs text-default-400 mt-0.5">
-                        {lang.speakers} speakers
-                      </p>
-                    )}
-                  </div>
-                </CardBody>
-              </Card>
-            ))}
-            <Card
-              className="landing-card border border-primary/20 bg-primary/5 min-w-[250px] flex-1"
-              shadow="none"
+        {/* ─── SPONSOR SECTION ─── */}
+        <section
+          aria-labelledby="sponsor-heading"
+          className="py-14 border-t border-default-200"
+        >
+          <div className="max-w-[1280px] mx-auto px-4 md:px-8 text-center">
+            <h2
+              className="text-xs font-semibold uppercase tracking-widest text-default-400 mb-8"
+              id="sponsor-heading"
             >
-              <CardBody className="flex flex-row items-center gap-4 p-5">
-                <span className="text-4xl">🌍</span>
+              Sponsored &amp; Powered By
+            </h2>
+            <div className="flex justify-center">
+              <NextLink
+                aria-label="Visit Geneline-X website (opens in a new tab)"
+                className="group inline-flex flex-col items-center gap-3 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-xl"
+                href="https://geneline-x.net/"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
+                  <Icon
+                    aria-hidden="true"
+                    className="w-7 h-7 text-primary"
+                    icon="solar:dna-bold-duotone"
+                  />
+                </div>
                 <div>
-                  <p className="font-bold text-foreground text-lg">
-                    All African Languages
+                  <p className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                    Geneline-X
                   </p>
-                  <p className="text-sm text-default-500">Entire Continent</p>
-                  <p className="text-xs text-primary font-medium mt-0.5">
-                    2000+ languages
-                  </p>
+                  <p className="text-sm text-default-400">geneline-x.net</p>
                 </div>
-              </CardBody>
-            </Card>
+              </NextLink>
+            </div>
+            <p className="mt-8 text-xs text-default-500">
+              For support or inquiries:{" "}
+              <NextLink
+                className="text-primary font-medium underline hover:text-primary/80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded"
+                href="mailto:info@geneline-x.net"
+              >
+                info@geneline-x.net
+              </NextLink>
+            </p>
           </div>
-        </div>
-      </section>
-
-      {/* ─── FINAL CTA ─── */}
-      <section className="landing-section bg-primary" id="cta">
-        <div className="max-w-[1280px] mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
-            Ready to Make an Impact?
-          </h2>
-          <p className="text-lg text-white/80 max-w-xl mx-auto mb-8">
-            Your voice matters. Help us build better speech technology for
-            millions of African language speakers.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button
-              as={NextLink}
-              className="font-semibold text-base h-12 px-8 bg-white text-primary"
-              href="/start"
-              size="lg"
-              startContent={
-                <Icon
-                  className="w-5 h-5"
-                  icon="solar:play-circle-bold-duotone"
-                />
-              }
-            >
-              Start Evaluation Now
-            </Button>
-            <Button
-              as={NextLink}
-              className="font-semibold text-base h-12 px-8 text-white border-white/30"
-              href="/admin"
-              size="lg"
-              startContent={
-                <Icon className="w-5 h-5" icon="solar:user-id-bold" />
-              }
-              variant="bordered"
-            >
-              Researcher Login
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── SPONSOR SECTION ─── */}
-      <section className="py-14 border-t border-default-200">
-        <div className="max-w-[1280px] mx-auto px-4 md:px-8 text-center">
-          <p className="text-xs font-semibold uppercase tracking-widest text-default-400 mb-8">
-            Sponsored &amp; Powered By
-          </p>
-          <div className="flex justify-center">
-            <NextLink
-              className="group inline-flex flex-col items-center gap-3 hover:opacity-80 transition-opacity"
-              href="https://geneline-x.net/"
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
-                <Icon
-                  className="w-7 h-7 text-primary"
-                  icon="solar:dna-bold-duotone"
-                />
-              </div>
-              <div>
-                <p className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
-                  Geneline-X
-                </p>
-                <p className="text-sm text-default-400">geneline-x.net</p>
-              </div>
-            </NextLink>
-          </div>
-          <p className="mt-8 text-xs text-default-400">
-            For support or inquiries:{" "}
-            <NextLink
-              className="text-primary font-medium hover:underline"
-              href="mailto:info@geneline-x.net"
-            >
-              info@geneline-x.net
-            </NextLink>
-          </p>
-        </div>
-      </section>
+        </section>
+      </main>
     </>
   );
 }
