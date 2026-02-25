@@ -2,63 +2,11 @@ import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 import { Link } from "@heroui/link";
 import { Chip } from "@heroui/chip";
-import { Divider } from "@heroui/divider";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
 import NextLink from "next/link";
 
 import { LANGUAGES } from "@/config/languages";
-
-const FEATURES = [
-  {
-    icon: "solar:headphones-round-bold-duotone",
-    title: "Audio Evaluation",
-    description:
-      "Listen to AI-generated speech samples and rate how natural they sound on a standardized MOS scale.",
-    color: "text-primary",
-    bg: "bg-primary/10",
-  },
-  {
-    icon: "solar:chart-2-bold-duotone",
-    title: "Real-time Analytics",
-    description:
-      "Track evaluation progress, MOS distributions, and inter-rater agreement with a powerful admin dashboard.",
-    color: "text-success",
-    bg: "bg-success/10",
-  },
-  {
-    icon: "solar:shield-check-bold-duotone",
-    title: "Anonymous & Secure",
-    description:
-      "All evaluations are fully anonymous. No accounts required. Data is stored securely and used only for research.",
-    color: "text-warning",
-    bg: "bg-warning/10",
-  },
-  {
-    icon: "solar:smartphone-bold-duotone",
-    title: "Mobile Optimized",
-    description:
-      "Evaluate from any device — phone, tablet, or desktop. Touch-friendly interface with optimized audio playback.",
-    color: "text-secondary",
-    bg: "bg-secondary/10",
-  },
-  {
-    icon: "solar:global-bold-duotone",
-    title: "Multi-Language",
-    description:
-      "Built for underrepresented African languages. Easily extensible to support new languages and dialects.",
-    color: "text-primary",
-    bg: "bg-primary/10",
-  },
-  {
-    icon: "solar:code-bold-duotone",
-    title: "Open Source",
-    description:
-      "Fully open source and community-driven. Inspect, modify, and contribute to the platform on GitHub.",
-    color: "text-danger",
-    bg: "bg-danger/10",
-  },
-];
 
 const STEPS = [
   {
@@ -82,37 +30,6 @@ const STEPS = [
     description:
       "Your anonymous ratings help researchers compare TTS models and improve voice tech for African languages.",
   },
-];
-
-const TESTIMONIALS = [
-  {
-    quote:
-      "OpenMOS made it incredibly easy for us to collect MOS evaluations from native Luganda speakers. The data quality is excellent.",
-    name: "Dr. Sarah Nakamya",
-    role: "NLP Researcher, Makerere University",
-    avatar: "solar:user-circle-bold-duotone",
-  },
-  {
-    quote:
-      "As a native Krio speaker, I loved how simple and accessible the evaluation process was. It took me less than 15 minutes.",
-    name: "Mohamed Kamara",
-    role: "Native Speaker Evaluator",
-    avatar: "solar:user-circle-bold-duotone",
-  },
-  {
-    quote:
-      "The admin dashboard gives us all the analytics we need — MOS distributions, rater demographics, and model comparisons in one place.",
-    name: "Prof. James Ochieng",
-    role: "Speech Technology Lab Lead",
-    avatar: "solar:user-circle-bold-duotone",
-  },
-];
-
-const STATS = [
-  { value: "31+", label: "Evaluations Completed" },
-  { value: "All", label: "African Languages Supported" },
-  { value: "~2 min", label: "Average Per Sample" },
-  { value: "100%", label: "Open Source" },
 ];
 
 export default function Home() {
@@ -216,22 +133,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── STATS BAR ─── */}
-      <section className="py-12 md:py-16 border-y border-default-200 bg-default-50">
-        <div className="max-w-[1280px] mx-auto px-4 md:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {STATS.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <p className="text-3xl md:text-4xl font-extrabold text-foreground mb-1">
-                  {stat.value}
-                </p>
-                <p className="text-sm text-default-500">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ─── HOW IT WORKS ─── */}
       <section className="landing-section" id="how-it-works">
         <div className="max-w-[1280px] mx-auto">
@@ -269,50 +170,6 @@ export default function Home() {
                   </p>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── FEATURES GRID ─── */}
-      <section
-        className="landing-section bg-default-50 border-y border-default-200"
-        id="features"
-      >
-        <div className="max-w-[1280px] mx-auto">
-          <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4">
-              Everything You Need
-            </h2>
-            <p className="text-lg text-default-500 max-w-xl mx-auto">
-              A complete platform for collecting MOS evaluations at scale
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {FEATURES.map((feature) => (
-              <Card
-                key={feature.title}
-                className="landing-card border border-default-200"
-                shadow="none"
-              >
-                <CardBody className="p-6">
-                  <div
-                    className={`w-12 h-12 rounded-xl ${feature.bg} flex items-center justify-center mb-4`}
-                  >
-                    <Icon
-                      className={`w-6 h-6 ${feature.color}`}
-                      icon={feature.icon}
-                    />
-                  </div>
-                  <h3 className="text-lg font-bold text-foreground mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-default-500 text-sm leading-relaxed">
-                    {feature.description}
-                  </p>
-                </CardBody>
-              </Card>
             ))}
           </div>
         </div>
@@ -437,52 +294,6 @@ export default function Home() {
                 </div>
               </CardBody>
             </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── TESTIMONIALS ─── */}
-      <section className="landing-section" id="testimonials">
-        <div className="max-w-[1280px] mx-auto">
-          <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4">
-              Trusted by Researchers
-            </h2>
-            <p className="text-lg text-default-500 max-w-xl mx-auto">
-              What researchers and evaluators are saying about OpenMOS
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t) => (
-              <Card
-                key={t.name}
-                className="landing-card border border-default-200"
-                shadow="none"
-              >
-                <CardBody className="p-6">
-                  <Icon
-                    className="w-8 h-8 text-default-200 mb-4"
-                    icon="solar:chat-square-like-bold-duotone"
-                  />
-                  <p className="text-default-600 leading-relaxed mb-6 text-sm">
-                    &ldquo;{t.quote}&rdquo;
-                  </p>
-                  <Divider className="mb-4" />
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Icon className="w-5 h-5 text-primary" icon={t.avatar} />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground text-sm">
-                        {t.name}
-                      </p>
-                      <p className="text-xs text-default-400">{t.role}</p>
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-            ))}
           </div>
         </div>
       </section>
