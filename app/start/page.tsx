@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
@@ -8,10 +8,18 @@ import { Select, SelectItem } from "@heroui/select";
 import { RadioGroup, Radio } from "@heroui/radio";
 import { Progress } from "@heroui/progress";
 import { Checkbox } from "@heroui/checkbox";
+import { Spinner } from "@heroui/spinner";
 import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
 
-import { LANGUAGES } from "@/config/languages";
+interface Language {
+  id: string;
+  name: string;
+  code: string;
+  flag: string;
+  region: string | null;
+  speakers: string | null;
+}
 
 type OnboardingStep = "welcome" | "demographics" | "consent";
 
@@ -35,6 +43,28 @@ export default function OnboardingPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [languagesLoading, setLanguagesLoading] = useState(true);
+
+  // Fetch languages from the database on component mount
+  useEffect(() => {
+    async function fetchLanguages() {
+      try {
+        const res = await fetch("/api/languages/public");
+
+        if (res.ok) {
+          const data = await res.json();
+
+          setLanguages(data);
+        }
+      } catch {
+        // Silently fail — user can still proceed with empty list
+      } finally {
+        setLanguagesLoading(false);
+      }
+    }
+    fetchLanguages();
+  }, []);
 
   const progressMap = {
     welcome: 0,
@@ -73,7 +103,7 @@ export default function OnboardingPage() {
           samples: data.samples,
           totalSamples: data.totalSamples,
           language: data.language,
-        }),
+        })
       );
 
       router.push("/evaluate");
@@ -171,12 +201,22 @@ export default function OnboardingPage() {
             <CardBody className="gap-5 px-6 pb-8">
               <Select
                 isRequired
+                isDisabled={languagesLoading}
                 label="Native Language"
-                placeholder="Select your native language"
+                placeholder={
+                  languagesLoading
+                    ? "Loading languages…"
+                    : "Select your native language"
+                }
                 selectedKeys={
                   demographics.nativeLanguage
                     ? [demographics.nativeLanguage]
                     : []
+                }
+                startContent={
+                  languagesLoading ? (
+                    <Spinner size="sm" className="ml-1" />
+                  ) : undefined
                 }
                 onSelectionChange={(keys) => {
                   const value = Array.from(keys)[0] as string;
@@ -184,10 +224,10 @@ export default function OnboardingPage() {
                   setDemographics({ ...demographics, nativeLanguage: value });
                 }}
               >
-                {LANGUAGES.map((lang) => (
+                {languages.map((lang) => (
                   <SelectItem
                     key={lang.code}
-                    startContent={<span>{lang.flag}</span>}
+                    startContent={<span aria-hidden="true">{lang.flag}</span>}
                   >
                     {lang.name}
                   </SelectItem>
