@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { isNull, eq, and, or } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { languages } from "@/lib/db/schema";
@@ -7,10 +6,8 @@ import { languages } from "@/lib/db/schema";
 /**
  * GET /api/languages/public
  *
- * Returns all globally active languages from the database.
- * Used by the public evaluation onboarding page to populate
- * the native language dropdown without requiring authentication.
- * Deduplication is done by name (case-insensitive).
+ * Returns ALL languages from the database for the public evaluation
+ * onboarding page. Deduplication is done by name (case-insensitive).
  */
 export async function GET() {
   try {
@@ -24,7 +21,6 @@ export async function GET() {
         speakers: languages.speakers,
       })
       .from(languages)
-      .where(and(eq(languages.isActive, true), or(isNull(languages.userId))))
       .orderBy(languages.name);
 
     // Deduplicate by lowercase name — keep the first occurrence
