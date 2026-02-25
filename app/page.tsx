@@ -527,6 +527,45 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ─── SPONSOR SECTION ─── */}
+      <section className="py-14 border-t border-default-200">
+        <div className="max-w-[1280px] mx-auto px-4 md:px-8 text-center">
+          <p className="text-xs font-semibold uppercase tracking-widest text-default-400 mb-8">
+            Sponsored &amp; Powered By
+          </p>
+          <div className="flex justify-center">
+            <NextLink
+              className="group inline-flex flex-col items-center gap-3 hover:opacity-80 transition-opacity"
+              href="https://geneline-x.net/"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
+                <Icon
+                  className="w-7 h-7 text-primary"
+                  icon="solar:dna-bold-duotone"
+                />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                  Geneline-X
+                </p>
+                <p className="text-sm text-default-400">geneline-x.net</p>
+              </div>
+            </NextLink>
+          </div>
+          <p className="mt-8 text-xs text-default-400">
+            For support or inquiries:{" "}
+            <NextLink
+              className="text-primary font-medium hover:underline"
+              href="mailto:info@geneline-x.net"
+            >
+              info@geneline-x.net
+            </NextLink>
+          </p>
+        </div>
+      </section>
     </>
   );
 }
