@@ -16,7 +16,7 @@ export async function getLanguages(userId?: string) {
       .select()
       .from(languages)
       .where(
-        or(isNull(languages.userId), eq(languages.userId, effectiveUserId))
+        or(isNull(languages.userId), eq(languages.userId, effectiveUserId)),
       )
       .orderBy(desc(languages.createdAt));
   }
@@ -40,8 +40,8 @@ export async function getActiveLanguages(userId?: string) {
       .where(
         and(
           eq(languages.isActive, true),
-          or(isNull(languages.userId), eq(languages.userId, effectiveUserId))
-        )
+          or(isNull(languages.userId), eq(languages.userId, effectiveUserId)),
+        ),
       )
       .orderBy(desc(languages.createdAt));
   }
@@ -112,8 +112,8 @@ export async function toggleLanguage(id: string, isActive: boolean) {
       .where(
         and(
           eq(languages.id, id),
-          or(isNull(languages.userId), eq(languages.userId, userId))
-        )
+          or(isNull(languages.userId), eq(languages.userId, userId)),
+        ),
       );
     revalidatePath("/admin/settings");
     revalidatePath("/admin/upload");
