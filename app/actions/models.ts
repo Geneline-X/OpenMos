@@ -34,8 +34,8 @@ export async function getActiveModels() {
     .where(
       and(
         eq(aiModels.isActive, true),
-        or(isNull(aiModels.userId), eq(aiModels.userId, userId))
-      )
+        or(isNull(aiModels.userId), eq(aiModels.userId, userId)),
+      ),
     )
     .orderBy(desc(aiModels.createdAt));
 }
@@ -60,8 +60,8 @@ export async function getAvailableModels(userId?: string) {
     .where(
       or(
         isNull(aiModels.userId), // Global
-        eq(aiModels.userId, userId) // Owned by user
-      )
+        eq(aiModels.userId, userId), // Owned by user
+      ),
     )
     .orderBy(desc(aiModels.createdAt));
 }
@@ -120,8 +120,8 @@ export async function toggleModel(id: string, isActive: boolean) {
       .where(
         and(
           eq(aiModels.id, id),
-          or(isNull(aiModels.userId), eq(aiModels.userId, userId))
-        )
+          or(isNull(aiModels.userId), eq(aiModels.userId, userId)),
+        ),
       );
     revalidatePath("/admin/settings");
     revalidatePath("/admin/upload");
