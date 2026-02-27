@@ -145,7 +145,7 @@ function SidebarNavLink({
     if (hasChildren && item.children) {
       const isChildActive = item.children.some(
         (child) =>
-          pathname === child.href || pathname.startsWith(child.href + "/")
+          pathname === child.href || pathname.startsWith(child.href + "/"),
       );
 
       if (isChildActive) {
@@ -176,7 +176,7 @@ function SidebarNavLink({
             ? "bg-primary text-primary-foreground hover:bg-primary/90"
             : "text-default-600 hover:text-default-900",
           isCollapsed && "justify-center px-2",
-          isChild && "pl-9 text-xs" // Indent children
+          isChild && "pl-9 text-xs", // Indent children
         )}
       >
         <Icon
@@ -290,10 +290,13 @@ function SidebarContent({ isCollapsed, onClose }: SidebarContentProps) {
       if (pathname === "/admin/studies") {
         if (queryString) {
           const queryParams = new URLSearchParams(queryString);
+
           return searchParams.get("filter") === queryParams.get("filter");
         }
+
         return !searchParams.has("filter");
       }
+
       return false; // Prevent /admin/studies from highlighting for /admin/studies/current
     }
 
@@ -369,7 +372,7 @@ export function Sidebar() {
     <aside
       className={cn(
         "hidden lg:flex flex-col border-r border-divider bg-default-50 transition-all duration-300 overflow-hidden",
-        isCollapsed ? "w-16" : "w-60"
+        isCollapsed ? "w-16" : "w-60",
       )}
     >
       {/* Collapse Toggle */}
