@@ -69,8 +69,8 @@ export async function getUserModels(userId: string) {
       and(
         eq(userModelPreferences.userId, userId),
         eq(aiModels.isActive, true),
-        or(isNull(aiModels.userId), eq(aiModels.userId, userId))
-      )
+        or(isNull(aiModels.userId), eq(aiModels.userId, userId)),
+      ),
     );
 }
 
@@ -96,8 +96,8 @@ export async function getUserLanguages(userId: string) {
       and(
         eq(userLanguagePreferences.userId, userId),
         eq(languages.isActive, true), // Only show if language is still active globally
-        or(isNull(languages.userId), eq(languages.userId, userId))
-      )
+        or(isNull(languages.userId), eq(languages.userId, userId)),
+      ),
     );
 }
 
@@ -111,8 +111,8 @@ export async function isUserModelEnabled(userId: string, modelId: string) {
     .where(
       and(
         eq(userModelPreferences.userId, userId),
-        eq(userModelPreferences.modelId, modelId)
-      )
+        eq(userModelPreferences.modelId, modelId),
+      ),
     )
     .limit(1);
 
@@ -124,7 +124,7 @@ export async function isUserModelEnabled(userId: string, modelId: string) {
  */
 export async function isUserLanguageEnabled(
   userId: string,
-  languageId: string
+  languageId: string,
 ) {
   const result = await db
     .select()
@@ -132,8 +132,8 @@ export async function isUserLanguageEnabled(
     .where(
       and(
         eq(userLanguagePreferences.userId, userId),
-        eq(userLanguagePreferences.languageId, languageId)
-      )
+        eq(userLanguagePreferences.languageId, languageId),
+      ),
     )
     .limit(1);
 
@@ -164,8 +164,8 @@ export async function toggleUserModel(userId: string, modelId: string) {
       .where(
         and(
           eq(userModelPreferences.userId, userId),
-          eq(userModelPreferences.modelId, modelId)
-        )
+          eq(userModelPreferences.modelId, modelId),
+        ),
       )
       .limit(1);
 
@@ -212,8 +212,8 @@ export async function toggleUserLanguage(userId: string, languageId: string) {
       .where(
         and(
           eq(userLanguagePreferences.userId, userId),
-          eq(userLanguagePreferences.languageId, languageId)
-        )
+          eq(userLanguagePreferences.languageId, languageId),
+        ),
       )
       .limit(1);
 
@@ -259,7 +259,7 @@ export async function initializeUserPreferences(userId: string) {
         activeModels.map((model) => ({
           userId,
           modelId: model.id,
-        }))
+        })),
       );
     }
 
@@ -269,7 +269,7 @@ export async function initializeUserPreferences(userId: string) {
         activeLanguages.map((lang) => ({
           userId,
           languageId: lang.id,
-        }))
+        })),
       );
     }
 
