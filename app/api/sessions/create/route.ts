@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 
 import { NextRequest, NextResponse } from "next/server";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import {
@@ -9,12 +9,15 @@ import {
   evaluationSessions,
   audioSamples,
   languages,
+  studies,
+  studyModels,
+  aiModels,
 } from "@/lib/db/schema";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { age, gender, nativeLanguage } = body;
+    const { age, gender, nativeLanguage, studyId } = body;
 
     // Validate that the selected language code exists in the database
     const matchedLanguage = await db.query.languages.findFirst({
@@ -24,21 +27,21 @@ export async function POST(request: NextRequest) {
     if (!nativeLanguage || !matchedLanguage) {
       return NextResponse.json(
         { error: "Invalid or missing native language" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!age || age < 18 || age > 120) {
       return NextResponse.json(
         { error: "Invalid age - must be 18 or older" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!gender) {
       return NextResponse.json(
         { error: "Gender is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -58,25 +61,67 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    // Get available samples for this language
-    const samples = await db
-      .select()
-      .from(audioSamples)
-      .where(
-        and(
-          eq(audioSamples.language, nativeLanguage),
-          eq(audioSamples.isActive, true)
-        )
-      );
+    // Determine samples per rater from study or use default
+    let samplesPerRater = 20;
+    let studyModelTypes: string[] = [];
 
-    // Determine total samples (minimum of available or 20)
-    const totalSamples = Math.min(samples.length || 5, 20);
+    if (studyId) {
+      // Fetch study for samplesPerRater
+      const study = await db.query.studies.findFirst({
+        where: and(eq(studies.id, studyId), eq(studies.isActive, true)),
+      });
 
-    // Create evaluation session
+      if (study) {
+        samplesPerRater = study.samplesPerRater;
+      }
+
+      // Fetch model types linked to this study
+      const linkedModels = await db
+        .select({ value: aiModels.value })
+        .from(studyModels)
+        .innerJoin(aiModels, eq(studyModels.modelId, aiModels.id))
+        .where(eq(studyModels.studyId, studyId));
+
+      studyModelTypes = linkedModels.map((m) => m.value);
+    }
+
+    // Get available samples for this language, scoped by study models if applicable
+    let samples;
+
+    if (studyModelTypes.length > 0) {
+      // Filter by language AND study models
+      samples = await db
+        .select()
+        .from(audioSamples)
+        .where(
+          and(
+            eq(audioSamples.language, nativeLanguage),
+            eq(audioSamples.isActive, true),
+            inArray(audioSamples.modelType, studyModelTypes),
+          ),
+        );
+    } else {
+      // Fallback: filter by language only (legacy behavior)
+      samples = await db
+        .select()
+        .from(audioSamples)
+        .where(
+          and(
+            eq(audioSamples.language, nativeLanguage),
+            eq(audioSamples.isActive, true),
+          ),
+        );
+    }
+
+    // Determine total samples (minimum of available or study's samplesPerRater)
+    const totalSamples = Math.min(samples.length || 5, samplesPerRater);
+
+    // Create evaluation session with study link
     const [session] = await db
       .insert(evaluationSessions)
       .values({
         raterId: rater.id,
+        studyId: studyId || null,
         totalSamples: totalSamples,
         deviceType: request.headers.get("user-agent")?.includes("Mobile")
           ? "mobile"
@@ -132,7 +177,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { error: "Failed to create session" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
