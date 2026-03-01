@@ -83,6 +83,7 @@ export const evaluationSessions = pgTable("evaluation_sessions", {
   raterId: uuid("rater_id")
     .references(() => raters.id)
     .notNull(),
+  studyId: uuid("study_id").references(() => studies.id),
   startedAt: timestamp("started_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
   totalSamples: integer("total_samples").default(20).notNull(),
@@ -423,6 +424,10 @@ export const userLanguagePreferences = pgTable(
 export const studies = pgTable("studies", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
+  accessKey: text("access_key")
+    .unique()
+    .notNull()
+    .default(sql`'MOS-' || upper(substr(md5(random()::text), 1, 6))`),
   samplesPerRater: integer("samples_per_rater").default(20).notNull(),
   isActive: boolean("is_active").default(false).notNull(),
   userId: uuid("user_id").references(() => adminUsers.id, {
