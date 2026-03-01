@@ -1,6 +1,15 @@
 "use server";
 
-import { desc, eq, inArray, and } from "drizzle-orm";
+import {
+  desc,
+  eq,
+  inArray,
+  and,
+  count,
+  avg,
+  countDistinct,
+  sql,
+} from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { auth } from "@/lib/auth";
@@ -11,7 +20,25 @@ import {
   studyLanguages,
   aiModels,
   languages,
+  evaluationSessions,
+  ratings,
+  audioSamples,
 } from "@/lib/db/schema";
+
+/**
+ * Generate a unique, URL-safe access key for a study.
+ * Format: MOS-XXXXXX (6 alphanumeric uppercase characters)
+ */
+function generateAccessKey(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // No 0/O/1/I to avoid confusion
+  let key = "MOS-";
+
+  for (let i = 0; i < 6; i++) {
+    key += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  return key;
+}
 
 export type StudyWithRelations = typeof studies.$inferSelect & {
   models: string[];
@@ -88,6 +115,86 @@ export async function getActiveStudy() {
   };
 }
 
+export interface StudyStats {
+  totalRaters: number;
+  completedRaters: number;
+  totalRatings: number;
+  avgMos: string;
+  completionRate: number;
+  modelPerformance: { model: string; avgScore: string; count: number }[];
+}
+
+export async function getStudyStats(studyId: string): Promise<StudyStats> {
+  // Get session IDs for this study
+  const studySessionIds = db
+    .select({ id: evaluationSessions.id })
+    .from(evaluationSessions)
+    .where(eq(evaluationSessions.studyId, studyId));
+
+  // Count raters who actually submitted ratings (not just started a session)
+  const [raterCount] = await db
+    .select({ total: countDistinct(ratings.raterId) })
+    .from(ratings)
+    .where(inArray(ratings.sessionId, studySessionIds));
+
+  // Count raters who completed their session (completedAt is set)
+  const [completedCount] = await db
+    .select({ total: countDistinct(evaluationSessions.raterId) })
+    .from(evaluationSessions)
+    .innerJoin(ratings, eq(ratings.sessionId, evaluationSessions.id))
+    .where(
+      and(
+        eq(evaluationSessions.studyId, studyId),
+        sql`${evaluationSessions.completedAt} IS NOT NULL`,
+      ),
+    );
+
+  // Get rating stats for this study (ratings linked via sessions)
+
+  const [ratingStats] = await db
+    .select({
+      total: count(),
+      avgScore: avg(ratings.score),
+    })
+    .from(ratings)
+    .where(inArray(ratings.sessionId, studySessionIds));
+
+  // Per-model performance
+  const modelPerf = await db
+    .select({
+      model: audioSamples.modelType,
+      avgScore: avg(ratings.score),
+      count: count(),
+    })
+    .from(ratings)
+    .innerJoin(audioSamples, eq(ratings.audioId, audioSamples.id))
+    .where(inArray(ratings.sessionId, studySessionIds))
+    .groupBy(audioSamples.modelType);
+
+  const totalRaters = raterCount?.total || 0;
+  const completedRaters = completedCount?.total || 0;
+  const totalRatings = ratingStats?.total || 0;
+  const avgMos = ratingStats?.avgScore
+    ? parseFloat(ratingStats.avgScore as string).toFixed(2)
+    : "--";
+
+  return {
+    totalRaters,
+    completedRaters,
+    totalRatings,
+    avgMos,
+    completionRate:
+      totalRaters > 0 ? Math.round((completedRaters / totalRaters) * 100) : 0,
+    modelPerformance: modelPerf.map((m) => ({
+      model: m.model || "Unknown",
+      avgScore: m.avgScore
+        ? parseFloat(m.avgScore as string).toFixed(2)
+        : "0.00",
+      count: m.count,
+    })),
+  };
+}
+
 export async function createStudy(data: {
   name: string;
   samplesPerRater: number;
@@ -100,13 +207,38 @@ export async function createStudy(data: {
 
     if (!userId) throw new Error("Unauthorized");
 
-    // 1. Create Study
+    if (data.modelValues.length === 0) {
+      return { success: false, error: "At least one model is required" };
+    }
+
+    if (data.languageCodes.length === 0) {
+      return { success: false, error: "At least one language is required" };
+    }
+
+    // 1. Create Study with unique access key
+    let accessKey = generateAccessKey();
+    let keyExists = true;
+
+    // Ensure key uniqueness (unlikely collision but be safe)
+    while (keyExists) {
+      const existing = await db.query.studies.findFirst({
+        where: eq(studies.accessKey, accessKey),
+      });
+
+      if (!existing) {
+        keyExists = false;
+      } else {
+        accessKey = generateAccessKey();
+      }
+    }
+
     const [newStudy] = await db
       .insert(studies)
       .values({
         name: data.name,
+        accessKey,
         samplesPerRater: data.samplesPerRater,
-        isActive: false, // Default to inactive
+        isActive: false,
         userId,
       })
       .returning();
