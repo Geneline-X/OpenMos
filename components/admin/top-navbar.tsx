@@ -349,18 +349,6 @@ export function TopNavbar() {
                 >
                   Settings
                 </DropdownItem>
-                <DropdownItem
-                  key="activity"
-                  href="/admin/activity"
-                  startContent={
-                    <Icon
-                      className="h-4 w-4"
-                      icon={navigationIcons.pastStudies}
-                    />
-                  }
-                >
-                  Activity Log
-                </DropdownItem>
               </DropdownSection>
               <DropdownSection>
                 <DropdownItem
