@@ -305,7 +305,12 @@ export default function PrivacyPage() {
               For privacy-related questions or to exercise your rights, contact
               us at:
             </p>
-            <p className="font-medium">privacy@openmos.org</p>
+            <a
+              className="font-medium text-primary"
+              href="mailto:info@geneline-x.net"
+            >
+              info@geneline-x.net
+            </a>
           </CardBody>
         </Card>
       </div>
