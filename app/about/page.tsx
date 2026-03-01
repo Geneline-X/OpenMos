@@ -95,23 +95,33 @@ export default function AboutPage() {
               Supported Languages
             </h2>
             <p className="text-default-600 leading-relaxed">
-              We are currently focused on evaluating text-to-speech systems for
-              African languages that are underrepresented in AI research:
+              OpenMOS supports <strong>all African languages</strong>. Our
+              platform is designed to evaluate text-to-speech systems across the
+              full diversity of the continent&apos;s languages — from widely
+              spoken languages to underrepresented ones.
             </p>
-            <div className="flex gap-4 mt-2">
-              <div className="flex items-center gap-2 px-4 py-3 bg-default-50 rounded-lg">
-                <span className="text-2xl">🇺🇬</span>
-                <div>
-                  <p className="font-medium">Luganda</p>
-                  <p className="text-sm text-default-500">Uganda</p>
+            <div className="flex flex-wrap gap-3 mt-2">
+              {[
+                { flag: "🇺🇬", name: "Luganda" },
+                { flag: "🇸🇱", name: "Krio" },
+                { flag: "🇳🇬", name: "Yoruba" },
+                { flag: "🇰🇪", name: "Swahili" },
+                { flag: "🇿🇦", name: "Zulu" },
+                { flag: "🇪🇹", name: "Amharic" },
+                { flag: "🇬🇭", name: "Twi" },
+              ].map((lang) => (
+                <div
+                  key={lang.name}
+                  className="flex items-center gap-2 px-3 py-2 bg-default-50 rounded-lg"
+                >
+                  <span className="text-lg">{lang.flag}</span>
+                  <span className="text-sm font-medium">{lang.name}</span>
                 </div>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-3 bg-default-50 rounded-lg">
-                <span className="text-2xl">🇸🇱</span>
-                <div>
-                  <p className="font-medium">Krio</p>
-                  <p className="text-sm text-default-500">Sierra Leone</p>
-                </div>
+              ))}
+              <div className="flex items-center gap-2 px-3 py-2 bg-primary-50 rounded-lg">
+                <span className="text-sm font-medium text-primary">
+                  + many more
+                </span>
               </div>
             </div>
           </CardBody>
@@ -180,10 +190,10 @@ export default function AboutPage() {
             </p>
             <Link
               className="flex items-center gap-2"
-              href="mailto:research@openmos.org"
+              href="mailto:info@geneline-x.net"
             >
               <Icon className="w-5 h-5" icon="solar:letter-linear" />
-              research@openmos.org
+              info@geneline-x.net
             </Link>
           </CardBody>
         </Card>
