@@ -79,9 +79,9 @@ export default function Home() {
               </p>
 
               <div
+                aria-label="Primary actions"
                 className="flex flex-col sm:flex-row gap-3 mb-6 animate-fade-in-up animate-delay-300"
                 role="group"
-                aria-label="Primary actions"
               >
                 <Button
                   as={Link}
@@ -402,9 +402,9 @@ export default function Home() {
               millions of African language speakers.
             </p>
             <div
+              aria-label="Get started actions"
               className="flex flex-col sm:flex-row gap-3 justify-center"
               role="group"
-              aria-label="Get started actions"
             >
               <Button
                 as={NextLink}
