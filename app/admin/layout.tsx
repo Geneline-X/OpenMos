@@ -6,12 +6,14 @@ import { usePathname } from "next/navigation";
 
 import { ProtectedPageWrapper } from "@/components/auth";
 import { DashboardLayout } from "@/components/admin/dashboard-layout";
+import { StudyGuard } from "@/components/admin/study-guard";
 
 /**
  * Admin Layout
  *
  * Wraps all admin routes with authentication protection and dashboard layout.
- * This provides the sidebar, top navbar, and main content area.
+ * Data-dependent pages are gated behind an active study via StudyGuard.
+ * Setup pages (Studies, Settings, Help, Profile) remain always accessible.
  */
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -27,7 +29,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   return (
     <ProtectedPageWrapper requiredRole="viewer">
-      <DashboardLayout>{children}</DashboardLayout>
+      <DashboardLayout>
+        <StudyGuard>{children}</StudyGuard>
+      </DashboardLayout>
     </ProtectedPageWrapper>
   );
 }
