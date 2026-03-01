@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
@@ -8,17 +8,21 @@ import { Select, SelectItem } from "@heroui/select";
 import { RadioGroup, Radio } from "@heroui/radio";
 import { Progress } from "@heroui/progress";
 import { Checkbox } from "@heroui/checkbox";
-import { Spinner } from "@heroui/spinner";
 import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
 
-interface Language {
+interface StudyLanguage {
   id: string;
   name: string;
   code: string;
   flag: string;
-  region: string | null;
-  speakers: string | null;
+}
+
+interface StudyData {
+  studyId: string;
+  studyName: string;
+  samplesPerRater: number;
+  languages: StudyLanguage[];
 }
 
 type OnboardingStep = "welcome" | "demographics" | "consent";
@@ -32,6 +36,10 @@ interface Demographics {
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState<OnboardingStep>("welcome");
+  const [studyKey, setStudyKey] = useState("");
+  const [studyData, setStudyData] = useState<StudyData | null>(null);
+  const [isValidatingKey, setIsValidatingKey] = useState(false);
+  const [keyError, setKeyError] = useState("");
   const [demographics, setDemographics] = useState<Demographics>({
     age: "",
     gender: "",
@@ -43,28 +51,6 @@ export default function OnboardingPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [languages, setLanguages] = useState<Language[]>([]);
-  const [languagesLoading, setLanguagesLoading] = useState(true);
-
-  // Fetch languages from the database on component mount
-  useEffect(() => {
-    async function fetchLanguages() {
-      try {
-        const res = await fetch("/api/languages/public");
-
-        if (res.ok) {
-          const data = await res.json();
-
-          setLanguages(data);
-        }
-      } catch {
-        // Silently fail — user can still proceed with empty list
-      } finally {
-        setLanguagesLoading(false);
-      }
-    }
-    fetchLanguages();
-  }, []);
 
   const progressMap = {
     welcome: 0,
@@ -72,7 +58,44 @@ export default function OnboardingPage() {
     consent: 100,
   };
 
+  const handleValidateKey = async () => {
+    if (!studyKey.trim()) {
+      setKeyError("Please enter a study access key");
+
+      return;
+    }
+
+    setIsValidatingKey(true);
+    setKeyError("");
+
+    try {
+      const res = await fetch("/api/studies/validate-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: studyKey.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setKeyError(data.error || "Invalid access key");
+        setIsValidatingKey(false);
+
+        return;
+      }
+
+      setStudyData(data);
+      setStep("demographics");
+    } catch {
+      setKeyError("Failed to validate key. Please try again.");
+    } finally {
+      setIsValidatingKey(false);
+    }
+  };
+
   const handleStartSession = async () => {
+    if (!studyData) return;
+
     setIsLoading(true);
     setError("");
 
@@ -84,6 +107,7 @@ export default function OnboardingPage() {
           age: parseInt(demographics.age),
           gender: demographics.gender,
           nativeLanguage: demographics.nativeLanguage,
+          studyId: studyData.studyId,
         }),
       });
 
@@ -103,7 +127,8 @@ export default function OnboardingPage() {
           samples: data.samples,
           totalSamples: data.totalSamples,
           language: data.language,
-        })
+          studyName: studyData.studyName,
+        }),
       );
 
       router.push("/evaluate");
@@ -133,7 +158,7 @@ export default function OnboardingPage() {
           value={progressMap[step]}
         />
 
-        {/* Welcome Step */}
+        {/* Welcome + Key Entry Step */}
         {step === "welcome" && (
           <Card className="shadow-lg">
             <CardHeader className="flex-col items-center gap-3 pb-0 pt-8">
@@ -166,7 +191,7 @@ export default function OnboardingPage() {
                     className="h-4 w-4 text-primary"
                     icon="solar:headphones-round-linear"
                   />
-                  <span>20 audio clips</span>
+                  <span>Audio clips rated on naturalness</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Icon
@@ -177,14 +202,37 @@ export default function OnboardingPage() {
                 </div>
               </div>
 
-              <Button
-                className="mt-4"
-                color="primary"
-                size="lg"
-                onPress={() => setStep("demographics")}
-              >
-                Get Started
-              </Button>
+              <div className="mt-4 space-y-3">
+                <Input
+                  description="Enter the access key provided by the researcher"
+                  errorMessage={keyError}
+                  isInvalid={!!keyError}
+                  label="Study Access Key"
+                  placeholder="e.g. MOS-A7X3K9"
+                  startContent={
+                    <Icon
+                      className="h-4 w-4 text-default-400"
+                      icon="solar:key-bold-duotone"
+                    />
+                  }
+                  value={studyKey}
+                  onValueChange={(val) => {
+                    setStudyKey(val);
+                    setKeyError("");
+                  }}
+                />
+
+                <Button
+                  className="w-full"
+                  color="primary"
+                  isDisabled={!studyKey.trim()}
+                  isLoading={isValidatingKey}
+                  size="lg"
+                  onPress={handleValidateKey}
+                >
+                  Continue
+                </Button>
+              </div>
             </CardBody>
           </Card>
         )}
@@ -195,28 +243,21 @@ export default function OnboardingPage() {
             <CardHeader className="flex-col items-start gap-1 px-6 pt-6">
               <h2 className="text-xl font-semibold">About You</h2>
               <p className="text-sm text-default-500">
-                Quick info for our research
+                Quick info for{" "}
+                <span className="font-medium text-primary">
+                  {studyData?.studyName}
+                </span>
               </p>
             </CardHeader>
             <CardBody className="gap-5 px-6 pb-8">
               <Select
                 isRequired
-                isDisabled={languagesLoading}
                 label="Native Language"
-                placeholder={
-                  languagesLoading
-                    ? "Loading languages…"
-                    : "Select your native language"
-                }
+                placeholder="Select your native language"
                 selectedKeys={
                   demographics.nativeLanguage
                     ? [demographics.nativeLanguage]
                     : []
-                }
-                startContent={
-                  languagesLoading ? (
-                    <Spinner size="sm" className="ml-1" />
-                  ) : undefined
                 }
                 onSelectionChange={(keys) => {
                   const value = Array.from(keys)[0] as string;
@@ -224,7 +265,7 @@ export default function OnboardingPage() {
                   setDemographics({ ...demographics, nativeLanguage: value });
                 }}
               >
-                {languages.map((lang) => (
+                {(studyData?.languages || []).map((lang) => (
                   <SelectItem
                     key={lang.code}
                     startContent={<span aria-hidden="true">{lang.flag}</span>}
