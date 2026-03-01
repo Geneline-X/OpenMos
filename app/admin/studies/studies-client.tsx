@@ -39,6 +39,7 @@ export default function StudiesClient({
   const [selectedModelValues, setSelectedModelValues] = useState<string[]>([]);
   const [selectedLangCodes, setSelectedLangCodes] = useState<string[]>([]);
   const [isAddingStudy, setIsAddingStudy] = useState(false);
+  const [copiedKeyId, setCopiedKeyId] = useState<string | null>(null);
 
   // Filter studies based on view
   const displayedStudies = isPastStudies
@@ -48,6 +49,18 @@ export default function StudiesClient({
   const handleAddStudy = async () => {
     if (!newStudyName) {
       toast.error("Please enter a study name");
+
+      return;
+    }
+
+    if (selectedLangCodes.length === 0) {
+      toast.error("Please select at least one language");
+
+      return;
+    }
+
+    if (selectedModelValues.length === 0) {
+      toast.error("Please select at least one model");
 
       return;
     }
@@ -180,6 +193,11 @@ export default function StudiesClient({
             <Button
               className="w-full md:w-auto self-end"
               color="primary"
+              isDisabled={
+                !newStudyName ||
+                selectedLangCodes.length === 0 ||
+                selectedModelValues.length === 0
+              }
               isLoading={isAddingStudy}
               onPress={handleAddStudy}
             >
@@ -234,6 +252,34 @@ export default function StudiesClient({
                       <Icon icon="solar:calendar-linear" />
                       Started {new Date(study.createdAt).toLocaleDateString()}
                     </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-default-400">
+                      Access Key:
+                    </span>
+                    <code className="text-xs font-mono bg-default-100 px-2 py-0.5 rounded">
+                      {study.accessKey}
+                    </code>
+                    <Button
+                      isIconOnly
+                      color={copiedKeyId === study.id ? "success" : "default"}
+                      size="sm"
+                      variant="light"
+                      onPress={() => {
+                        navigator.clipboard.writeText(study.accessKey);
+                        setCopiedKeyId(study.id);
+                        setTimeout(() => setCopiedKeyId(null), 1000);
+                      }}
+                    >
+                      <Icon
+                        className="w-4 h-4"
+                        icon={
+                          copiedKeyId === study.id
+                            ? "solar:check-circle-bold"
+                            : "solar:copy-bold"
+                        }
+                      />
+                    </Button>
                   </div>
                 </div>
 
