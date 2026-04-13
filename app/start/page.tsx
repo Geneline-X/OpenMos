@@ -27,6 +27,15 @@ interface StudyData {
 
 type OnboardingStep = "welcome" | "demographics" | "consent";
 
+const AGE_RANGES = [
+  { label: "18–24", value: "18-24", numeric: 21 },
+  { label: "25–34", value: "25-34", numeric: 30 },
+  { label: "35–44", value: "35-44", numeric: 40 },
+  { label: "45–54", value: "45-54", numeric: 50 },
+  { label: "55–64", value: "55-64", numeric: 60 },
+  { label: "65+", value: "65+", numeric: 67 },
+];
+
 interface Demographics {
   age: string;
   gender: string;
@@ -104,7 +113,7 @@ export default function OnboardingPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          age: parseInt(demographics.age),
+          age: AGE_RANGES.find((r) => r.value === demographics.age)?.numeric ?? 21,
           gender: demographics.gender,
           nativeLanguage: demographics.nativeLanguage,
           studyId: studyData.studyId,
@@ -142,8 +151,7 @@ export default function OnboardingPage() {
   const canProceedFromDemographics =
     demographics.age &&
     demographics.gender &&
-    demographics.nativeLanguage &&
-    parseInt(demographics.age) >= 18;
+    demographics.nativeLanguage;
 
   const canProceedFromConsent = consent.dataUsage && consent.anonymous;
 
@@ -275,18 +283,21 @@ export default function OnboardingPage() {
                 ))}
               </Select>
 
-              <Input
+              <Select
                 isRequired
-                label="Age"
-                max={100}
-                min={18}
-                placeholder="Your age"
-                type="number"
-                value={demographics.age}
-                onValueChange={(value) =>
-                  setDemographics({ ...demographics, age: value })
-                }
-              />
+                label="Age Range"
+                placeholder="Select your age range"
+                selectedKeys={demographics.age ? [demographics.age] : []}
+                onSelectionChange={(keys) => {
+                  const value = Array.from(keys)[0] as string;
+
+                  setDemographics({ ...demographics, age: value });
+                }}
+              >
+                {AGE_RANGES.map((range) => (
+                  <SelectItem key={range.value}>{range.label}</SelectItem>
+                ))}
+              </Select>
 
               <RadioGroup
                 isRequired

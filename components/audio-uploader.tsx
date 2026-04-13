@@ -37,7 +37,8 @@ export function AudioUploader({
   const [modelType, setModelType] = useState<string>(
     models?.[0]?.value || "orpheus",
   );
-  const [language, setLanguage] = useState<string>("luganda");
+  const [language, setLanguage] = useState<string>("");
+  const [languageError, setLanguageError] = useState<string>("");
   const [textContent, setTextContent] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
 
@@ -114,6 +115,11 @@ export function AudioUploader({
 
     if (queuedFiles.length === 0) return;
 
+    if (!language) {
+      setLanguageError("Please select a language before uploading");
+      return;
+    }
+
     setIsUploading(true);
 
     // Mark all queued files as uploading
@@ -164,7 +170,7 @@ export function AudioUploader({
           <div>
             <p className="text-sm font-medium mb-2">Model Type</p>
             <RadioGroup
-              className="flex-wrap"
+              className="flex-wrap gap-y-2"
               orientation="horizontal"
               value={modelType}
               onValueChange={setModelType}
@@ -184,13 +190,20 @@ export function AudioUploader({
           </div>
 
           <Select
+            isRequired
+            errorMessage={languageError}
+            isInvalid={!!languageError}
             items={languages}
             label="Language"
             labelPlacement="outside"
-            selectedKeys={[language]}
-            onSelectionChange={(keys) =>
-              setLanguage(Array.from(keys)[0] as string)
-            }
+            placeholder="Select a language"
+            selectedKeys={language ? [language] : []}
+            onSelectionChange={(keys) => {
+              const val = Array.from(keys)[0] as string;
+
+              setLanguage(val || "");
+              setLanguageError("");
+            }}
           >
             {(lang) => (
               <SelectItem

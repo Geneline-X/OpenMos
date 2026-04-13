@@ -251,12 +251,12 @@ export default function Home() {
             {/* Language cards as an accessible list */}
             <ul
               aria-label="Supported African languages"
-              className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto list-none p-0"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto list-none p-0 w-full"
             >
               {LANGUAGES.map((lang) => (
                 <li key={lang.code}>
                   <Card
-                    className="landing-card border border-default-200 min-w-[200px]"
+                    className="landing-card border border-default-200 w-full sm:min-w-[200px] sm:w-auto"
                     shadow="none"
                   >
                     <CardBody className="flex flex-row items-center gap-4 p-5">
@@ -282,7 +282,7 @@ export default function Home() {
               ))}
               <li>
                 <Card
-                  className="landing-card border border-primary/20 bg-primary/5 min-w-[250px]"
+                  className="landing-card border border-primary/20 bg-primary/5 w-full"
                   shadow="none"
                 >
                   <CardBody className="flex flex-row items-center gap-4 p-5">
@@ -461,11 +461,13 @@ export default function Home() {
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
-                  <Icon
-                    aria-hidden="true"
-                    className="w-7 h-7 text-primary"
-                    icon="solar:dna-bold-duotone"
+                <div className="w-14 h-14 rounded-2xl overflow-hidden border border-primary/20">
+                  <Image
+                    alt="Geneline-X logo"
+                    className="w-full h-full object-cover"
+                    height={56}
+                    src="/geneline.png"
+                    width={56}
                   />
                 </div>
                 <div>

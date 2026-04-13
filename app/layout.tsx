@@ -62,9 +62,9 @@ export default function RootLayout({
         <Providers
           themeProps={{
             attribute: "class",
-            defaultTheme: "system",
-            enableSystem: true,
-            disableTransitionOnChange: true,
+            defaultTheme: "light",
+            forcedTheme: "light",
+            enableSystem: false,
           }}
         >
           <PublicLayoutWrapper>{children}</PublicLayoutWrapper>

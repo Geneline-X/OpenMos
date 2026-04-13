@@ -274,7 +274,7 @@ export default function EvaluatePage() {
   // Error state
   if (sessionError || !sessionData || !currentSample) {
     return (
-      <section className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-4 text-center">
+      <section className="flex flex-col items-center justify-center min-h-[60vh] gap-4 px-4 py-8 text-center">
         <Icon
           className="w-16 h-16 text-warning"
           icon="solar:danger-triangle-bold-duotone"
@@ -296,7 +296,7 @@ export default function EvaluatePage() {
   }
 
   return (
-    <section className="flex flex-col gap-4 py-2 md:py-4 max-w-lg mx-auto">
+    <section className="flex flex-col gap-4 py-2 md:py-4 px-4 max-w-lg mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <Link

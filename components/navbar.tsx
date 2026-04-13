@@ -17,7 +17,6 @@ import { Icon } from "@iconify/react";
 import { useState } from "react";
 
 import { siteConfig } from "@/config/site";
-import { ThemeSwitch } from "@/components/theme-switch";
 import { Logo } from "@/components/icons";
 
 export const Navbar = () => {
@@ -71,12 +70,10 @@ export const Navbar = () => {
           >
             <Icon className="w-5 h-5" icon="solar:code-linear" />
           </Link>
-          <ThemeSwitch />
         </NavbarItem>
       </NavbarContent>
 
       <NavbarContent className="md:hidden basis-1 pl-4" justify="end">
-        <ThemeSwitch />
         <NavbarMenuToggle
           aria-label={isMenuOpen ? "Close menu" : "Open menu"}
           icon={(isOpen) =>

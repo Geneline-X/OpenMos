@@ -4,20 +4,34 @@ export default heroui({
   themes: {
     light: {
       colors: {
-        background: "#fafaf9", // Off-white for reduced eye strain
-        foreground: "#1e293b", // Slate-800
+        background: "#edecea", // Warm dim off-white
+        foreground: "#374151", // Muted dark gray
+        default: {
+          50: "#f5f4f2",
+          100: "#edecea",
+          200: "#e2e0dd",
+          300: "#d1cfcb",
+          400: "#b5b2ad",
+          500: "#928f8a",
+          600: "#6b6864",
+          700: "#504e4a",
+          800: "#374151",
+          900: "#1f2937",
+          DEFAULT: "#d1cfcb",
+          foreground: "#374151",
+        },
         primary: {
-          50: "#eff6ff",
-          100: "#dbeafe",
-          200: "#bfdbfe",
-          300: "#93c5fd",
-          400: "#60a5fa",
-          500: "#3b82f6",
-          600: "#2563eb",
-          700: "#1d4ed8",
-          800: "#1e40af", // Primary brand color
-          900: "#1e3a8a",
-          DEFAULT: "#1e40af",
+          50: "#eef2ff",
+          100: "#e0e7ff",
+          200: "#c7d2fe",
+          300: "#a5b4fc",
+          400: "#818cf8",
+          500: "#6366f1", // Indigo — slightly softer than pure blue
+          600: "#4f46e5",
+          700: "#4338ca",
+          800: "#3730a3",
+          900: "#312e81",
+          DEFAULT: "#4f46e5",
           foreground: "#ffffff",
         },
         success: {
@@ -26,7 +40,7 @@ export default heroui({
           200: "#a7f3d0",
           300: "#6ee7b7",
           400: "#34d399",
-          500: "#10b981", // Emerald for high ratings
+          500: "#10b981",
           600: "#059669",
           700: "#047857",
           800: "#065f46",
@@ -40,7 +54,7 @@ export default heroui({
           200: "#fde68a",
           300: "#fcd34d",
           400: "#fbbf24",
-          500: "#f59e0b", // Amber for medium ratings
+          500: "#f59e0b",
           600: "#d97706",
           700: "#b45309",
           800: "#92400e",
@@ -54,7 +68,7 @@ export default heroui({
           200: "#fecdd3",
           300: "#fda4af",
           400: "#fb7185",
-          500: "#f43f5e", // Rose for low ratings
+          500: "#f43f5e",
           600: "#e11d48",
           700: "#be123c",
           800: "#9f1239",
@@ -62,38 +76,10 @@ export default heroui({
           DEFAULT: "#f43f5e",
           foreground: "#ffffff",
         },
-      },
-    },
-    dark: {
-      colors: {
-        background: "#0f172a", // Slate-900
-        foreground: "#f8fafc", // Slate-50
-        primary: {
-          50: "#1e3a8a",
-          100: "#1e40af",
-          200: "#1d4ed8",
-          300: "#2563eb",
-          400: "#3b82f6",
-          500: "#60a5fa",
-          600: "#93c5fd",
-          700: "#bfdbfe",
-          800: "#dbeafe",
-          900: "#eff6ff",
-          DEFAULT: "#3b82f6",
-          foreground: "#ffffff",
-        },
-        success: {
-          DEFAULT: "#10b981",
-          foreground: "#ffffff",
-        },
-        warning: {
-          DEFAULT: "#f59e0b",
-          foreground: "#ffffff",
-        },
-        danger: {
-          DEFAULT: "#f43f5e",
-          foreground: "#ffffff",
-        },
+        content1: "#f5f4f2",
+        content2: "#edecea",
+        content3: "#e2e0dd",
+        content4: "#d1cfcb",
       },
     },
   },

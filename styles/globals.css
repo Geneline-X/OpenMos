@@ -14,8 +14,8 @@
 /* Research-Professional Design Tokens */
 :root {
   /* Primary brand color */
-  --openmos-primary: #1e40af;
-  --openmos-primary-light: rgba(30, 64, 175, 0.3);
+  --openmos-primary: #4f46e5;
+  --openmos-primary-light: rgba(79, 70, 229, 0.2);
 
   /* Rating colors */
   --openmos-rating-5: #10b981;
@@ -24,18 +24,13 @@
   --openmos-rating-2: #fb7185;
   --openmos-rating-1: #f43f5e;
 
-  /* Backgrounds */
-  --openmos-bg: #fafaf9;
-  --openmos-card: #ffffff;
+  /* Backgrounds — warm dim palette */
+  --openmos-bg: #edecea;
+  --openmos-card: #f5f4f2;
 
   /* Spacing for touch targets */
   --openmos-touch-min: 48px;
   --openmos-touch-preferred: 56px;
-}
-
-.dark {
-  --openmos-bg: #0f172a;
-  --openmos-card: #1e293b;
 }
 
 /* Global resets for research app */
@@ -48,6 +43,7 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   background-color: var(--openmos-bg);
+  color: #374151;
 }
 
 /* Touch target utilities */
@@ -199,9 +195,6 @@ body {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
 }
 
-.dark .landing-card:hover {
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-}
 
 /* Landing section spacing */
 .landing-section {
@@ -235,14 +228,6 @@ body {
   box-shadow: 0 32px 100px rgba(0, 0, 0, 0.16);
 }
 
-.dark .product-screenshot {
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
-  border-color: rgba(255, 255, 255, 0.06);
-}
-
-.dark .product-screenshot:hover {
-  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.5);
-}
 
 @keyframes spin {
   from {

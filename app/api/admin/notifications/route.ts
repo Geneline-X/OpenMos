@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { desc, eq, count, and, or, isNull } from "drizzle-orm";
+import { desc, eq, count, and } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { notifications } from "@/lib/db/schema";
@@ -18,42 +18,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Build query
-    let query = db
-      .select()
-      .from(notifications)
-      .where(or(eq(notifications.userId, userId), isNull(notifications.userId)))
-      .orderBy(desc(notifications.createdAt))
-      .limit(limit);
+    // Build query — only notifications belonging to this user
+    const baseWhere = eq(notifications.userId, userId);
 
-    // Filter by unread if requested
     const notificationsList = unreadOnly
       ? await db
           .select()
           .from(notifications)
-          .where(
-            and(
-              or(
-                eq(notifications.userId, userId),
-                isNull(notifications.userId),
-              ),
-              eq(notifications.isRead, false),
-            ),
-          )
+          .where(and(baseWhere, eq(notifications.isRead, false)))
           .orderBy(desc(notifications.createdAt))
           .limit(limit)
-      : await query;
+      : await db
+          .select()
+          .from(notifications)
+          .where(baseWhere)
+          .orderBy(desc(notifications.createdAt))
+          .limit(limit);
 
     // Get unread count
     const [unreadResult] = await db
       .select({ count: count() })
       .from(notifications)
-      .where(
-        and(
-          or(eq(notifications.userId, userId), isNull(notifications.userId)),
-          eq(notifications.isRead, false),
-        ),
-      );
+      .where(and(baseWhere, eq(notifications.isRead, false)));
 
     return NextResponse.json({
       notifications: notificationsList.map((n) => ({
@@ -96,10 +82,7 @@ export async function PATCH(request: NextRequest) {
         .update(notifications)
         .set({ isRead: true })
         .where(
-          and(
-            or(eq(notifications.userId, userId), isNull(notifications.userId)),
-            eq(notifications.isRead, false),
-          ),
+          and(eq(notifications.userId, userId), eq(notifications.isRead, false)),
         );
     } else if (ids && Array.isArray(ids)) {
       for (const id of ids) {
@@ -107,13 +90,7 @@ export async function PATCH(request: NextRequest) {
           .update(notifications)
           .set({ isRead: true })
           .where(
-            and(
-              eq(notifications.id, id),
-              or(
-                eq(notifications.userId, userId),
-                isNull(notifications.userId),
-              ),
-            ),
+            and(eq(notifications.id, id), eq(notifications.userId, userId)),
           );
       }
     }

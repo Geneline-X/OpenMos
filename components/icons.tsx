@@ -13,7 +13,7 @@ export const Logo: React.FC<IconSvgProps> = ({
     alt="OpenMos Logo"
     className={props.className}
     height={(size as number) || (height as number) || 36}
-    src="/logo.png"
+    src="/favicon.png"
     width={(size as number) || (width as number) || 36}
   />
 );
