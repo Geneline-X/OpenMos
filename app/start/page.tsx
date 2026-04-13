@@ -113,7 +113,8 @@ export default function OnboardingPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          age: AGE_RANGES.find((r) => r.value === demographics.age)?.numeric ?? 21,
+          age:
+            AGE_RANGES.find((r) => r.value === demographics.age)?.numeric ?? 21,
           gender: demographics.gender,
           nativeLanguage: demographics.nativeLanguage,
           studyId: studyData.studyId,
@@ -149,9 +150,7 @@ export default function OnboardingPage() {
   };
 
   const canProceedFromDemographics =
-    demographics.age &&
-    demographics.gender &&
-    demographics.nativeLanguage;
+    demographics.age && demographics.gender && demographics.nativeLanguage;
 
   const canProceedFromConsent = consent.dataUsage && consent.anonymous;
 

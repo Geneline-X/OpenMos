@@ -196,11 +196,10 @@ export default function ProfilePage() {
         <CardBody className="space-y-4">
           {/* Full Name */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Full Name</label>
+            <p className="text-sm font-medium">Full Name</p>
             {isEditingName ? (
               <div className="flex gap-2">
                 <Input
-                  autoFocus
                   placeholder="Enter your full name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
@@ -247,7 +246,7 @@ export default function ProfilePage() {
 
           {/* Email (Read-only) */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Email</label>
+            <p className="text-sm font-medium">Email</p>
             <p className="text-default-700">{session?.user?.email}</p>
           </div>
 
@@ -255,7 +254,7 @@ export default function ProfilePage() {
 
           {/* Username (Read-only) */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Username</label>
+            <p className="text-sm font-medium">Username</p>
             <p className="text-default-700">{session?.user?.username}</p>
           </div>
 
@@ -263,7 +262,7 @@ export default function ProfilePage() {
 
           {/* Role (Read-only) */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Role</label>
+            <p className="text-sm font-medium">Role</p>
             <div>
               <Chip color="primary" size="sm" variant="flat">
                 {session?.user?.role || "researcher"}

@@ -52,8 +52,8 @@ export function WeeklyDigest({
             lineHeight: "1.5",
           }}
         >
-          Here's a quick look at your study progress over the past week across
-          the OpenMOS platform.
+          Here&apos;s a quick look at your study progress over the past week
+          across the OpenMOS platform.
         </Text>
 
         <Stats

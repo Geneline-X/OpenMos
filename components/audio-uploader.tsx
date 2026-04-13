@@ -117,6 +117,7 @@ export function AudioUploader({
 
     if (!language) {
       setLanguageError("Please select a language before uploading");
+
       return;
     }
 

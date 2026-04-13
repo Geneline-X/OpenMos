@@ -50,13 +50,16 @@ export async function POST(request: NextRequest) {
       })
       .from(studyLanguages)
       .innerJoin(languages, eq(studyLanguages.languageId, languages.id))
-      .where(and(eq(studyLanguages.studyId, study.id), eq(languages.isActive, true)));
+      .where(
+        and(eq(studyLanguages.studyId, study.id), eq(languages.isActive, true)),
+      );
 
     // Deduplicate by code — same language code may appear via multiple user-scoped records
     const seen = new Set<string>();
     const uniqueLangs = studyLangs.filter((lang) => {
       if (seen.has(lang.code)) return false;
       seen.add(lang.code);
+
       return true;
     });
 

@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     "Mean Opinion Score",
     "Speech Evaluation",
     "TTS",
-      "African Languages",
+    "African Languages",
     "Luganda",
     "Krio",
   ],

@@ -418,8 +418,12 @@ export function MobileSidebar() {
     <>
       {/* Backdrop */}
       <div
+        aria-label="Close sidebar"
         className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden"
+        role="button"
+        tabIndex={0}
         onClick={closeMobileSidebar}
+        onKeyDown={(e) => e.key === "Enter" && closeMobileSidebar()}
       />
 
       {/* Sidebar */}

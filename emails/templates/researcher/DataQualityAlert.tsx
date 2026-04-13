@@ -46,7 +46,7 @@ export function DataQualityAlert({
           }}
         >
           Our automated quality checks have flagged potential issues in your
-          study <strong>"{studyName}"</strong>.
+          study <strong>&quot;{studyName}&quot;</strong>.
         </Text>
 
         <Alert variant="warning">
@@ -91,7 +91,7 @@ export function DataQualityAlert({
           style={{ margin: "0", fontSize: "14px", lineHeight: "1.5" }}
         >
           If you verify these evaluations are legitimate, you can mark them as
-          "Safe" in the review portal to clear this alert.
+          &quot;Safe&quot; in the review portal to clear this alert.
         </Text>
       </Section>
       <Footer appUrl={appUrl} />

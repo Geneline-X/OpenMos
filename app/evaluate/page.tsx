@@ -406,7 +406,9 @@ export default function EvaluatePage() {
             onEnded={handleEnded}
             onLoadedMetadata={handleLoadedMetadata}
             onTimeUpdate={handleTimeUpdate}
-          />
+          >
+            <track kind="captions" />
+          </audio>
         </CardBody>
       </Card>
 

@@ -78,8 +78,9 @@ export function PasswordChanged({
         )}
 
         <Alert variant="warning">
-          <strong>Didn't do this?</strong> If you did not change your password,
-          please secure your account immediately by contacting support.
+          <strong>Didn&apos;t do this?</strong> If you did not change your
+          password, please secure your account immediately by contacting
+          support.
         </Alert>
 
         <Section style={{ textAlign: "center", margin: "24px 0" }}>

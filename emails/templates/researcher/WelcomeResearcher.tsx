@@ -42,7 +42,7 @@ export function WelcomeResearcher({
             lineHeight: "1.5",
           }}
         >
-          Hi {userName}, we're thrilled to have you join as a{" "}
+          Hi {userName}, we&apos;re thrilled to have you join as a{" "}
           <strong>{role}</strong>. OpenMOS is a collaborative platform for
           speech research, helping build robust AI models for African languages.
         </Text>

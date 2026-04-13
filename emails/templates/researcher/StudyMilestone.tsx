@@ -60,7 +60,7 @@ export function StudyMilestone({
           }}
         >
           Congratulations {researcherName}! Your study{" "}
-          <strong>"{studyName}"</strong> just hit a major milestone:{" "}
+          <strong>&quot;{studyName}&quot;</strong> just hit a major milestone:{" "}
           <strong>{milestone}</strong>.
         </Text>
 

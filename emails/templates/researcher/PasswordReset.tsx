@@ -73,8 +73,8 @@ export function PasswordReset({
 
         <Alert variant="info">
           <strong>This link expires in {expiresInMinutes} minutes.</strong> If
-          you didn't request a password reset, you can safely ignore this email.
-          Your password will not be changed.
+          you didn&apos;t request a password reset, you can safely ignore this
+          email. Your password will not be changed.
         </Alert>
       </Section>
       <Footer appUrl={appUrl} />

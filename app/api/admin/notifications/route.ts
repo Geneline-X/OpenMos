@@ -82,7 +82,10 @@ export async function PATCH(request: NextRequest) {
         .update(notifications)
         .set({ isRead: true })
         .where(
-          and(eq(notifications.userId, userId), eq(notifications.isRead, false)),
+          and(
+            eq(notifications.userId, userId),
+            eq(notifications.isRead, false),
+          ),
         );
     } else if (ids && Array.isArray(ids)) {
       for (const id of ids) {

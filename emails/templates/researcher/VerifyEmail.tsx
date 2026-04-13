@@ -71,8 +71,8 @@ export function VerifyEmail({
         </Text>
 
         <Alert variant="info">
-          <strong>This link expires in 1 hour.</strong> If you didn't create an
-          account, you can safely ignore this email.
+          <strong>This link expires in 1 hour.</strong> If you didn&apos;t
+          create an account, you can safely ignore this email.
         </Alert>
       </Section>
       <Footer appUrl={appUrl} />
