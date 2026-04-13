@@ -16,6 +16,8 @@ import { Chip } from "@heroui/chip";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 
+import { toast } from "sonner";
+
 import { useSidebar } from "./sidebar-context";
 import {
   navigationIcons,
@@ -163,13 +165,18 @@ export function TopNavbar() {
                 </DropdownItem>
                 <DropdownItem
                   key="report"
-                  description="Generate PDF analysis"
-                  href="/admin/reports"
+                  description="Coming soon"
                   startContent={
                     <Icon
                       className="h-5 w-5 text-warning"
                       icon={quickActionIcons.report}
                     />
+                  }
+                  onPress={() =>
+                    toast.info("Feature coming soon", {
+                      description:
+                        "Report generation is under development. Check back in a future update.",
+                    })
                   }
                 >
                   Generate Report
@@ -177,7 +184,7 @@ export function TopNavbar() {
                 <DropdownItem
                   key="new-study"
                   description="Create new evaluation"
-                  href="/admin/studies/new"
+                  href="/admin/studies"
                   startContent={
                     <Icon
                       className="h-5 w-5 text-secondary"

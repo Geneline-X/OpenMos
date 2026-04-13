@@ -168,7 +168,10 @@ export default function StudiesClient({
                 {initialLanguages
                   .filter((l) => l.isActive)
                   .map((lang) => (
-                    <SelectItem key={lang.code}>
+                    <SelectItem
+                      key={lang.code}
+                      textValue={`${lang.flag} ${lang.name}`}
+                    >
                       {lang.flag} {lang.name}
                     </SelectItem>
                   ))}
