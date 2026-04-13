@@ -15,7 +15,6 @@ import { Avatar } from "@heroui/avatar";
 import { Chip } from "@heroui/chip";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
-
 import { toast } from "sonner";
 
 import { useSidebar } from "./sidebar-context";
