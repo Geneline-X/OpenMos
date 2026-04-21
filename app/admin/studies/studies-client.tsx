@@ -40,10 +40,14 @@ export default function StudiesClient({
   const [selectedLangCodes, setSelectedLangCodes] = useState<string[]>([]);
   const [isAddingStudy, setIsAddingStudy] = useState(false);
   const [copiedKeyId, setCopiedKeyId] = useState<string | null>(null);
+  const [activeStudyId, setActiveStudyId] = useState<string | null>(
+    initialStudies.find((s) => s.isActive)?.id ?? null,
+  );
+  const [togglingStudyId, setTogglingStudyId] = useState<string | null>(null);
 
-  // Filter studies based on view
+  // Filter studies based on view using local active state
   const displayedStudies = isPastStudies
-    ? initialStudies.filter((s) => !s.isActive)
+    ? initialStudies.filter((s) => activeStudyId !== s.id)
     : initialStudies;
 
   const handleAddStudy = async () => {
@@ -86,16 +90,27 @@ export default function StudiesClient({
   };
 
   const handleToggleStudy = async (id: string, isActive: boolean) => {
-    // If turning on, warn that others will be turned off
+    if (togglingStudyId) return;
+
+    const previousActiveId = activeStudyId;
+
+    // Optimistic update
+    setActiveStudyId(isActive ? id : null);
+    setTogglingStudyId(id);
+
     if (isActive) {
       toast.info("Activating this study will deactivate others.");
     }
 
     const res = await toggleStudyActive(id, isActive);
 
+    setTogglingStudyId(null);
+
     if (res.success) {
       toast.success(isActive ? "Study activated" : "Study deactivated");
     } else {
+      // Revert optimistic update on failure
+      setActiveStudyId(previousActiveId);
       toast.error("Failed to update study status");
     }
   };
@@ -228,7 +243,7 @@ export default function StudiesClient({
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold text-lg">{study.name}</h3>
-                    {study.isActive ? (
+                    {activeStudyId === study.id ? (
                       <span className="text-xs bg-success-100 text-success-600 px-2 py-0.5 rounded-full">
                         Active
                       </span>
@@ -290,7 +305,8 @@ export default function StudiesClient({
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-default-500">Status:</span>
                     <Switch
-                      isSelected={study.isActive}
+                      isDisabled={togglingStudyId !== null}
+                      isSelected={activeStudyId === study.id}
                       size="sm"
                       onValueChange={(val) => handleToggleStudy(study.id, val)}
                     >
