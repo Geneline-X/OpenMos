@@ -268,10 +268,6 @@ export default function CurrentStudyClient({
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-default-500">Samples per rater</span>
-                <span>{study.samplesPerRater}</span>
-              </div>
-              <div className="flex justify-between">
                 <span className="text-default-500">Started</span>
                 <span>{format(new Date(study.createdAt), "MMM d, yyyy")}</span>
               </div>

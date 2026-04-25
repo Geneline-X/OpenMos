@@ -11,6 +11,7 @@ import {
   sql,
 } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { UTApi } from "uploadthing/server";
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -24,6 +25,8 @@ import {
   ratings,
   audioSamples,
 } from "@/lib/db/schema";
+
+const utapi = new UTApi();
 
 /**
  * Generate a unique, URL-safe access key for a study.
@@ -197,7 +200,6 @@ export async function getStudyStats(studyId: string): Promise<StudyStats> {
 
 export async function createStudy(data: {
   name: string;
-  samplesPerRater: number;
   modelValues: string[];
   languageCodes: string[];
 }) {
@@ -237,7 +239,6 @@ export async function createStudy(data: {
       .values({
         name: data.name,
         accessKey,
-        samplesPerRater: data.samplesPerRater,
         isActive: false,
         userId,
       })
@@ -296,13 +297,46 @@ export async function deleteStudy(id: string) {
 
     if (!userId) throw new Error("Unauthorized");
 
+    // Verify ownership before touching anything
+    const study = await db.query.studies.findFirst({
+      where: and(eq(studies.id, id), eq(studies.userId, userId)),
+    });
+
+    if (!study) return { success: false, error: "Study not found" };
+
+    // 1. Collect UploadThing keys for all samples tied to this study
+    //    so we can clean up CDN storage before the DB rows are gone.
+    const samples = await db
+      .select({ key: audioSamples.uploadthingKey })
+      .from(audioSamples)
+      .where(eq(audioSamples.studyId, id));
+
+    const utKeys = samples
+      .map((s) => s.key)
+      .filter((k): k is string => Boolean(k));
+
+    // 2. Delete CDN files (non-blocking — don't fail the whole operation if
+    //    UploadThing is temporarily unreachable)
+    if (utKeys.length > 0) {
+      await utapi.deleteFiles(utKeys).catch((err) => {
+        console.error("UploadThing cleanup failed during study deletion:", err);
+      });
+    }
+
+    // 3. Delete the study row. The DB cascade takes care of:
+    //    studies → audioSamples (studyId CASCADE)
+    //    audioSamples → ratings   (audioId CASCADE)
+    //    studies → studyModels    (studyId CASCADE, already wired)
+    //    studies → studyLanguages (studyId CASCADE, already wired)
+    //    evaluationSessions.studyId is SET NULL (historical sessions preserved)
     await db
       .delete(studies)
       .where(and(eq(studies.id, id), eq(studies.userId, userId)));
+
     revalidatePath("/admin/settings");
     revalidatePath("/admin/studies");
 
-    return { success: true };
+    return { success: true, deletedSamples: samples.length };
   } catch (error) {
     console.error("Failed to delete study:", error);
 

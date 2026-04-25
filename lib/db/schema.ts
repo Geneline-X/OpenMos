@@ -67,14 +67,19 @@ export const audioSamples = pgTable("audio_samples", {
   id: uuid("id").primaryKey().defaultRandom(),
   fileUrl: text("file_url").notNull(), // UploadThing CDN URL
   uploadthingKey: text("uploadthing_key"), // For deletion capability
-  modelType: text("model_type").notNull(), // 'orpheus' | 'nemo' | 'ground_truth'
-  language: text("language").notNull(), // 'luganda' | 'krio'
-  textContent: text("text_content"), // Transcription of audio
+  modelType: text("model_type").notNull(),
+  language: text("language").notNull(),
+  textContent: text("text_content"), // Optional transcript
   durationSeconds: decimal("duration_seconds", { precision: 6, scale: 2 }),
   fileSizeBytes: integer("file_size_bytes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   uploadedBy: uuid("uploaded_by").references(() => adminUsers.id),
+  // Samples belong to exactly one study. Deleting a study cascades here,
+  // which then cascades to ratings (see ratings.audioId below).
+  studyId: uuid("study_id").references(() => studies.id, {
+    onDelete: "cascade",
+  }),
 });
 
 // Evaluation sessions table - tracks user evaluation progress
@@ -83,7 +88,10 @@ export const evaluationSessions = pgTable("evaluation_sessions", {
   raterId: uuid("rater_id")
     .references(() => raters.id)
     .notNull(),
-  studyId: uuid("study_id").references(() => studies.id),
+  // SET NULL so historical sessions survive study deletion
+  studyId: uuid("study_id").references(() => studies.id, {
+    onDelete: "set null",
+  }),
   startedAt: timestamp("started_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
   totalSamples: integer("total_samples").default(20).notNull(),
@@ -102,8 +110,9 @@ export const ratings = pgTable("ratings", {
   raterId: uuid("rater_id")
     .references(() => raters.id)
     .notNull(),
+  // CASCADE: deleting a sample removes its ratings automatically
   audioId: uuid("audio_id")
-    .references(() => audioSamples.id)
+    .references(() => audioSamples.id, { onDelete: "cascade" })
     .notNull(),
   score: integer("score").notNull(), // 1-5
   timeToRateMs: integer("time_to_rate_ms"), // Time from play to rating
@@ -428,7 +437,6 @@ export const studies = pgTable("studies", {
     .unique()
     .notNull()
     .default(sql`'MOS-' || upper(substr(md5(random()::text), 1, 6))`),
-  samplesPerRater: integer("samples_per_rater").default(20).notNull(),
   isActive: boolean("is_active").default(false).notNull(),
   userId: uuid("user_id").references(() => adminUsers.id, {
     onDelete: "cascade",

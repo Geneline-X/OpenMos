@@ -3,6 +3,7 @@ import UploadClient from "./upload-client";
 import { auth } from "@/lib/auth";
 import { getActiveModels } from "@/app/actions/models";
 import { getActiveLanguages } from "@/app/actions/languages";
+import { getActiveStudy } from "@/app/actions/studies";
 import {
   getUserModels,
   getUserLanguages,
@@ -15,7 +16,6 @@ export default async function AdminUploadPage() {
   let languages;
 
   if (session?.user?.id) {
-    // Get user-specific enabled models/languages
     const [userModels, userLangs] = await Promise.all([
       getUserModels(session.user.id),
       getUserLanguages(session.user.id),
@@ -24,7 +24,6 @@ export default async function AdminUploadPage() {
     models = userModels;
     languages = userLangs;
   } else {
-    // Fallback to all active models/languages
     const [activeModels, activeLangs] = await Promise.all([
       getActiveModels(),
       getActiveLanguages(),
@@ -34,5 +33,14 @@ export default async function AdminUploadPage() {
     languages = activeLangs;
   }
 
-  return <UploadClient languages={languages} models={models} />;
+  const activeStudy = await getActiveStudy();
+
+  return (
+    <UploadClient
+      activeStudyId={activeStudy?.id ?? null}
+      activeStudyName={activeStudy?.name ?? null}
+      languages={languages}
+      models={models}
+    />
+  );
 }

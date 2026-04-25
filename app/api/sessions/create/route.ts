@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 
 import { NextRequest, NextResponse } from "next/server";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import {
@@ -9,9 +9,6 @@ import {
   evaluationSessions,
   audioSamples,
   languages,
-  studies,
-  studyModels,
-  aiModels,
 } from "@/lib/db/schema";
 
 export async function POST(request: NextRequest) {
@@ -61,60 +58,30 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    // Determine samples per rater from study or use default
-    let samplesPerRater = 20;
-    let studyModelTypes: string[] = [];
+    // Fetch samples. When a studyId is present, samples are directly tied to
+    // that study — the rater evaluates ALL available samples for their language.
+    const samples = studyId
+      ? await db
+          .select()
+          .from(audioSamples)
+          .where(
+            and(
+              eq(audioSamples.studyId, studyId),
+              eq(audioSamples.language, nativeLanguage),
+              eq(audioSamples.isActive, true),
+            ),
+          )
+      : await db
+          .select()
+          .from(audioSamples)
+          .where(
+            and(
+              eq(audioSamples.language, nativeLanguage),
+              eq(audioSamples.isActive, true),
+            ),
+          );
 
-    if (studyId) {
-      // Fetch study for samplesPerRater
-      const study = await db.query.studies.findFirst({
-        where: and(eq(studies.id, studyId), eq(studies.isActive, true)),
-      });
-
-      if (study) {
-        samplesPerRater = study.samplesPerRater;
-      }
-
-      // Fetch model types linked to this study
-      const linkedModels = await db
-        .select({ value: aiModels.value })
-        .from(studyModels)
-        .innerJoin(aiModels, eq(studyModels.modelId, aiModels.id))
-        .where(eq(studyModels.studyId, studyId));
-
-      studyModelTypes = linkedModels.map((m) => m.value);
-    }
-
-    // Get available samples for this language, scoped by study models if applicable
-    let samples;
-
-    if (studyModelTypes.length > 0) {
-      // Filter by language AND study models
-      samples = await db
-        .select()
-        .from(audioSamples)
-        .where(
-          and(
-            eq(audioSamples.language, nativeLanguage),
-            eq(audioSamples.isActive, true),
-            inArray(audioSamples.modelType, studyModelTypes),
-          ),
-        );
-    } else {
-      // Fallback: filter by language only (legacy behavior)
-      samples = await db
-        .select()
-        .from(audioSamples)
-        .where(
-          and(
-            eq(audioSamples.language, nativeLanguage),
-            eq(audioSamples.isActive, true),
-          ),
-        );
-    }
-
-    // Determine total samples (minimum of available or study's samplesPerRater)
-    const totalSamples = Math.min(samples.length || 5, samplesPerRater);
+    const totalSamples = samples.length || 0;
 
     // Create evaluation session with study link
     const [session] = await db

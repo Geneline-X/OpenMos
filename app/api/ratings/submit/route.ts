@@ -48,11 +48,11 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    // Update session progress
+    // completed_count is managed by the DB trigger trg_sync_session_on_rating.
+    // We only advance the UI cursor and set the final completion timestamp here.
     const [updatedSession] = await db
       .update(evaluationSessions)
       .set({
-        completedCount: sql`${evaluationSessions.completedCount} + 1`,
         currentSampleIndex: sql`${evaluationSessions.currentSampleIndex} + 1`,
         completedAt: isLastSample ? new Date() : undefined,
       })

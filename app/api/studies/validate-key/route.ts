@@ -66,7 +66,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       studyId: study.id,
       studyName: study.name,
-      samplesPerRater: study.samplesPerRater,
       languages: uniqueLangs,
     });
   } catch (error) {

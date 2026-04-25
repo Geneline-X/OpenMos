@@ -1,0 +1,1 @@
+ALTER TABLE "studies" DROP COLUMN "samples_per_rater";

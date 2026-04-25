@@ -13,7 +13,7 @@ import Cookies from "js-cookie";
 interface EvaluatorSession {
   sessionToken: string;
   raterId?: string;
-  language?: "luganda" | "krio";
+  language?: string;
   currentSampleIndex: number;
   totalSamples: number;
   createdAt: string;
@@ -114,11 +114,12 @@ export function EvaluatorSessionProvider({
     loadSession();
   }, []);
 
-  const clearSessionData = () => {
+  // Stable reference — safe to use inside any useCallback without re-creating them
+  const clearSessionData = useCallback(() => {
     Cookies.remove(SESSION_COOKIE_NAME);
     localStorage.removeItem(SESSION_STORAGE_KEY);
     setSession(null);
-  };
+  }, []);
 
   const startNewSession =
     useCallback(async (): Promise<EvaluatorSession | null> => {
@@ -227,9 +228,7 @@ export function EvaluatorSessionProvider({
     }).catch(console.error);
   }, [session]);
 
-  const clearSession = useCallback(() => {
-    clearSessionData();
-  }, []);
+  const clearSession = clearSessionData;
 
   const refreshSession = useCallback(async () => {
     if (!session) return;

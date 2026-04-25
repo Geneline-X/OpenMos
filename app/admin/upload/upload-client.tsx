@@ -11,12 +11,18 @@ import { AiModel, Language } from "@/lib/db/schema";
 interface UploadClientProps {
   models: AiModel[];
   languages: Language[];
+  activeStudyId: string | null;
+  activeStudyName: string | null;
 }
 
-export default function UploadClient({ models, languages }: UploadClientProps) {
-  const handleUploadComplete = (files: { url: string; key: string }[]) => {
-    console.log("Upload complete:", files);
-    // In production, the files are already saved to DB via UploadThing callback
+export default function UploadClient({
+  models,
+  languages,
+  activeStudyId,
+  activeStudyName,
+}: UploadClientProps) {
+  const handleUploadComplete = (_files: { url: string; key: string }[]) => {
+    // Files are atomically saved to DB via /api/admin/samples/batch
   };
 
   return (
@@ -38,6 +44,8 @@ export default function UploadClient({ models, languages }: UploadClientProps) {
       <AudioUploader
         languages={languages}
         models={models}
+        studyId={activeStudyId}
+        studyName={activeStudyName}
         onUploadComplete={handleUploadComplete}
       />
 
@@ -105,39 +113,6 @@ export default function UploadClient({ models, languages }: UploadClientProps) {
         </CardBody>
       </Card>
 
-      {/* Quick Stats - TODO: Make dynamic */}
-      <div className="grid grid-cols-3 gap-4 mt-6">
-        <Card shadow="sm">
-          <CardBody className="text-center py-4">
-            <Icon
-              className="w-8 h-8 mx-auto text-primary mb-2"
-              icon="solar:microphone-bold-duotone"
-            />
-            <p className="text-2xl font-bold">--</p>
-            <p className="text-xs text-default-500">Orpheus Samples</p>
-          </CardBody>
-        </Card>
-        <Card shadow="sm">
-          <CardBody className="text-center py-4">
-            <Icon
-              className="w-8 h-8 mx-auto text-warning mb-2"
-              icon="solar:soundwave-bold-duotone"
-            />
-            <p className="text-2xl font-bold">--</p>
-            <p className="text-xs text-default-500">NeMo Samples</p>
-          </CardBody>
-        </Card>
-        <Card shadow="sm">
-          <CardBody className="text-center py-4">
-            <Icon
-              className="w-8 h-8 mx-auto text-success mb-2"
-              icon="solar:star-bold-duotone"
-            />
-            <p className="text-2xl font-bold">--</p>
-            <p className="text-xs text-default-500">Ground Truth</p>
-          </CardBody>
-        </Card>
-      </div>
     </section>
   );
 }

@@ -21,7 +21,6 @@ interface StudyLanguage {
 interface StudyData {
   studyId: string;
   studyName: string;
-  samplesPerRater: number;
   languages: StudyLanguage[];
 }
 

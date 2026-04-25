@@ -130,9 +130,9 @@ export default function SettingsClient({
       toast.success("Model added successfully");
       setNewModelName("");
       setNewModelValue("");
-      // Note: We might want to auto-enable it for the user or refresh the list
-      // Since this is a client component receiving props, we rely on Server Action revalidation
-      // to update the list, but user preference state might need manual update if we want instant feedback
+      if (res.modelId) {
+        setEnabledModelIds((prev) => new Set(Array.from(prev).concat(res.modelId!)));
+      }
     } else {
       toast.error(res.error || "Failed to add model");
     }
@@ -203,6 +203,9 @@ export default function SettingsClient({
       toast.success("Language added successfully");
       setNewLangName("");
       setNewLangFlag("");
+      if (res.languageId) {
+        setEnabledLanguageIds((prev) => new Set(Array.from(prev).concat(res.languageId!)));
+      }
     } else {
       toast.error(res.error || "Failed to add language");
     }

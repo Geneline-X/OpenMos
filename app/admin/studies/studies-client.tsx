@@ -35,7 +35,6 @@ export default function StudiesClient({
 
   // Study Management State
   const [newStudyName, setNewStudyName] = useState("");
-  const [newStudySamples, setNewStudySamples] = useState("20");
   const [selectedModelValues, setSelectedModelValues] = useState<string[]>([]);
   const [selectedLangCodes, setSelectedLangCodes] = useState<string[]>([]);
   const [isAddingStudy, setIsAddingStudy] = useState(false);
@@ -72,7 +71,6 @@ export default function StudiesClient({
     setIsAddingStudy(true);
     const res = await createStudy({
       name: newStudyName,
-      samplesPerRater: parseInt(newStudySamples) || 20,
       modelValues: selectedModelValues,
       languageCodes: selectedLangCodes,
     });
@@ -116,15 +114,25 @@ export default function StudiesClient({
   };
 
   const handleDeleteStudy = async (id: string) => {
-    if (!confirm("Are you sure? This will delete the study configuration.")) {
+    if (
+      !confirm(
+        "Delete this study? All audio samples tied to it and their ratings will be permanently removed.",
+      )
+    ) {
       return;
     }
+
     const res = await deleteStudy(id);
 
     if (res.success) {
-      toast.success("Study deleted");
+      const count = (res as any).deletedSamples;
+      toast.success(
+        count
+          ? `Study deleted along with ${count} sample${count !== 1 ? "s" : ""}`
+          : "Study deleted",
+      );
     } else {
-      toast.error("Failed to delete study");
+      toast.error(res.error || "Failed to delete study");
     }
   };
 
@@ -162,13 +170,6 @@ export default function StudiesClient({
                 size="sm"
                 value={newStudyName}
                 onValueChange={setNewStudyName}
-              />
-              <Input
-                label="Samples / Rater"
-                size="sm"
-                type="number"
-                value={newStudySamples}
-                onValueChange={setNewStudySamples}
               />
               <Select
                 label="Languages"
@@ -254,10 +255,6 @@ export default function StudiesClient({
                     )}
                   </div>
                   <div className="text-sm text-default-500 flex flex-wrap gap-4">
-                    <span className="flex items-center gap-1">
-                      <Icon icon="solar:document-text-linear" />
-                      {study.samplesPerRater} samples/rater
-                    </span>
                     <span className="flex items-center gap-1">
                       <Icon icon="solar:global-linear" />
                       {study.languages.length} languages

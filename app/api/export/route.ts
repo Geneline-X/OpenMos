@@ -12,9 +12,14 @@ interface ExportFilters {
   endDate?: string;
 }
 
-async function getRatingsData(filters: ExportFilters) {
-  // Build the query with joins
-  const conditions = [];
+/**
+ * Fetch ratings that belong to the given user's uploaded audio samples only.
+ * The userId filter is mandatory — it prevents any user from exporting another
+ * user's data.
+ */
+async function getRatingsData(filters: ExportFilters, userId: string) {
+  // Always scope to the authenticated user's samples
+  const conditions = [eq(audioSamples.uploadedBy, userId)];
 
   if (filters.language) {
     conditions.push(eq(audioSamples.language, filters.language));
@@ -46,7 +51,7 @@ async function getRatingsData(filters: ExportFilters) {
     .from(ratings)
     .innerJoin(audioSamples, eq(ratings.audioId, audioSamples.id))
     .innerJoin(raters, eq(ratings.raterId, raters.id))
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(ratings.timestamp);
 
   return data;
@@ -132,10 +137,10 @@ ${stats.map((s) => `${s.model} & ${s.mean} & ${s.stdDev} & ${s.ci} & ${s.n} \\\\
 
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
     const session = await auth();
+    const userId = session?.user?.id;
 
-    if (!session) {
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -147,12 +152,10 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get("endDate") || undefined;
     const columnsParam = searchParams.get("columns");
 
-    const data = await getRatingsData({
-      language,
-      modelType,
-      startDate,
-      endDate,
-    });
+    const data = await getRatingsData(
+      { language, modelType, startDate, endDate },
+      userId,
+    );
 
     // Filter columns if specified
     const filteredData = columnsParam
@@ -218,23 +221,22 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  // For stats/summary endpoint
+  // Stats / summary endpoint used by the export page preview
   try {
     const session = await auth();
+    const userId = session?.user?.id;
 
-    if (!session) {
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
     const { language, modelType, startDate, endDate } = body;
 
-    const data = await getRatingsData({
-      language,
-      modelType,
-      startDate,
-      endDate,
-    });
+    const data = await getRatingsData(
+      { language, modelType, startDate, endDate },
+      userId,
+    );
 
     // Calculate comprehensive statistics
     const modelStats: Record<string, { scores: number[]; n: number }> = {};

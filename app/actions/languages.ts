@@ -87,7 +87,7 @@ export async function addLanguage(data: {
     revalidatePath("/admin/upload");
     revalidatePath("/admin/studies");
 
-    return { success: true };
+    return { success: true, languageId: newLang.id };
   } catch (error) {
     console.error("Failed to add language:", error);
 

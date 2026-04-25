@@ -1,59 +1,49 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 
-import { db } from "@/lib/db";
-import { audioSamples } from "@/lib/db/schema";
-import { NotificationService } from "@/lib/services/notifications";
 import { auth } from "@/lib/auth";
 
 const f = createUploadthing();
 
 // FileRouter for your app, can contain multiple FileRoutes
 export const ourFileRouter = {
-  // Audio sample uploader for admins
+  // Audio sample uploader for admins — max 30 files, 16 MB each
   audioUploader: f({
-    audio: { maxFileSize: "16MB", maxFileCount: 20 },
+    audio: { maxFileSize: "16MB", maxFileCount: 30 },
   })
     .middleware(async ({ req }) => {
-      // Veryify admin authentication
+      // Verify admin authentication
       const session = await auth();
 
       if (!session?.user?.id) {
         throw new Error("Unauthorized");
       }
 
-      // Get metadata from request headers (set by client)
+      // Capture upload metadata from request headers (set by the client)
       const modelType = req.headers.get("x-model-type") || "orpheus";
       const language = req.headers.get("x-language") || "luganda";
       const textContent = req.headers.get("x-text-content") || null;
+      const studyId = req.headers.get("x-study-id") || null;
 
-      return { uploadedBy: session.user.id, modelType, language, textContent };
+      return {
+        uploadedBy: session.user.id,
+        modelType,
+        language,
+        textContent,
+        studyId,
+      };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Audio upload complete:", file.url);
-
-      // Save to database
-      const [sample] = await db
-        .insert(audioSamples)
-        .values({
-          fileUrl: file.url,
-          uploadthingKey: file.key,
-          modelType: metadata.modelType,
-          language: metadata.language,
-          textContent: metadata.textContent,
-          isActive: true,
-          uploadedBy: metadata.uploadedBy,
-        })
-        .returning();
-
-      // Create notification for sample upload
-      await NotificationService.samplesUploaded(
-        1,
-        metadata.language,
-        metadata.modelType,
-        metadata.uploadedBy,
-      );
-
-      return { url: file.url, key: file.key, sampleId: sample.id };
+      // Do NOT insert into the DB here — the client will call /api/admin/samples/batch
+      // once all files have finished uploading, inserting everything atomically in one
+      // shot. If any single file fails the batch, none are persisted.
+      return {
+        url: file.url,
+        key: file.key,
+        modelType: metadata.modelType,
+        language: metadata.language,
+        textContent: metadata.textContent,
+        studyId: metadata.studyId,
+      };
     }),
 
   // Data export uploader (for generating temporary download links)

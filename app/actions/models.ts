@@ -95,7 +95,7 @@ export async function addModel(data: {
     revalidatePath("/admin/upload");
     revalidatePath("/admin/studies");
 
-    return { success: true };
+    return { success: true, modelId: newModel.id };
   } catch (error) {
     console.error("Failed to add model:", error);
 

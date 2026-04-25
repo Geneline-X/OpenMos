@@ -13,6 +13,8 @@ import { Icon } from "@iconify/react";
 import { useUploadThing } from "@/lib/uploadthing-react";
 import { Language } from "@/lib/db/schema";
 
+const MAX_FILES = 30;
+
 type UploadFile = {
   file: File;
   id: string;
@@ -26,12 +28,17 @@ type AudioUploaderProps = {
   onUploadComplete?: (files: { url: string; key: string }[]) => void;
   models: { name: string; value: string; description?: string | null }[];
   languages: Language[];
+  /** ID of the active study to associate uploads with */
+  studyId?: string | null;
+  studyName?: string | null;
 };
 
 export function AudioUploader({
   onUploadComplete,
   models,
   languages,
+  studyId = null,
+  studyName = null,
 }: AudioUploaderProps) {
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [modelType, setModelType] = useState<string>(
@@ -47,42 +54,12 @@ export function AudioUploader({
       "x-model-type": modelType,
       "x-language": language,
       "x-text-content": textContent,
+      ...(studyId ? { "x-study-id": studyId } : {}),
     },
     onUploadProgress: (progress) => {
-      // Update progress for all uploading files
       setFiles((prev) =>
         prev.map((f) => (f.status === "uploading" ? { ...f, progress } : f)),
       );
-    },
-    onClientUploadComplete: (res) => {
-      // Mark files as complete
-      setFiles((prev) =>
-        prev.map((f, idx) =>
-          f.status === "uploading" && res[idx]
-            ? { ...f, status: "complete", url: res[idx].ufsUrl || res[idx].url }
-            : f,
-        ),
-      );
-      setIsUploading(false);
-
-      // Notify parent
-      const completedFiles = res.map((r) => ({
-        url: r.ufsUrl || r.url,
-        key: r.key,
-      }));
-
-      onUploadComplete?.(completedFiles);
-    },
-    onUploadError: (error) => {
-      console.error("Upload error:", error);
-      setFiles((prev) =>
-        prev.map((f) =>
-          f.status === "uploading"
-            ? { ...f, status: "error", error: error.message }
-            : f,
-        ),
-      );
-      setIsUploading(false);
     },
   });
 
@@ -94,7 +71,11 @@ export function AudioUploader({
       status: "queued",
     }));
 
-    setFiles((prev) => [...prev, ...newFiles]);
+    setFiles((prev) => {
+      const combined = [...prev, ...newFiles];
+      // Enforce the cap so the dropzone never exceeds MAX_FILES
+      return combined.slice(0, MAX_FILES);
+    });
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -102,8 +83,8 @@ export function AudioUploader({
     accept: {
       "audio/*": [".wav", ".mp3", ".m4a", ".ogg", ".flac"],
     },
-    maxSize: 16 * 1024 * 1024, // 16MB
-    maxFiles: 20,
+    maxSize: 16 * 1024 * 1024, // 16 MB
+    maxFiles: MAX_FILES,
   });
 
   const removeFile = (id: string) => {
@@ -123,25 +104,86 @@ export function AudioUploader({
 
     setIsUploading(true);
 
-    // Mark all queued files as uploading
+    // Mark all queued files as uploading before we start
     setFiles((prev) =>
       prev.map((f) =>
         f.status === "queued" ? { ...f, status: "uploading", progress: 0 } : f,
       ),
     );
 
-    // Start upload using UploadThing
     try {
-      await startUpload(queuedFiles.map((f) => f.file));
+      // 1. Upload all files to UploadThing CDN
+      const uploadResults = await startUpload(
+        queuedFiles.map((f) => f.file),
+      );
+
+      if (!uploadResults || uploadResults.length === 0) {
+        throw new Error("Upload returned no results");
+      }
+
+      // 2. Build the payload — metadata comes back from the server callback
+      type ServerData = {
+        modelType?: string;
+        language?: string;
+        textContent?: string | null;
+      };
+
+      const batchData = uploadResults.map((r) => {
+        const sd = (r.serverData as ServerData) ?? {};
+
+        return {
+          url: r.ufsUrl || r.url,
+          key: r.key,
+          modelType: sd.modelType ?? modelType,
+          language: sd.language ?? language,
+          textContent: sd.textContent ?? (textContent || null),
+          studyId: (sd as any).studyId ?? studyId ?? null,
+        };
+      });
+
+      // 3. Atomically persist all samples with a single DB INSERT.
+      //    If this fails, the server cleans up the CDN files for us.
+      const saveRes = await fetch("/api/admin/samples/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ files: batchData }),
+      });
+
+      if (!saveRes.ok) {
+        const errBody = await saveRes
+          .json()
+          .catch(() => ({ error: "Unknown error" }));
+
+        throw new Error(errBody.error || "Failed to save samples");
+      }
+
+      // 4. Everything succeeded — mark all as complete
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.status === "uploading" ? { ...f, status: "complete" } : f,
+        ),
+      );
+
+      onUploadComplete?.(
+        batchData.map((f) => ({ url: f.url, key: f.key })),
+      );
     } catch (error) {
-      console.error("Upload failed:", error);
+      console.error("Upload or save failed:", error);
+
+      // Atomicity: if anything failed, mark the whole batch as failed
       setFiles((prev) =>
         prev.map((f) =>
           f.status === "uploading"
-            ? { ...f, status: "error", error: "Upload failed" }
+            ? {
+                ...f,
+                status: "error",
+                error:
+                  error instanceof Error ? error.message : "Upload failed",
+              }
             : f,
         ),
       );
+    } finally {
       setIsUploading(false);
     }
   };
@@ -155,6 +197,7 @@ export function AudioUploader({
 
   const queuedCount = files.filter((f) => f.status === "queued").length;
   const completedCount = files.filter((f) => f.status === "complete").length;
+  const errorCount = files.filter((f) => f.status === "error").length;
 
   return (
     <Card shadow="sm">
@@ -166,6 +209,22 @@ export function AudioUploader({
         <h3 className="font-semibold">Upload Audio Samples</h3>
       </CardHeader>
       <CardBody className="gap-6">
+        {/* Study association banner */}
+        {studyId ? (
+          <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/20 rounded-lg text-sm">
+            <Icon className="w-4 h-4 text-primary flex-shrink-0" icon="solar:clipboard-text-bold-duotone" />
+            <span>
+              Samples will be added to study{" "}
+              <strong>{studyName ?? studyId}</strong>
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 px-3 py-2 bg-warning/10 border border-warning/20 rounded-lg text-sm">
+            <Icon className="w-4 h-4 text-warning flex-shrink-0" icon="solar:danger-triangle-bold-duotone" />
+            <span>No active study — samples will not be tied to any study</span>
+          </div>
+        )}
+
         {/* Metadata Selection */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -254,7 +313,8 @@ export function AudioUploader({
           </p>
           <p className="text-sm text-default-500 mb-2">or click to browse</p>
           <p className="text-xs text-default-400">
-            Supported: .wav, .mp3, .m4a, .ogg, .flac • Max size: 16MB per file
+            Supported: .wav, .mp3, .m4a, .ogg, .flac • Max size: 16 MB per
+            file • Up to {MAX_FILES} files
           </p>
         </div>
 
@@ -263,11 +323,14 @@ export function AudioUploader({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <p className="font-medium">Files to Upload ({files.length})</p>
-              {completedCount > 0 && (
-                <p className="text-sm text-success">
-                  {completedCount} completed
-                </p>
-              )}
+              <div className="flex gap-3 text-sm">
+                {completedCount > 0 && (
+                  <span className="text-success">{completedCount} saved</span>
+                )}
+                {errorCount > 0 && (
+                  <span className="text-danger">{errorCount} failed</span>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -294,6 +357,11 @@ export function AudioUploader({
                         size="sm"
                         value={uploadFile.progress}
                       />
+                    )}
+                    {uploadFile.status === "error" && uploadFile.error && (
+                      <p className="text-xs text-danger mt-0.5">
+                        {uploadFile.error}
+                      </p>
                     )}
                   </div>
                   <div className="flex-shrink-0">
@@ -360,7 +428,9 @@ export function AudioUploader({
             }
             onPress={handleUpload}
           >
-            {isUploading ? "Uploading..." : `Upload All (${queuedCount})`}
+            {isUploading
+              ? "Uploading..."
+              : `Upload All (${queuedCount})`}
           </Button>
         </div>
       </CardBody>

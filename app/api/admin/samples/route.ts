@@ -22,8 +22,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Base query for samples with aggregated rating data
-    let query = db
+    // Build conditions once, optionally adding language filter
+    const conditions = [eq(audioSamples.uploadedBy, userId)];
+
+    if (language) {
+      conditions.push(eq(audioSamples.language, language));
+    }
+
+    const samples = await db
       .select({
         id: audioSamples.id,
         fileUrl: audioSamples.fileUrl,
@@ -38,42 +44,13 @@ export async function GET(request: NextRequest) {
       })
       .from(audioSamples)
       .leftJoin(ratings, eq(audioSamples.id, ratings.audioId))
-      .where(eq(audioSamples.uploadedBy, userId))
+      .where(and(...conditions))
       .groupBy(audioSamples.id)
       .orderBy(desc(audioSamples.createdAt))
       .limit(limit)
       .offset(offset);
 
-    // Apply language filter if provided
-    const samples = language
-      ? await db
-          .select({
-            id: audioSamples.id,
-            fileUrl: audioSamples.fileUrl,
-            modelType: audioSamples.modelType,
-            language: audioSamples.language,
-            textContent: audioSamples.textContent,
-            durationSeconds: audioSamples.durationSeconds,
-            isActive: audioSamples.isActive,
-            createdAt: audioSamples.createdAt,
-            ratingCount: count(ratings.id),
-            avgScore: avg(ratings.score),
-          })
-          .from(audioSamples)
-          .leftJoin(ratings, eq(audioSamples.id, ratings.audioId))
-          .where(
-            and(
-              eq(audioSamples.language, language),
-              eq(audioSamples.uploadedBy, userId),
-            ),
-          )
-          .groupBy(audioSamples.id)
-          .orderBy(desc(audioSamples.createdAt))
-          .limit(limit)
-          .offset(offset)
-      : await query;
-
-    // Get total count
+    // Total count scoped to this user (ignores language filter for pagination)
     const [totalResult] = await db
       .select({ count: count() })
       .from(audioSamples)
@@ -129,11 +106,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Delete the sample (ratings will cascade due to FK or we handle manually)
-    // First delete associated ratings
-    await db.delete(ratings).where(eq(ratings.audioId, id));
-
-    // Get the sample first to retrieve the uploadthing key
+    // Verify ownership FIRST — must happen before any deletion
     const [sample] = await db
       .select({ uploadthingKey: audioSamples.uploadthingKey })
       .from(audioSamples)
@@ -143,22 +116,17 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Sample not found" }, { status: 404 });
     }
 
-    // Delete from UploadThing storage if we have the key
+    // Remove associated ratings, then the sample itself
+    await db.delete(ratings).where(eq(ratings.audioId, id));
+
     if (sample.uploadthingKey) {
-      try {
-        await utapi.deleteFiles(sample.uploadthingKey);
-        console.log(`Deleted file from UploadThing: ${sample.uploadthingKey}`);
-      } catch (utError) {
-        console.error("Failed to delete from UploadThing:", utError);
-        // Continue with DB deletion even if UploadThing fails
-      }
+      await utapi.deleteFiles(sample.uploadthingKey).catch((err) => {
+        // Log but don't abort — the DB record must still be removed
+        console.error("Failed to delete from UploadThing:", err);
+      });
     }
 
-    // Then delete the sample from database
-    const [deleted] = await db
-      .delete(audioSamples)
-      .where(eq(audioSamples.id, id))
-      .returning();
+    await db.delete(audioSamples).where(eq(audioSamples.id, id));
 
     return NextResponse.json({
       success: true,
@@ -207,10 +175,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Sample not found" }, { status: 404 });
     }
 
-    return NextResponse.json({
-      success: true,
-      sample: updated,
-    });
+    return NextResponse.json({ success: true, sample: updated });
   } catch (error) {
     console.error("Sample update error:", error);
 
