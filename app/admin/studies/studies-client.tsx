@@ -126,6 +126,7 @@ export default function StudiesClient({
 
     if (res.success) {
       const count = (res as any).deletedSamples;
+
       toast.success(
         count
           ? `Study deleted along with ${count} sample${count !== 1 ? "s" : ""}`

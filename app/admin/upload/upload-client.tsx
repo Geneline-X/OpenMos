@@ -112,7 +112,6 @@ export default function UploadClient({
           </ul>
         </CardBody>
       </Card>
-
     </section>
   );
 }

@@ -39,9 +39,13 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
+
     files = body.files;
   } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid request body" },
+      { status: 400 },
+    );
   }
 
   if (!Array.isArray(files) || files.length === 0) {
@@ -101,7 +105,10 @@ export async function POST(request: NextRequest) {
 
     if (keys.length > 0) {
       utapi.deleteFiles(keys).catch((utErr) => {
-        console.error("Failed to clean up UploadThing files after batch failure:", utErr);
+        console.error(
+          "Failed to clean up UploadThing files after batch failure:",
+          utErr,
+        );
       });
     }
 

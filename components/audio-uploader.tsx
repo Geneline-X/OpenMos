@@ -73,6 +73,7 @@ export function AudioUploader({
 
     setFiles((prev) => {
       const combined = [...prev, ...newFiles];
+
       // Enforce the cap so the dropzone never exceeds MAX_FILES
       return combined.slice(0, MAX_FILES);
     });
@@ -113,9 +114,7 @@ export function AudioUploader({
 
     try {
       // 1. Upload all files to UploadThing CDN
-      const uploadResults = await startUpload(
-        queuedFiles.map((f) => f.file),
-      );
+      const uploadResults = await startUpload(queuedFiles.map((f) => f.file));
 
       if (!uploadResults || uploadResults.length === 0) {
         throw new Error("Upload returned no results");
@@ -164,9 +163,7 @@ export function AudioUploader({
         ),
       );
 
-      onUploadComplete?.(
-        batchData.map((f) => ({ url: f.url, key: f.key })),
-      );
+      onUploadComplete?.(batchData.map((f) => ({ url: f.url, key: f.key })));
     } catch (error) {
       console.error("Upload or save failed:", error);
 
@@ -177,8 +174,7 @@ export function AudioUploader({
             ? {
                 ...f,
                 status: "error",
-                error:
-                  error instanceof Error ? error.message : "Upload failed",
+                error: error instanceof Error ? error.message : "Upload failed",
               }
             : f,
         ),
@@ -212,7 +208,10 @@ export function AudioUploader({
         {/* Study association banner */}
         {studyId ? (
           <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/20 rounded-lg text-sm">
-            <Icon className="w-4 h-4 text-primary flex-shrink-0" icon="solar:clipboard-text-bold-duotone" />
+            <Icon
+              className="w-4 h-4 text-primary flex-shrink-0"
+              icon="solar:clipboard-text-bold-duotone"
+            />
             <span>
               Samples will be added to study{" "}
               <strong>{studyName ?? studyId}</strong>
@@ -220,7 +219,10 @@ export function AudioUploader({
           </div>
         ) : (
           <div className="flex items-center gap-2 px-3 py-2 bg-warning/10 border border-warning/20 rounded-lg text-sm">
-            <Icon className="w-4 h-4 text-warning flex-shrink-0" icon="solar:danger-triangle-bold-duotone" />
+            <Icon
+              className="w-4 h-4 text-warning flex-shrink-0"
+              icon="solar:danger-triangle-bold-duotone"
+            />
             <span>No active study — samples will not be tied to any study</span>
           </div>
         )}
@@ -313,8 +315,8 @@ export function AudioUploader({
           </p>
           <p className="text-sm text-default-500 mb-2">or click to browse</p>
           <p className="text-xs text-default-400">
-            Supported: .wav, .mp3, .m4a, .ogg, .flac • Max size: 16 MB per
-            file • Up to {MAX_FILES} files
+            Supported: .wav, .mp3, .m4a, .ogg, .flac • Max size: 16 MB per file
+            • Up to {MAX_FILES} files
           </p>
         </div>
 
@@ -428,9 +430,7 @@ export function AudioUploader({
             }
             onPress={handleUpload}
           >
-            {isUploading
-              ? "Uploading..."
-              : `Upload All (${queuedCount})`}
+            {isUploading ? "Uploading..." : `Upload All (${queuedCount})`}
           </Button>
         </div>
       </CardBody>

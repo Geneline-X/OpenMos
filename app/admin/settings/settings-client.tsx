@@ -131,7 +131,9 @@ export default function SettingsClient({
       setNewModelName("");
       setNewModelValue("");
       if (res.modelId) {
-        setEnabledModelIds((prev) => new Set(Array.from(prev).concat(res.modelId!)));
+        setEnabledModelIds(
+          (prev) => new Set(Array.from(prev).concat(res.modelId!)),
+        );
       }
     } else {
       toast.error(res.error || "Failed to add model");
@@ -204,7 +206,9 @@ export default function SettingsClient({
       setNewLangName("");
       setNewLangFlag("");
       if (res.languageId) {
-        setEnabledLanguageIds((prev) => new Set(Array.from(prev).concat(res.languageId!)));
+        setEnabledLanguageIds(
+          (prev) => new Set(Array.from(prev).concat(res.languageId!)),
+        );
       }
     } else {
       toast.error(res.error || "Failed to add language");

@@ -34,7 +34,9 @@ export async function GET(_request: NextRequest) {
 
     const totalSessions = Number(row.total_sessions) || 1;
     const completedSessions = Number(row.completed_sessions) || 0;
-    const completionRate = Math.round((completedSessions / totalSessions) * 100);
+    const completionRate = Math.round(
+      (completedSessions / totalSessions) * 100,
+    );
 
     const avgTimeSeconds = Math.round(Number(row.avg_time_ms || 0) / 1000);
 
